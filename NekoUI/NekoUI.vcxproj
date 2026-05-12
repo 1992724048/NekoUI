@@ -58,6 +58,8 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
+    <Import Project="..\..\Library\parallel_hashmap\parallel_hashmap.vcxitems" Label="Shared" />
+    <Import Project="..\..\Library\glm\glm.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -112,7 +114,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;WINDOWS_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -139,7 +141,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;WINDOWS_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -167,12 +169,20 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NekoUI\Engine\Backend\DirectX11\DirectX11.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
+    <ClCompile Include="NekoUI\Engine\Window\Windows\Windows.cpp" />
+    <ClCompile Include="NekoUI\Widget\Text\Text.cpp" />
+    <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="NekoUI\Engine\Backend\Backend.hpp" />
     <ClInclude Include="NekoUI\Engine\Backend\DirectX11\DirectX11.hpp" />
+    <ClInclude Include="NekoUI\Engine\Window\Window.hpp" />
+    <ClInclude Include="NekoUI\Engine\Window\Windows\Windows.h" />
+    <ClInclude Include="NekoUI\Widget\Text\Text.hpp" />
+    <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

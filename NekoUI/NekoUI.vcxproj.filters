@@ -24,12 +24,36 @@
     <ClCompile Include="NekoUI\Engine\Backend\DirectX11\DirectX11.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Widget.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Text\Text.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Engine\Window\Windows\Windows.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NekoUI\Engine\Backend\DirectX11\DirectX11.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Widget.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Text\Text.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\Backend\Backend.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\Window\Window.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\Window\Windows\Windows.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
