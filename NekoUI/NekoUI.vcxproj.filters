@@ -21,7 +21,7 @@
     <ClCompile Include="NekoUI\Engine\Engine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Engine\Backend\DirectX11\DirectX11.cpp">
+    <ClCompile Include="NekoUI\Backend\DirectX11\DirectX11.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NekoUI\Widget\Widget.cpp">
@@ -30,7 +30,7 @@
     <ClCompile Include="NekoUI\Widget\Text\Text.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Engine\Window\Windows\Windows.cpp">
+    <ClCompile Include="NekoUI\Window\Windows\Windows.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,7 +38,7 @@
     <None Include="NekoUI\Engine\Engine.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NekoUI\Engine\Backend\DirectX11\DirectX11.hpp">
+    <ClInclude Include="NekoUI\Backend\DirectX11\DirectX11.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Widget\Widget.hpp">
@@ -47,13 +47,16 @@
     <ClInclude Include="NekoUI\Widget\Text\Text.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Engine\Backend\Backend.hpp">
+    <ClInclude Include="NekoUI\Backend\Backend.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Engine\Window\Window.hpp">
+    <ClInclude Include="NekoUI\Window\Window.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Engine\Window\Windows\Windows.h">
+    <ClInclude Include="NekoUI\Window\Windows\Windows.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Type.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

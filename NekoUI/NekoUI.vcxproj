@@ -57,10 +57,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared">
-    <Import Project="..\..\Library\parallel_hashmap\parallel_hashmap.vcxitems" Label="Shared" />
-    <Import Project="..\..\Library\glm\glm.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -120,15 +117,16 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OptimizeForWindowsApplication>true</OptimizeForWindowsApplication>
-      <StringPooling>true</StringPooling>
+      <StringPooling>false</StringPooling>
       <ExceptionHandling>Async</ExceptionHandling>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <EnableEnhancedInstructionSet>ARROWLAKE-S</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
-      <GuardEHContMetadata>true</GuardEHContMetadata>
+      <GuardEHContMetadata>false</GuardEHContMetadata>
       <GenerateAlternateCodePaths>ARROWLAKE-S</GenerateAlternateCodePaths>
       <UseProcessorExtensions>ARROWLAKE-S</UseProcessorExtensions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,13 +150,14 @@
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <EnableEnhancedInstructionSet>ARROWLAKE-S</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
-      <GuardEHContMetadata>true</GuardEHContMetadata>
+      <GuardEHContMetadata>false</GuardEHContMetadata>
       <GenerateAlternateCodePaths>ARROWLAKE-S</GenerateAlternateCodePaths>
       <UseProcessorExtensions>ARROWLAKE-S</UseProcessorExtensions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <Optimization>MaxSpeedHighLevel</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -167,9 +166,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="NekoUI\Engine\Backend\DirectX11\DirectX11.cpp" />
+    <ClCompile Include="NekoUI\Backend\DirectX11\DirectX11.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
-    <ClCompile Include="NekoUI\Engine\Window\Windows\Windows.cpp" />
+    <ClCompile Include="NekoUI\Window\Windows\Windows.cpp" />
     <ClCompile Include="NekoUI\Widget\Text\Text.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
@@ -177,10 +176,11 @@
     <None Include="NekoUI\Engine\Engine.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NekoUI\Engine\Backend\Backend.hpp" />
-    <ClInclude Include="NekoUI\Engine\Backend\DirectX11\DirectX11.hpp" />
-    <ClInclude Include="NekoUI\Engine\Window\Window.hpp" />
-    <ClInclude Include="NekoUI\Engine\Window\Windows\Windows.h" />
+    <ClInclude Include="NekoUI\Backend\Backend.hpp" />
+    <ClInclude Include="NekoUI\Backend\DirectX11\DirectX11.hpp" />
+    <ClInclude Include="NekoUI\Window\Window.hpp" />
+    <ClInclude Include="NekoUI\Window\Windows\Windows.hpp" />
+    <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Widget\Text\Text.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>

@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
 #include <array>
-#include <glm/glm.hpp>
+#include <functional>
 
-namespace neko::engine {
-    class Engine;
-} // namespace neko::engine
+#include "../Type.hpp"
 
 namespace neko::window {
+    using namespace neko::type;
+
     enum class MsgResult { Dispose, Ignore };
 
     enum class MouseMsgType { Down, Up, Wheel };
@@ -39,17 +39,19 @@ namespace neko::window {
         KeyboardMsg keyboard;
     };
 
+    /**
+     * <summary>
+     * 窗口对象
+     * </summary>
+     */
     class Window {
     public:
-        using Handle = void*;
-
         virtual ~Window() = default;
 
         virtual auto get_handle() -> Handle {
             return nullptr;
         }
-    private:
+
         std::function<MsgResult(InputType, InputMsgType, InputMsg)> msg_callback;
-        friend class engine::Engine;
     };
 } // namespace neko::window
