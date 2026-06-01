@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <memory>
+#include <optional>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
@@ -20,7 +21,7 @@ namespace neko::engine {
     template<typename T> concept WindowsType = requires(std::shared_ptr<T> ptr) {
         requires std::is_base_of_v<window::Window, T>; { ptr->get_handle() } -> std::same_as<Handle>; {
             ptr->msg_callback
-        } -> std::convertible_to<std::function<window::MsgResult(window::InputType, window::InputMsgType, window::InputMsg)>>;
+        } -> std::convertible_to<std::function<window::MsgResult()>>;
     };
 
     /**
@@ -51,7 +52,7 @@ namespace neko::engine {
             if (window_handle == nullptr || handle == nullptr || window_handle != handle) {
                 return false;
             }
-            window->msg_callback = std::bind(&Engine::msg_callback, this, window_handle, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+            window->msg_callback = std::bind(&Engine::msg_callback, this, window_handle, std::ref(window->state));
 
             std::unique_lock _(mutex);
             backend_windows[window_handle].window = window;
@@ -81,12 +82,22 @@ namespace neko::engine {
             std::shared_ptr<window::Window> window;
 
             std::shared_mutex mutex;
-            std::unordered_map<std::string, std::shared_ptr<widget::Widget>> widget_list;
+            std::unordered_map<std::string, std::shared_ptr<widget::Widget>> id2widget;
 
-            widget::Widget widget;
+            std::mutex lock;
+            std::condition_variable notification;
+
+            std::jthread render_thread;
+
+            std::atomic_bool init{false};
+            std::atomic_bool dirty;
+            std::atomic_int16_t animation;
+            std::atomic<std::shared_ptr<widget::Widget>> widget_tree;
         };
 
-        auto msg_callback(Handle handle, window::InputType input_type, window::InputMsgType msg_type, window::InputMsg msg) -> window::MsgResult;
+        auto msg_callback(Handle handle, window::InputState& state) -> window::MsgResult;
+        static auto render_thread(const std::stop_token& token, ChildWindow& window) -> void;
+        static auto ui_process(ChildWindow& window) -> void;
 
         std::shared_mutex mutex;
         std::unordered_map<Handle, ChildWindow> backend_windows;

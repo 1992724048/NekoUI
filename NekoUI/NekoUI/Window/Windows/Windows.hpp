@@ -12,7 +12,7 @@ namespace neko::window::impl {
     class Windows final : public Window {
     public:
         explicit Windows(HWND hwnd);
-        ~Windows() noexcept override;
+        ~Windows() noexcept ;
         auto get_handle() -> Handle override;
 
         static auto create(std::wstring_view title, const std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)>& proc) -> std::shared_ptr<Windows>;

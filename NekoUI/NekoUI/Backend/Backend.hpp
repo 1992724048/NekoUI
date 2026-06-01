@@ -4,6 +4,8 @@
 #include <memory>
 
 namespace neko::backend {
+    using namespace neko::type;
+
     /**
      * <summary>
      * 渲染后端
@@ -22,6 +24,8 @@ namespace neko::backend {
             return window->get_handle();
         }
 
+        virtual auto resize(Vec2<int> new_size) -> void {}
+
         virtual auto submit() -> void {}
         virtual auto draw_text() -> void {}
         virtual auto draw_line() -> void {}
@@ -30,7 +34,8 @@ namespace neko::backend {
         virtual auto draw_rect_fill() -> void {}
         virtual auto draw_circle_fill() -> void {}
         virtual auto draw_image() -> void {}
-    private:
+    protected:
+        Vec2<int> size{};
         std::shared_ptr<window::Window> window;
     };
 } // namespace neko::backend
