@@ -18,33 +18,9 @@ namespace neko::engine {
         backend_windows.clear();
     }
 
-    auto Engine::get_widget(const Handle handle, const std::string& widget_id) -> std::shared_ptr<Widget> {
-        if (handle == nullptr || !backend_windows.contains(handle)) {
-            return nullptr;
-        }
-
-        const auto& ins = backend_windows[handle];
-        while (auto widget = ins.widget_tree.load()) {
-            if (widget_id == widget->id_key) {
-                return widget;
-            }
-            widget = widget->child.load();
-        }
-
-        return nullptr;
-    }
-
     auto Engine::set_widget_tree(const Handle handle, const std::shared_ptr<Widget>& widget_tree) -> bool {
         if (handle == nullptr || !backend_windows.contains(handle)) {
             return false;
-        }
-
-        auto widget = widget_tree;
-        while (widget != nullptr) {
-            if (widget->child.load() == widget) {
-                return false;
-            }
-            widget = widget->child.load();
         }
 
         auto& ins = backend_windows[handle];
@@ -63,6 +39,7 @@ namespace neko::engine {
             return MsgResult::Dispose;
         }
         if (!state.window.first_create && !child.init) {
+            child.dirty = true;
             child.render_notify.notify_one();
         }
         if (state.window.first_create) {
@@ -97,10 +74,12 @@ namespace neko::engine {
     }
 
     auto Engine::render_process(ChildWindow& window) -> void {
-        auto widget = window.widget_tree.load();
-        while (widget != nullptr) {
-            widget->draw();
-            widget = widget->child.load();
+        const auto [x, y] = window.window->get_size();
+        window.context.body_range = {.x = 0, .y = 0, .z = x, .w = y};
+
+        const auto widget = window.widget_tree.load();
+        if (widget) {
+            widget->draw(window.context);
         }
         window.dirty = false;
     }

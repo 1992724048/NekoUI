@@ -2,6 +2,9 @@
 #include <memory>
 #include <string>
 
+#include "../Type.hpp"
+#include "../Engine/Context.hpp"
+
 namespace neko::widget {
     /**
      * <summary>
@@ -11,9 +14,6 @@ namespace neko::widget {
     class Widget {
     public:
         virtual ~Widget() = default;
-        std::string id_key;
-        std::atomic<std::shared_ptr<Widget>> child;
-
-        virtual auto draw() -> void {};
+        virtual auto draw(engine::Context context) -> void {}
     };
 } // namespace neko::widget

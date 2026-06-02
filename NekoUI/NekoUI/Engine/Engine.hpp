@@ -94,16 +94,6 @@ namespace neko::engine {
 
         /**
          * <summary>
-         * 通过窗口与控件ID获取控件对象
-         * </summary>
-         * <param name="handle">窗口句柄</param>
-         * <param name="widget_id">控件ID</param>
-         * <returns>控件对象</returns>
-         */
-        auto get_widget(Handle handle, const std::string& widget_id) -> std::shared_ptr<Widget>;
-
-        /**
-         * <summary>
          * 设置控件树
          * </summary>
          * <param name="handle">窗口句柄</param>
@@ -119,6 +109,8 @@ namespace neko::engine {
             std::mutex render_lock;
             std::condition_variable render_notify;
             std::jthread render_thread;
+
+            Context context{};
 
             std::atomic_bool init{false};
             std::atomic_bool dirty;

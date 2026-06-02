@@ -5,6 +5,8 @@
 #include <array>
 #include <random>
 
+#include "../../Widget/Component/Animation.hpp"
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -255,9 +257,26 @@ DirectX11::~DirectX11() noexcept {
 auto DirectX11::draw_rect(Vec4<int> range, Color rgba, int thickness) -> void {
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    static std::uniform_real_distribution dist(0.0f, 1.0f);
 
-    float color[4] = {dist(gen), dist(gen), dist(gen), 1.0f};
+    static animation::EaseInOutAnimation r_anim(0.0f, 300);
+    static animation::EaseInOutAnimation g_anim(0.0f, 300);
+    static animation::EaseInOutAnimation b_anim(0.0f, 300);
+
+    if (!r_anim.is_done()) {
+        const float t = dist(gen);
+        r_anim.to_value(t);
+    }
+    if (!g_anim.is_done()) {
+        const float t = dist(gen);
+        g_anim.to_value(t);
+    }
+    if (!b_anim.is_done()) {
+        const float t = dist(gen);
+        b_anim.to_value(t);
+    }
+
+    const float color[4] = {r_anim.update(), g_anim.update(), b_anim.update(), 1.0f};
 
     context->ClearRenderTargetView(render_target_view.Get(), color);
 }
