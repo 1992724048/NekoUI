@@ -39,6 +39,14 @@ namespace neko::engine {
             return false;
         }
 
+        auto widget = widget_tree;
+        while (widget != nullptr) {
+            if (widget->child.load() == widget) {
+                return false;
+            }
+            widget = widget->child.load();
+        }
+
         auto& ins = backend_windows[handle];
         ins.dirty = true;
         ins.widget_tree = widget_tree;
@@ -89,7 +97,8 @@ namespace neko::engine {
     }
 
     auto Engine::render_process(ChildWindow& window) -> void {
-        while (auto widget = window.widget_tree.load()) {
+        auto widget = window.widget_tree.load();
+        while (widget != nullptr) {
             widget->draw();
             widget = widget->child.load();
         }

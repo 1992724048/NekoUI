@@ -23,6 +23,12 @@ auto main(int argc, char* argv[]) -> int {
     engine->add(window_ptr, backend_ptr);
     engine->add(window_ptr2, backend_ptr2);
 
+    const auto widget_tree = std::make_shared<widget::Widget>();
+    widget_tree->child = std::make_shared<widget::Widget>();
+    widget_tree->child.load()->child = std::make_shared<widget::Widget>();
+
+    engine->set_widget_tree(window_ptr->get_handle(), widget_tree);
+
     window::impl::Windows::get_msg();
     return 0;
 }

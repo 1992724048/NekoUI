@@ -10,6 +10,7 @@ namespace neko::widget {
      */
     class Widget {
     public:
+        virtual ~Widget() = default;
         std::string id_key;
         std::atomic<std::shared_ptr<Widget>> child;
 
