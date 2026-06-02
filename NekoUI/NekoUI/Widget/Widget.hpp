@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <memory>
+#include <string>
 
 namespace neko::widget {
     /**
@@ -8,6 +10,9 @@ namespace neko::widget {
      */
     class Widget {
     public:
-        
+        std::string id_key;
+        std::atomic<std::shared_ptr<Widget>> child;
+
+        virtual auto draw() -> void {};
     };
 } // namespace neko::widget

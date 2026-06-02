@@ -2,7 +2,10 @@
 #include "NekoUI/Engine/Engine.hpp"
 #include "NekoUI/Window/Windows/Windows.hpp"
 
-auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM param1, const LPARAM param2) -> LRESULT {
+static auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM param1, const LPARAM param2) -> LRESULT {
+    if (msg == WM_CLOSE) {
+        return DestroyWindow(hwnd);
+    }
     return DefWindowProcW(hwnd, msg, param1, param2);
 }
 

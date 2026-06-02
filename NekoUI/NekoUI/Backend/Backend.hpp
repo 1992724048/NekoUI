@@ -30,10 +30,12 @@ namespace neko::backend {
         virtual auto draw_text() -> void {}
         virtual auto draw_line() -> void {}
         virtual auto draw_triangle() -> void {}
-        virtual auto draw_rect() -> void {}
+        virtual auto draw_rect(Vec4<int> range, Color rgba, int thickness) -> void {}
         virtual auto draw_rect_fill() -> void {}
         virtual auto draw_circle_fill() -> void {}
         virtual auto draw_image() -> void {}
+
+        std::function<void()> render_callback;
     protected:
         Vec2<int> size{};
         std::shared_ptr<window::Window> window;

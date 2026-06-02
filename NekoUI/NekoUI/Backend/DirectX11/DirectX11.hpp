@@ -16,6 +16,7 @@ namespace neko::backend::impl {
         auto resize(Vec2<int> new_size) -> void override;
         auto submit() -> void override;
         ~DirectX11() noexcept override;
+        auto draw_rect(Vec4<int> range, Color rgba, int thickness) -> void override;
     private:
         UINT msaa_quality{0};
         D3D11_VIEWPORT screen_viewport{};

@@ -3,6 +3,7 @@
 #include "DirectX11.hpp"
 
 #include <array>
+#include <random>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -183,7 +184,11 @@ auto DirectX11::resize(const Vec2<int> new_size) -> void {
     HRESULT result{S_OK};
     ComPtr<ID3D11Texture2D> back_buffer;
 
-    result = swap_chain->ResizeBuffers(dxgi_factory2 != nullptr ? 3 : 1, static_cast<UINT>(size.x), static_cast<UINT>(size.y), DXGI_FORMAT_R8G8B8A8_UNORM, dxgi_factory2 != nullptr ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+    result = swap_chain->ResizeBuffers(dxgi_factory2 != nullptr ? 3 : 1,
+                                       static_cast<UINT>(size.x),
+                                       static_cast<UINT>(size.y),
+                                       DXGI_FORMAT_R8G8B8A8_UNORM,
+                                       dxgi_factory2 != nullptr ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
     assert(SUCCEEDED(result));
     result = swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(back_buffer.GetAddressOf()));
     assert(SUCCEEDED(result));
@@ -235,63 +240,8 @@ auto DirectX11::submit() -> void {
     context->ClearRenderTargetView(render_target_view.Get(), color.data());
     context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.F, 0);
 
-    // --- 三角形顶点数据 ---
-    struct Vertex {
-        DirectX::XMFLOAT3 pos;
-        DirectX::XMFLOAT4 color;
-    };
-    Vertex vertices[] = {{{0.f, 0.5f, 0.f}, {1, 0, 0, 1}}, {{0.5f, -0.5f, 0.f}, {0, 1, 0, 1}}, {{-0.5f, -0.5f, 0.f}, {0, 0, 1, 1}}};
-
-    D3D11_BUFFER_DESC vbd{};
-    vbd.Usage = D3D11_USAGE_DEFAULT;
-    vbd.ByteWidth = sizeof(vertices);
-    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    D3D11_SUBRESOURCE_DATA initData{};
-    initData.pSysMem = vertices;
-    ComPtr<ID3D11Buffer> vertex_buffer;
-    device->CreateBuffer(&vbd, &initData, vertex_buffer.GetAddressOf());
-
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-    context->IASetVertexBuffers(0, 1, vertex_buffer.GetAddressOf(), &stride, &offset);
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-    // --- 简单 HLSL shader ---
-    auto vs_src = "struct VS_IN { float3 pos : POSITION; float4 col : COLOR; };" "struct VS_OUT { float4 pos : SV_POSITION; float4 col : COLOR; };"
-            "VS_OUT main(VS_IN input) { VS_OUT output; output.pos = float4(input.pos, 1.0); output.col = input.col; return output; }";
-
-    auto ps_src = "struct PS_IN { float4 pos : SV_POSITION; float4 col : COLOR; };" "float4 main(PS_IN input) : SV_Target { return input.col; }";
-
-    ComPtr<ID3DBlob> vs_blob, ps_blob, error_blob;
-
-    auto res = D3DCompile(vs_src, strlen(vs_src), nullptr, nullptr, nullptr, "main", "vs_5_0", 0, 0, vs_blob.GetAddressOf(), error_blob.GetAddressOf());
-
-    if (FAILED(res)) {
-        OutputDebugStringA(static_cast<char*>(error_blob->GetBufferPointer()));
-        assert(false);
-    }
-    res = D3DCompile(ps_src, strlen(ps_src), nullptr, nullptr, nullptr, "main", "ps_5_0", 0, 0, ps_blob.GetAddressOf(), error_blob.GetAddressOf());
-
-    ComPtr<ID3D11VertexShader> vertex_shader;
-    ComPtr<ID3D11PixelShader> pixel_shader;
-    device->CreateVertexShader(vs_blob->GetBufferPointer(), vs_blob->GetBufferSize(), nullptr, vertex_shader.GetAddressOf());
-    device->CreatePixelShader(ps_blob->GetBufferPointer(), ps_blob->GetBufferSize(), nullptr, pixel_shader.GetAddressOf());
-
-    context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-    context->PSSetShader(pixel_shader.Get(), nullptr, 0);
-
-    // --- 输入布局 ---
-    D3D11_INPUT_ELEMENT_DESC layout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, pos), D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(Vertex, color), D3D11_INPUT_PER_VERTEX_DATA, 0}
-    };
-
-    ComPtr<ID3D11InputLayout> input_layout;
-    device->CreateInputLayout(layout, 2, vs_blob->GetBufferPointer(), vs_blob->GetBufferSize(), input_layout.GetAddressOf());
-    context->IASetInputLayout(input_layout.Get());
-
-    // --- 绘制 ---
-    context->Draw(3, 0);
+    draw_rect({}, {}, 0);
+    render_callback();
 
     swap_chain->Present(1, 0);
 }
@@ -300,4 +250,14 @@ DirectX11::~DirectX11() noexcept {
     if (context.Get() != nullptr) {
         context->ClearState();
     }
+}
+
+auto DirectX11::draw_rect(Vec4<int> range, Color rgba, int thickness) -> void {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    float color[4] = {dist(gen), dist(gen), dist(gen), 1.0f};
+
+    context->ClearRenderTargetView(render_target_view.Get(), color);
 }

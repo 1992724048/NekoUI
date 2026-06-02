@@ -86,6 +86,11 @@ namespace neko::window {
     };
 
     struct WindowState {
+        /**
+         * <summary>
+         * 窗口大小
+         * </summary>
+         */
         Vec2<int> window_size{.x = 0, .y = 0};
         /**
          * <summary>
@@ -98,7 +103,7 @@ namespace neko::window {
          * 是否第一次创建
          * </summary>
          */
-        bool first_created{true};
+        bool first_create{true};
         /**
          * <summary>
          * 是否销毁

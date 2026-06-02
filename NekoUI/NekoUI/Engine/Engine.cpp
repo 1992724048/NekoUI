@@ -13,43 +13,68 @@ namespace neko::engine {
         return !backend_windows.empty();
     }
 
-    auto Engine::msg_callback(const Handle handle, window::InputState& state) -> window::MsgResult {
-        std::shared_lock read_lock(mutex);
+    auto Engine::destroy() -> void {
+        std::unique_lock _(mutex);
+        backend_windows.clear();
+    }
+
+    auto Engine::get_widget(const Handle handle, const std::string& widget_id) -> std::shared_ptr<Widget> {
         if (handle == nullptr || !backend_windows.contains(handle)) {
-            return window::MsgResult::Ignore;
+            return nullptr;
+        }
+
+        const auto& ins = backend_windows[handle];
+        while (auto widget = ins.widget_tree.load()) {
+            if (widget_id == widget->id_key) {
+                return widget;
+            }
+            widget = widget->child.load();
+        }
+
+        return nullptr;
+    }
+
+    auto Engine::set_widget_tree(const Handle handle, const std::shared_ptr<Widget>& widget_tree) -> bool {
+        if (handle == nullptr || !backend_windows.contains(handle)) {
+            return false;
         }
 
         auto& ins = backend_windows[handle];
+        ins.dirty = true;
+        ins.widget_tree = widget_tree;
+        return true;
+    }
+
+    auto Engine::msg_callback(ChildWindow& child, InputState& state) -> MsgResult {
         if (state.window.destroy) {
-            read_lock.unlock();
-            if (ins.render_thread.request_stop() && ins.render_thread.joinable()) {
-                ins.notification.notify_one();
-                ins.render_thread.join();
-                remove(handle);
+            if (child.render_thread.request_stop() && child.render_thread.joinable()) {
+                child.render_notify.notify_one();
+                child.render_thread.join();
             }
-            return window::MsgResult::Dispose;
+            remove(child.window->get_handle());
+            return MsgResult::Dispose;
         }
-        if (!state.window.first_created && !ins.init) {
-            ins.notification.notify_one();
+        if (!state.window.first_create && !child.init) {
+            child.render_notify.notify_one();
         }
-        if (state.window.first_created) {
-            ins.render_thread = std::jthread(render_thread, std::ref(ins));
-            state.window.first_created = false;
+        if (state.window.first_create) {
+            child.render_thread = std::jthread(render_thread, std::ref(child));
+            state.window.first_create = false;
         }
         if (state.window.resized) {
-            ins.dirty = true;
-            ins.notification.notify_one();
+            child.dirty = true;
+            child.render_notify.notify_one();
             state.window.resized = false;
         }
 
-        return window::MsgResult::Ignore;
+        return msg_process(child);
     }
 
     auto Engine::render_thread(const std::stop_token& token, ChildWindow& window) -> void {
         while (!token.stop_requested()) {
             if (window.animation == 0 && !window.dirty) {
-                std::unique_lock lock(window.lock);
-                window.notification.wait(lock);
+                std::unique_lock lock(window.render_lock);
+                window.render_notify.wait(lock);
             }
 
             if (token.stop_requested()) {
@@ -57,13 +82,21 @@ namespace neko::engine {
             }
 
             window.backend->resize(window.window->get_size());
-            ui_process(window);
             window.backend->submit();
 
             window.init = true;
-            window.dirty = false;
         }
     }
 
-    auto Engine::ui_process(ChildWindow& window) -> void {}
+    auto Engine::render_process(ChildWindow& window) -> void {
+        while (auto widget = window.widget_tree.load()) {
+            widget->draw();
+            widget = widget->child.load();
+        }
+        window.dirty = false;
+    }
+
+    auto Engine::msg_process(ChildWindow& window) -> MsgResult {
+        return MsgResult::Ignore;
+    }
 } // namespace neko::engine
