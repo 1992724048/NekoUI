@@ -52,7 +52,7 @@ namespace neko::engine {
             state.window.resized = false;
         }
 
-        return msg_process(child);
+        return msg_process(child, state);
     }
 
     auto Engine::render_thread(const std::stop_token& token, ChildWindow& window) -> void {
@@ -74,17 +74,27 @@ namespace neko::engine {
     }
 
     auto Engine::render_process(ChildWindow& window) -> void {
-        const auto [x, y] = window.window->get_size();
-        window.context.body_range = {.x = 0, .y = 0, .z = x, .w = y};
-
         const auto widget = window.widget_tree.load();
         if (widget) {
-            widget->draw(window.context);
+            widget->draw(window.backend);
         }
         window.dirty = false;
     }
 
-    auto Engine::msg_process(ChildWindow& window) -> MsgResult {
+    auto Engine::msg_process(ChildWindow& window, InputState& state) -> MsgResult {
         return MsgResult::Ignore;
+    }
+
+    auto Engine::set_state(ChildWindow& window) -> void {
+        window.dirty = true;
+        const auto tree = window.widget_tree.load();
+        if (tree == nullptr) {
+            return;
+        }
+        const auto& childs = tree->children();
+        std::unique_lock _(window.keys_lock);
+        for (const auto& child : childs) {
+            window.key2widget[child->id()] = child;
+        }
     }
 } // namespace neko::engine

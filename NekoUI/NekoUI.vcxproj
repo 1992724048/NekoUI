@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>Intel C++ Compiler 2026</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <InterproceduralOptimization>true</InterproceduralOptimization>
     <UseInteloneTBB>true</UseInteloneTBB>
@@ -50,7 +50,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>Intel C++ Compiler 2026</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <InterproceduralOptimization>true</InterproceduralOptimization>
@@ -122,7 +122,7 @@
       <StringPooling>false</StringPooling>
       <ExceptionHandling>Async</ExceptionHandling>
       <ControlFlowGuard>false</ControlFlowGuard>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>ARROWLAKE-S</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
       <GuardEHContMetadata>false</GuardEHContMetadata>
       <GenerateAlternateCodePaths>ARROWLAKE-S</GenerateAlternateCodePaths>
@@ -153,7 +153,7 @@
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Async</ExceptionHandling>
       <ControlFlowGuard>false</ControlFlowGuard>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>ARROWLAKE-S</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
       <GuardEHContMetadata>false</GuardEHContMetadata>
       <GenerateAlternateCodePaths>ARROWLAKE-S</GenerateAlternateCodePaths>
@@ -162,6 +162,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <Optimization>MaxSpeedHighLevel</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

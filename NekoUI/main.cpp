@@ -1,5 +1,6 @@
 ﻿#include "NekoUI/Backend/DirectX11/DirectX11.hpp"
 #include "NekoUI/Engine/Engine.hpp"
+#include "NekoUI/Widget/Button/Button.hpp"
 #include "NekoUI/Window/Windows/Windows.hpp"
 
 static auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM param1, const LPARAM param2) -> LRESULT {
@@ -23,7 +24,7 @@ auto main(int argc, char* argv[]) -> int {
     engine->add(window_ptr, backend_ptr);
     engine->add(window_ptr2, backend_ptr2);
 
-    const auto widget_tree = std::make_shared<widget::Widget>();
+    const auto widget_tree = std::make_shared<widget::Button>();
 
     engine->set_widget_tree(window_ptr->get_handle(), widget_tree);
 

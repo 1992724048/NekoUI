@@ -11,6 +11,6 @@ namespace neko::widget {
         auto mouse_button(Vec2<int> pos, std::bitset<7> state) -> void override;
         auto mouse_wheel(Vec2<int> pos, int wheel) -> void override;
 
-        auto draw(engine::Context context) -> void override;
+        auto draw(std::shared_ptr<backend::Backend>& backend) -> void override;
     };
 } // namespace neko::widget

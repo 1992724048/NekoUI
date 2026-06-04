@@ -48,15 +48,39 @@ namespace neko::animation {
 
         /**
          * <summary>
+         * 值
+         * </summary>
+         */
+        operator T() {
+            return update();
+        }
+
+        /**
+         * <summary>
          * 设置变动值
          * </summary>
          * <param name="value">值</param>
+         * <param name="duration">时间</param>
          */
-        auto to_value(T value) -> void {
+        auto to_value(T value, std::optional<TimeType> duration = std::nullopt) -> void {
             start = std::chrono::high_resolution_clock::now();
             start_value = now_value;
             new_value = value;
+            if (duration.has_value()) {
+                this->duration = duration.value();
+            }
             change = true;
+        }
+
+        /**
+         * <summary>
+         * 设置变动值
+         * </summary>
+         * <param name="value">值</param>
+         * <param name="duration">时间</param>
+         */
+        auto operator()(T value, std::optional<TimeType> duration = std::nullopt) -> void {
+            return to_value(value, duration);
         }
 
         /**
@@ -86,7 +110,7 @@ namespace neko::animation {
          * <returns>结果</returns>
          */
         [[nodiscard]] auto is_done() const -> bool {
-            return change;
+            return !change;
         }
     };
 

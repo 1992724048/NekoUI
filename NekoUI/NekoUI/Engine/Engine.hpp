@@ -64,7 +64,10 @@ namespace neko::engine {
             ins.backend = backend;
 
             window->msg_callback = std::bind(&Engine::msg_callback, this, std::ref(ins), std::ref(window->state));
-            backend->render_callback = std::bind(&Engine::render_process, std::ref(ins));
+            backend->render_callback = std::bind(render_process, std::ref(ins));
+            ins.context.set_state = std::bind(set_state, std::ref(ins));
+
+            set_state(ins);
             return true;
         }
 
@@ -106,6 +109,9 @@ namespace neko::engine {
             std::shared_ptr<backend::Backend> backend;
             std::shared_ptr<Window> window;
 
+            std::mutex keys_lock;
+            std::unordered_map<std::string, std::shared_ptr<Widget>> key2widget;
+
             std::mutex render_lock;
             std::condition_variable render_notify;
             std::jthread render_thread;
@@ -121,7 +127,8 @@ namespace neko::engine {
         auto msg_callback(ChildWindow& child, InputState& state) -> MsgResult;
         static auto render_thread(const std::stop_token& token, ChildWindow& window) -> void;
         static auto render_process(ChildWindow& window) -> void;
-        static auto msg_process(ChildWindow& window) -> MsgResult;
+        static auto msg_process(ChildWindow& window, InputState& state) -> MsgResult;
+        static auto set_state(ChildWindow& window) -> void;
 
         std::shared_mutex mutex;
         std::unordered_map<Handle, ChildWindow> backend_windows;

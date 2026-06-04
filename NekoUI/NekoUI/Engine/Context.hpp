@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -10,7 +11,6 @@ namespace neko::engine {
     using namespace type;
 
     struct Context {
-        Vec4<int> body_range;
-        std::vector<std::shared_ptr<widget::Widget>> stack;
+        std::function<void()> set_state;
     };
 } // namespace neko::engine
