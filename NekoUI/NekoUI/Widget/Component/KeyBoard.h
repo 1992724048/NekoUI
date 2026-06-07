@@ -1,10 +1,13 @@
 ﻿#pragma once
 #include <bitset>
+#include "Event.hpp"
 
 namespace neko::event {
-    class KeyBoard {
+    using namespace type;
+
+    class KeyBoard : Event {
     public:
-        virtual ~KeyBoard() = default;
+        ~KeyBoard() override = default;
         virtual auto keyboard_button(std::bitset<108> state) -> void {}
     };
 } // namespace neko::event

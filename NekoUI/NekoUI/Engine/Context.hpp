@@ -11,6 +11,9 @@ namespace neko::engine {
     using namespace type;
 
     struct Context {
-        std::function<void()> set_state;
+        std::function<void()> rebuild;
+        std::function<void()> rerender;
+        std::function<void()> animation_start;
+        std::function<void()> animation_end;
     };
 } // namespace neko::engine

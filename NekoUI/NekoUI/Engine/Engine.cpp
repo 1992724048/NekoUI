@@ -24,7 +24,6 @@ namespace neko::engine {
         }
 
         auto& ins = backend_windows[handle];
-        ins.dirty = true;
         ins.widget_tree = widget_tree;
         return true;
     }
@@ -39,7 +38,6 @@ namespace neko::engine {
             return MsgResult::Dispose;
         }
         if (!state.window.first_create && !child.init) {
-            child.dirty = true;
             child.render_notify.notify_one();
         }
         if (state.window.first_create) {
@@ -47,7 +45,6 @@ namespace neko::engine {
             state.window.first_create = false;
         }
         if (state.window.resized) {
-            child.dirty = true;
             child.render_notify.notify_one();
             state.window.resized = false;
         }
@@ -57,7 +54,7 @@ namespace neko::engine {
 
     auto Engine::render_thread(const std::stop_token& token, ChildWindow& window) -> void {
         while (!token.stop_requested()) {
-            if (window.animation == 0 && !window.dirty) {
+            if (window.animation == 0) {
                 std::unique_lock lock(window.render_lock);
                 window.render_notify.wait(lock);
             }
@@ -75,26 +72,39 @@ namespace neko::engine {
 
     auto Engine::render_process(ChildWindow& window) -> void {
         const auto widget = window.widget_tree.load();
-        if (widget) {
+        if (widget && widget->dirty()) {
             widget->draw(window.backend);
         }
-        window.dirty = false;
     }
 
     auto Engine::msg_process(ChildWindow& window, InputState& state) -> MsgResult {
         return MsgResult::Ignore;
     }
 
-    auto Engine::set_state(ChildWindow& window) -> void {
-        window.dirty = true;
+    auto Engine::rebuild(ChildWindow& window) -> void {
         const auto tree = window.widget_tree.load();
         if (tree == nullptr) {
             return;
         }
+
         const auto& childs = tree->children();
+        std::unique_lock _(window.stack_lock);
+        window.widget_stack = childs;
+
         std::unique_lock _(window.keys_lock);
+        window.key2widget.clear();
         for (const auto& child : childs) {
             window.key2widget[child->id()] = child;
         }
+
+        window.render_notify.notify_one();
+    }
+
+    auto Engine::animation_count(ChildWindow& window, const std::uint16_t num) -> void {
+        window.animation += num;
+    }
+
+    auto Engine::rerender(ChildWindow& window) -> void {
+        window.render_notify.notify_one();
     }
 } // namespace neko::engine

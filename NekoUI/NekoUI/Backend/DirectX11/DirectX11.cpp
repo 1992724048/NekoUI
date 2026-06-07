@@ -3,9 +3,6 @@
 #include "DirectX11.hpp"
 
 #include <array>
-#include <random>
-
-#include "../../Widget/Component/Animation.hpp"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")

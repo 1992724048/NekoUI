@@ -187,6 +187,7 @@
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\CSS.hpp" />
+    <ClInclude Include="NekoUI\Widget\Component\Event.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\KeyBoard.h" />
     <ClInclude Include="NekoUI\Widget\Component\Mouse.hpp" />
     <ClInclude Include="NekoUI\Window\Window.hpp" />

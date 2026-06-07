@@ -6,11 +6,7 @@
 namespace neko::backend {
     using namespace neko::type;
 
-    /**
-     * <summary>
-     * 渲染后端
-     * </summary>
-     */
+    //! @brief 渲染后端
     class Backend {
     public:
         using Handle = void*;

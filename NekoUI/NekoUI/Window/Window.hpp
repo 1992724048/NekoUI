@@ -10,18 +10,10 @@
 namespace neko::window {
     using namespace neko::type;
 
-    /**
-     * <summary>
-     * 消息结果
-     * </summary>
-     */
+    //! @brief 消息处理结果
     enum class MsgResult : std::uint8_t { Dispose, Ignore };
 
-    /**
-     * <summary>
-     * 鼠标状态索引
-     * </summary>
-     */
+    //! @brief 鼠标状态索引
     enum class MouseKey : std::uint8_t {
         RightButton,
         LeftButton,
@@ -32,11 +24,7 @@ namespace neko::window {
         WheelUp
     };
 
-    /**
-     * <summary>
-     * 键盘状态索引
-     * </summary>
-     */
+    //! @brief 键盘状态索引
     enum class KeyboardKey : std::uint8_t {
         A,
         B,
@@ -66,68 +54,39 @@ namespace neko::window {
         Z
     };
 
-    /**
-     * <summary>
-     * 鼠标状态
-     * </summary>
-     */
+    //! @brief 鼠标状态
     struct MouseState {
         std::bitset<7> keys;
         int wheel, x, y;
     };
 
-    /**
-     * <summary>
-     * 键盘状态
-     * </summary>
-     */
+    //! @brief 键盘状态
     struct KeyboardState {
         std::bitset<108> keys;
     };
 
     struct WindowState {
-        /**
-         * <summary>
-         * 窗口大小
-         * </summary>
-         */
+        //! @brief 窗口大小
         Vec2<int> window_size{.x = 0, .y = 0};
-        /**
-         * <summary>
-         * 大小是否改变
-         * </summary>
-         */
+
+        //! @brief 大小是否改变
         bool resized{false};
-        /**
-         * <summary>
-         * 是否第一次创建
-         * </summary>
-         */
+
+        //! @brief 是否第一次创建
         bool first_create{true};
-        /**
-         * <summary>
-         * 是否销毁
-         * </summary>
-         */
+
+        //! @brief 是否销毁
         bool destroy{false};
     };
 
-    /**
-     * <summary>
-     * 输入状态
-     * </summary>
-     */
+    //! @brief 输入状态
     struct InputState {
         MouseState mouse;
         KeyboardState keyboard;
         WindowState window;
     };
 
-    /**
-     * <summary>
-     * 窗口对象
-     * </summary>
-     */
+    //! @brief 窗口对象
     class Window {
     public:
         virtual ~Window() = default;

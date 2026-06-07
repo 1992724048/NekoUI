@@ -2,21 +2,21 @@
 
 #pragma once
 #include <chrono>
+#include <numbers>
 
 namespace neko::animation {
-    /**
-     * <summary>
-     * 动画基类
-     * </summary>
-     */
+    //! @brief 动画基类
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型 
+    //! @note https://easings.net/
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class Animation {
     protected:
+        TimeType duration;
         T now_value;
         T new_value;
         T start_value;
         bool change{false};
-        TimeType duration;
 
         std::chrono::time_point<std::chrono::steady_clock> start{};
     public:
@@ -35,33 +35,21 @@ namespace neko::animation {
 
         virtual ~Animation() = default;
 
-        /**
-         * <summary>
-         * 更新并获取当前变换值
-         * </summary>
-         * <returns>值</returns>
-         */
+        //! @brief 更新并获取当前变换值
+        //! @return 值
         virtual auto update() -> T& {
             change = false;
             return now_value = new_value;
         }
 
-        /**
-         * <summary>
-         * 值
-         * </summary>
-         */
+        //! @brief 值
         operator T() {
             return update();
         }
 
-        /**
-         * <summary>
-         * 设置变动值
-         * </summary>
-         * <param name="value">值</param>
-         * <param name="duration">时间</param>
-         */
+        //! @brief 设置变动值
+        //! @param value 值
+        //! @param duration 时间
         auto to_value(T value, std::optional<TimeType> duration = std::nullopt) -> void {
             start = std::chrono::high_resolution_clock::now();
             start_value = now_value;
@@ -72,23 +60,15 @@ namespace neko::animation {
             change = true;
         }
 
-        /**
-         * <summary>
-         * 设置变动值
-         * </summary>
-         * <param name="value">值</param>
-         * <param name="duration">时间</param>
-         */
+        //! @brief 设置变动值
+        //! @param value 值
+        //! @param duration 时间
         auto operator()(T value, std::optional<TimeType> duration = std::nullopt) -> void {
             return to_value(value, duration);
         }
 
-        /**
-         * <summary>
-         * 获取进度
-         * </summary>
-         * <returns>结果</returns>
-         */
+        //! @brief 获取进度
+        //! @return 百分比
         auto progress() -> float {
             const auto now = std::chrono::high_resolution_clock::now();
             auto elapsed = std::chrono::duration_cast<TimeType>(now - start);
@@ -103,33 +83,24 @@ namespace neko::animation {
             return static_cast<float>(elapsed.count()) / static_cast<float>(duration.count());
         }
 
-        /**
-         * <summary>
-         * 是否完成
-         * </summary>
-         * <returns>结果</returns>
-         */
+        //! @brief 是否完成
+        //! @return true: 完成动画 \n false: 播放动画
         [[nodiscard]] auto is_done() const -> bool {
             return !change;
         }
     };
 
-    /**
-     * <summary>
-     * 线性动画
-     * </summary>
-     */
+    //! @brief 线性动画
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class LinearAnimation final : public Animation<T, TimeType> {
     public:
         explicit LinearAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
-        /**
-         * <summary>
-         * 更新并获取当前变换值
-         * </summary>
-         * <returns>值</returns>
-         */
+        //! @brief 更新并获取当前变换值
+        //! @return 值
         auto update() -> T& override {
             if (this->change) {
                 float process = this->progress();
@@ -139,26 +110,21 @@ namespace neko::animation {
         }
     };
 
-    /**
-     * <summary>
-     * EaseInOut
-     * </summary>
-     */
+    //! @brief EaseInOut
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
     template<typename T, typename TimeType = std::chrono::milliseconds>
-    class EaseInOutAnimation final : public Animation<T, TimeType> {
+    class EaseInOutSineAnimation final : public Animation<T, TimeType> {
     public:
-        explicit EaseInOutAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+        explicit EaseInOutSineAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
-        /**
-         * <summary>
-         * 更新并获取当前变换值
-         * </summary>
-         * <returns>值</returns>
-         */
+        //! @brief 更新并获取当前变换值
+        //! @return 值
         auto update() -> T& override {
             if (this->change) {
                 const float process = this->progress();
-                float eased = process < 0.5F ? 4.0F * process * process * process : 1.0F - (std::pow((-2.0F * process) + 2.0F, 3.0F) / 2.0F);
+                const float eased = (1.0F - std::cos(std::numbers::pi_v<float> * process)) * 0.5F;
                 this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
             }
             return this->now_value;

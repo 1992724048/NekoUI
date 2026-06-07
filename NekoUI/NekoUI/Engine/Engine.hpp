@@ -1,9 +1,8 @@
 ﻿#pragma once
 #include <memory>
-#include <optional>
-#include <queue>
 #include <shared_mutex>
 #include <string>
+#include <thread>
 #include <unordered_map>
 
 #include "../Type.hpp"
@@ -29,24 +28,18 @@ namespace neko::engine {
         } -> std::convertible_to<std::function<MsgResult()>>;
     };
 
-    /**
-     * <summary>
-     * 控件处理引擎
-     * </summary>
-     */
+    //! @brief 控件处理引擎
     class Engine {
     public:
         Engine() = default;
         ~Engine() = default;
 
-        /**
-         * <summary>
-         * 添加窗口
-         * </summary>
-         * <param name="window">窗口对象</param>
-         * <param name="backend">后端对象</param>
-         * <returns>结果</returns>
-         */
+        //! @brief 添加窗口
+        //! @tparam W 约束
+        //! @tparam B 约束
+        //! @param window 窗口对象
+        //! @param backend 后端对象
+        //! @return 结果
         template<WindowsType W, BackendType B>
         auto add(std::shared_ptr<W> window, std::shared_ptr<B> backend) -> bool {
             if (window == nullptr || backend == nullptr) {
@@ -65,44 +58,30 @@ namespace neko::engine {
 
             window->msg_callback = std::bind(&Engine::msg_callback, this, std::ref(ins), std::ref(window->state));
             backend->render_callback = std::bind(render_process, std::ref(ins));
-            ins.context.set_state = std::bind(set_state, std::ref(ins));
+            ins.context.rebuild = std::bind(rebuild, std::ref(ins));
+            ins.context.animation_start = std::bind(animation_count, std::ref(ins), 1);
+            ins.context.animation_end = std::bind(animation_count, std::ref(ins), -1);
 
-            set_state(ins);
+            rebuild(ins);
             return true;
         }
 
-        /**
-         * <summary>
-         * 移除窗口
-         * </summary>
-         * <param name="handle">窗口句柄</param>
-         * <returns>结果</returns>
-         */
+        //! @brief 移除窗口
+        //! @param handle 窗口句柄
+        //! @return true: 成功 \n false: 失败
         auto remove(Handle handle) -> bool;
 
-        /**
-         * <summary>
-         * 是否可用
-         * </summary>
-         * <returns>结果</returns>
-         */
+        //! @brief 是否可用
+        //! @return true: 可用 \n false: 不可用
         [[nodiscard]] auto is_ready() -> bool;
 
-        /**
-         * <summary>
-         * 销毁引擎资源
-         * </summary>
-         */
+        //! @brief 销毁引擎资源
         auto destroy() -> void;
 
-        /**
-         * <summary>
-         * 设置控件树
-         * </summary>
-         * <param name="handle">窗口句柄</param>
-         * <param name="widget_tree">控件树对象</param>
-         * <returns>是否成功</returns>
-         */
+        //! @brief 设置控件树
+        //! @param handle 窗口句柄
+        //! @param widget_tree 控件树对象
+        //! @return true: 成功 \n false: 失败
         auto set_widget_tree(Handle handle, const std::shared_ptr<Widget>& widget_tree) -> bool;
     private:
         struct ChildWindow {
@@ -112,6 +91,12 @@ namespace neko::engine {
             std::mutex keys_lock;
             std::unordered_map<std::string, std::shared_ptr<Widget>> key2widget;
 
+            std::mutex stack_lock;
+            std::vector<std::shared_ptr<Widget>> widget_stack;
+
+            std::mutex event_lock;
+            std::vector<std::shared_ptr<Widget>> event_stack;
+
             std::mutex render_lock;
             std::condition_variable render_notify;
             std::jthread render_thread;
@@ -119,8 +104,8 @@ namespace neko::engine {
             Context context{};
 
             std::atomic_bool init{false};
-            std::atomic_bool dirty;
-            std::atomic_int16_t animation;
+            std::atomic_uint16_t animation;
+
             std::atomic<std::shared_ptr<Widget>> widget_tree;
         };
 
@@ -128,7 +113,9 @@ namespace neko::engine {
         static auto render_thread(const std::stop_token& token, ChildWindow& window) -> void;
         static auto render_process(ChildWindow& window) -> void;
         static auto msg_process(ChildWindow& window, InputState& state) -> MsgResult;
-        static auto set_state(ChildWindow& window) -> void;
+        static auto rebuild(ChildWindow& window) -> void;
+        static auto animation_count(ChildWindow& window, std::uint16_t num) -> void;
+        static auto rerender(ChildWindow& window) -> void;
 
         std::shared_mutex mutex;
         std::unordered_map<Handle, ChildWindow> backend_windows;
