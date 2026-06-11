@@ -34,7 +34,7 @@ namespace neko::widget {
         }
 
         virtual ~Widget() = default;
-        virtual auto draw(std::shared_ptr<backend::Backend>& backend) -> void {}
+        virtual auto draw(engine::Context& context, std::shared_ptr<backend::Backend>& backend) -> void {}
         virtual auto update(engine::Context& context) -> void {}
 
         //! @brief 获取子控件

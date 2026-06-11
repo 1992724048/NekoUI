@@ -13,27 +13,26 @@ namespace neko::backend {
 
         virtual ~Backend() = default;
 
-        [[nodiscard]] auto get_window_handle() const -> Handle {
-            if (window == nullptr) {
-                return nullptr;
-            }
-            return window->get_handle();
+        virtual auto get_handle() -> Handle {
+            return nullptr;
         }
 
-        virtual auto resize(Vec2<int> new_size) -> void {}
+        virtual auto resize(Handle window_handle, Vec2<int> new_size) -> void {}
 
-        virtual auto submit() -> void {}
-        virtual auto draw_text() -> void {}
-        virtual auto draw_line() -> void {}
-        virtual auto draw_triangle() -> void {}
-        virtual auto draw_rect(Vec4<int> range, Color rgba, int thickness) -> void {}
-        virtual auto draw_rect_fill() -> void {}
-        virtual auto draw_circle_fill() -> void {}
-        virtual auto draw_image() -> void {}
+        virtual auto attach(const std::shared_ptr<window::Window>& window) -> bool {
+            return false;
+        }
+
+        virtual auto submit(Handle window_handle) -> void {}
+
+        virtual auto draw_text(Handle window_handle) -> void {}
+        virtual auto draw_line(Handle window_handle) -> void {}
+        virtual auto draw_triangle(Handle window_handle) -> void {}
+        virtual auto draw_rect(Handle window_handle, Vec4<int> range, Color rgba, int thickness) -> void {}
+        virtual auto draw_rect_fill(Handle window_handle) -> void {}
+        virtual auto draw_circle_fill(Handle window_handle) -> void {}
+        virtual auto draw_image(Handle window_handle) -> void {}
 
         std::function<void()> render_callback;
-    protected:
-        Vec2<int> size{};
-        std::shared_ptr<window::Window> window;
     };
 } // namespace neko::backend

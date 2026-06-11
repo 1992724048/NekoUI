@@ -1,11 +1,34 @@
 ﻿#include "Engine.hpp"
 
+#include <stack>
 #include <stdexcept>
 
 namespace neko::engine {
-    auto Engine::remove(const Handle handle) -> bool {
+    auto Engine::remove(const Handle backend_handle, const Handle windows_handle) -> bool {
         std::unique_lock _(mutex);
-        return backend_windows.erase(handle) != 0U;
+        if (backend_handle == nullptr) {
+            return false;
+        }
+
+        if (!backend_windows.contains(backend_handle)) {
+            return false;
+        }
+
+        if (windows_handle == nullptr) {
+            return backend_windows.erase(backend_handle) != 0U;
+        }
+
+        auto& backend = backend_windows[backend_handle];
+        if (!backend.contains(windows_handle)) {
+            return false;
+        }
+
+        auto& window = backend[windows_handle];
+        if (window.render_thread.request_stop() && window.render_thread.joinable()) {
+            window.render_notify.notify_one();
+            window.render_thread.join();
+        }
+        return backend.erase(windows_handle) != 0U;
     }
 
     auto Engine::is_ready() -> bool {
@@ -29,14 +52,6 @@ namespace neko::engine {
     }
 
     auto Engine::msg_callback(ChildWindow& child, InputState& state) -> MsgResult {
-        if (state.window.destroy) {
-            if (child.render_thread.request_stop() && child.render_thread.joinable()) {
-                child.render_notify.notify_one();
-                child.render_thread.join();
-            }
-            remove(child.window->get_handle());
-            return MsgResult::Dispose;
-        }
         if (!state.window.first_create && !child.init) {
             child.render_notify.notify_one();
         }
@@ -72,8 +87,8 @@ namespace neko::engine {
 
     auto Engine::render_process(ChildWindow& window) -> void {
         const auto widget = window.widget_tree.load();
-        if (widget && widget->dirty()) {
-            widget->draw(window.backend);
+        if (widget) {
+            widget->draw(window.context, window.backend);
         }
     }
 
@@ -88,8 +103,6 @@ namespace neko::engine {
         }
 
         const auto& childs = tree->children();
-        std::unique_lock _(window.stack_lock);
-        window.widget_stack = childs;
 
         std::unique_lock _(window.keys_lock);
         window.key2widget.clear();

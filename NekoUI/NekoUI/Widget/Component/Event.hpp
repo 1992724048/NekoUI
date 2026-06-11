@@ -8,8 +8,8 @@ namespace neko::event {
     public:
         virtual ~Event() = default;
 
-        virtual auto event_range() -> Vec4<int> {
-            return {.x = 0, .y = 0, .z = 0, .w = 0};
+        virtual auto is_hovered(Vec2<int> mouse_pos) -> bool {
+            return false;
         }
     };
 } // namespace neko::event

@@ -17,7 +17,7 @@ auto Button::mouse_wheel(const Vec2<int> pos, const int wheel) -> void {
     Mouse::mouse_wheel(pos, wheel);
 }
 
-auto Button::draw(std::shared_ptr<backend::Backend>& backend) -> void {
+auto Button::draw(engine::Context& context, std::shared_ptr<backend::Backend>& backend) -> void {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     static std::uniform_int_distribution dist(0, 255);
@@ -39,5 +39,5 @@ auto Button::draw(std::shared_ptr<backend::Backend>& backend) -> void {
         b_anim(t);
     }
 
-    backend->draw_rect({0, 0, 0, 0}, {r_anim, g_anim, b_anim, 255}, 1);
+    backend->draw_rect({.x = 0, .y = 0, .z = 0, .w = 0}, {r_anim, g_anim, b_anim, 255}, 1);
 }

@@ -74,9 +74,6 @@ namespace neko::window {
 
         //! @brief 是否第一次创建
         bool first_create{true};
-
-        //! @brief 是否销毁
-        bool destroy{false};
     };
 
     //! @brief 输入状态
@@ -100,6 +97,7 @@ namespace neko::window {
         }
 
         std::function<MsgResult()> msg_callback;
+        std::function<void()> destroy_callback;
         InputState state{};
     };
 } // namespace neko::window

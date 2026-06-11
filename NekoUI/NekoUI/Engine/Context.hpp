@@ -9,6 +9,7 @@ namespace neko::widget {
 
 namespace neko::engine {
     using namespace type;
+    using namespace widget;
 
     struct Context {
         std::function<void()> rebuild;

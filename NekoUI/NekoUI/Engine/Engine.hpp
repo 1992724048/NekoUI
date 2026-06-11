@@ -34,15 +34,13 @@ namespace neko::engine {
         Engine() = default;
         ~Engine() = default;
 
-        //! @brief 添加窗口
-        //! @tparam W 约束
+        //! @brief 添加后端
         //! @tparam B 约束
-        //! @param window 窗口对象
         //! @param backend 后端对象
         //! @return 结果
-        template<WindowsType W, BackendType B>
-        auto add(std::shared_ptr<W> window, std::shared_ptr<B> backend) -> bool {
-            if (window == nullptr || backend == nullptr) {
+        template<BackendType B>
+        auto add_backend(std::shared_ptr<B> backend) -> bool {
+            if (backend == nullptr) {
                 return false;
             }
             const Handle window_handle = window->get_handle();
@@ -66,10 +64,11 @@ namespace neko::engine {
             return true;
         }
 
-        //! @brief 移除窗口
-        //! @param handle 窗口句柄
+        //! @brief 移除窗口或后端
+        //! @param backend_handle 后端句柄 (如果窗口句柄为空则删除整个后端)
+        //! @param windows_handle 窗口句柄 (可选)
         //! @return true: 成功 \n false: 失败
-        auto remove(Handle handle) -> bool;
+        auto remove(Handle backend_handle, Handle windows_handle = nullptr) -> bool;
 
         //! @brief 是否可用
         //! @return true: 可用 \n false: 不可用
@@ -91,9 +90,6 @@ namespace neko::engine {
             std::mutex keys_lock;
             std::unordered_map<std::string, std::shared_ptr<Widget>> key2widget;
 
-            std::mutex stack_lock;
-            std::vector<std::shared_ptr<Widget>> widget_stack;
-
             std::mutex event_lock;
             std::vector<std::shared_ptr<Widget>> event_stack;
 
@@ -103,13 +99,13 @@ namespace neko::engine {
 
             Context context{};
 
+            std::atomic_int animation;
             std::atomic_bool init{false};
-            std::atomic_uint16_t animation;
 
             std::atomic<std::shared_ptr<Widget>> widget_tree;
         };
 
-        auto msg_callback(ChildWindow& child, InputState& state) -> MsgResult;
+        static auto msg_callback(ChildWindow& child, InputState& state) -> MsgResult;
         static auto render_thread(const std::stop_token& token, ChildWindow& window) -> void;
         static auto render_process(ChildWindow& window) -> void;
         static auto msg_process(ChildWindow& window, InputState& state) -> MsgResult;
@@ -118,6 +114,6 @@ namespace neko::engine {
         static auto rerender(ChildWindow& window) -> void;
 
         std::shared_mutex mutex;
-        std::unordered_map<Handle, ChildWindow> backend_windows;
+        std::unordered_map<Handle, std::unordered_map<Handle, ChildWindow>> backend_windows;
     };
 } // namespace neko::engine
