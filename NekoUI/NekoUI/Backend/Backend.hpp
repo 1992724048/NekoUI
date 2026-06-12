@@ -7,31 +7,28 @@ namespace neko::backend {
     using namespace neko::type;
 
     //! @brief 渲染后端
-    class Backend {
+    //! @note vulkan only
+    class Backend final {
     public:
-        using Handle = void*;
+        Backend();
+        ~Backend();
 
-        virtual ~Backend() = default;
+        auto get_handle() -> Handle;
 
-        virtual auto get_handle() -> Handle {
-            return nullptr;
-        }
+        auto resize(Handle window_handle, Vec2<int> new_size) -> void;
 
-        virtual auto resize(Handle window_handle, Vec2<int> new_size) -> void {}
+        auto attach(const std::shared_ptr<window::Window>& window) -> bool;
+        auto deattach(const std::shared_ptr<window::Window>& window) -> bool;
 
-        virtual auto attach(const std::shared_ptr<window::Window>& window) -> bool {
-            return false;
-        }
+        auto submit(Handle window_handle) -> void;
 
-        virtual auto submit(Handle window_handle) -> void {}
-
-        virtual auto draw_text(Handle window_handle) -> void {}
-        virtual auto draw_line(Handle window_handle) -> void {}
-        virtual auto draw_triangle(Handle window_handle) -> void {}
-        virtual auto draw_rect(Handle window_handle, Vec4<int> range, Color rgba, int thickness) -> void {}
-        virtual auto draw_rect_fill(Handle window_handle) -> void {}
-        virtual auto draw_circle_fill(Handle window_handle) -> void {}
-        virtual auto draw_image(Handle window_handle) -> void {}
+        auto draw_text(Handle window_handle) -> void;
+        auto draw_line(Handle window_handle) -> void;
+        auto draw_triangle(Handle window_handle) -> void;
+        auto draw_rect(Handle window_handle, Vec4<int> range, Color rgba, int thickness) -> void;
+        auto draw_rect_fill(Handle window_handle) -> void;
+        auto draw_circle_fill(Handle window_handle) -> void;
+        auto draw_image(Handle window_handle) -> void;
 
         std::function<void()> render_callback;
     };

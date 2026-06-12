@@ -171,7 +171,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="NekoUI\Backend\DirectX11\DirectX11.cpp" />
+    <ClCompile Include="NekoUI\Backend\Backend.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
     <ClCompile Include="NekoUI\Window\Windows\Windows.cpp" />
@@ -182,7 +182,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NekoUI\Backend\Backend.hpp" />
-    <ClInclude Include="NekoUI\Backend\DirectX11\DirectX11.hpp" />
     <ClInclude Include="NekoUI\Engine\Context.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\Animation.hpp" />

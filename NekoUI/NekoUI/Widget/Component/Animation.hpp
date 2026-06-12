@@ -16,9 +16,10 @@ namespace neko::animation {
         T now_value;
         T new_value;
         T start_value;
-        bool change{false};
 
-        std::chrono::time_point<std::chrono::steady_clock> start{};
+        std::chrono::time_point<std::chrono::steady_clock> start;
+
+        bool change{false};
     public:
         explicit Animation(T value, int duration = 0) {
             now_value = value;

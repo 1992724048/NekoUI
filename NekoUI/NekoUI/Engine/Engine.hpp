@@ -17,7 +17,7 @@ namespace neko::engine {
     using namespace neko::window;
 
     template<typename T> concept BackendType = requires(std::shared_ptr<T> ptr) {
-        requires std::is_base_of_v<backend::Backend, T>; { ptr->get_window_handle() } -> std::same_as<Handle>; {
+        requires std::is_base_of_v<backend::Backend, T>; { ptr->get_handle() } -> std::same_as<Handle>; {
             ptr->render_callback
         } -> std::convertible_to<std::function<void()>>;
     };
@@ -51,10 +51,9 @@ namespace neko::engine {
 
             std::unique_lock _(mutex);
             auto& ins = backend_windows[handle];
-            ins.window = window;
-            ins.backend = backend;
+            ins[backend->get_handle()].backend = backend;
 
-            window->msg_callback = std::bind(&Engine::msg_callback, this, std::ref(ins), std::ref(window->state));
+            // window->msg_callback = std::bind(&Engine::msg_callback, this, std::ref(ins), std::ref(window->state));
             backend->render_callback = std::bind(render_process, std::ref(ins));
             ins.context.rebuild = std::bind(rebuild, std::ref(ins));
             ins.context.animation_start = std::bind(animation_count, std::ref(ins), 1);
