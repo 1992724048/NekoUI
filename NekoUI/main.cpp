@@ -49,7 +49,7 @@ namespace {
 } // namespace
 
 auto main(int argc, char* argv[]) -> int try {
-    constexpr std::wstring class_name = L"NekoUI";
+    const std::wstring class_name = L"NekoUI";
 
     WNDCLASSW win_class{};
     win_class.lpszClassName = class_name.data();
