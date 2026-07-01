@@ -10,6 +10,7 @@ namespace neko::engine {
         context.rerender = std::bind(&std::condition_variable::notify_one, &render_notify);
         context.animation_start = std::bind(&Engine::anim_inc, this);
         context.animation_end = std::bind(&Engine::anim_dec, this);
+        context.request_focus = [this](widget::Widget* w) -> void { focus_widget(w); };
         context.dpi_scale = backend.get_dpi_scale();
 
         msg_thread = std::jthread(std::bind(&Engine::msg_loop, this));
@@ -76,7 +77,7 @@ namespace neko::engine {
         }
 
         backend.begin();
-        for (auto& root : m_root_widgets) {
+        for (const auto& root : m_root_widgets) {
             root->layout({0, 0, resize_size.x, resize_size.y});
             root->draw(context, backend);
         }
@@ -96,7 +97,7 @@ namespace neko::engine {
             context.keyboard.handle(msg, wparam, lparam);
             msg_dispatch(msg, wparam, lparam);
 
-            for (auto& root : m_root_widgets) {
+            for (const auto& root : m_root_widgets) {
                 root->update(context);
             }
             if (context.dirty) {
@@ -138,13 +139,84 @@ namespace neko::engine {
                 break;
             }
             default:
-                for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
-                    if ((*it)->handle_event(context, msg, wparam, lparam)) {
+                switch (msg) {
+                    case WM_MOUSEMOVE:
+                    case WM_LBUTTONDOWN:
+                    case WM_LBUTTONUP:
+                    case WM_RBUTTONDOWN:
+                    case WM_RBUTTONUP:
+                    case WM_MBUTTONDOWN:
+                    case WM_MBUTTONUP:
+                    case WM_MOUSEWHEEL:
+                        for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
+                            if ((*it)->handle_event(context, msg, wparam, lparam)) {
+                                break;
+                            }
+                        }
                         break;
-                    }
+                    case WM_KEYDOWN:
+                        if (wparam == VK_TAB) {
+                            focus_next();
+                            return;
+                        }
+                        [[fallthrough]];
+                    case WM_KEYUP:
+                    case WM_CHAR:
+                        if (m_focused_widget) {
+                            m_focused_widget->handle_event(context, msg, wparam, lparam);
+                        }
+                        break;
+                    default:
+                        for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
+                            if ((*it)->handle_event(context, msg, wparam, lparam)) {
+                                break;
+                            }
+                        }
+                        break;
                 }
                 break;
         }
+    }
+
+    auto Engine::focus_widget(widget::Widget* w) -> void {
+        if (m_focused_widget == w) return;
+        if (m_focused_widget) {
+            m_focused_widget->m_has_focus = false;
+            m_focused_widget->on_focus_lost();
+        }
+        m_focused_widget = w;
+        if (w) {
+            w->m_has_focus = true;
+            w->on_focus_gained();
+        }
+    }
+
+    auto Engine::collect_focusable(widget::Widget* w, std::vector<widget::Widget*>& out) -> void {
+        if (!w) return;
+        if (w->focusable()) out.push_back(w);
+        for (auto* child : w->children()) {
+            collect_focusable(child, out);
+        }
+    }
+
+    auto Engine::focus_next() -> void {
+        std::vector<widget::Widget*> widgets;
+        for (auto& root : m_root_widgets) {
+            collect_focusable(root.get(), widgets);
+        }
+        if (widgets.empty()) {
+            focus_widget(nullptr);
+            return;
+        }
+
+        auto it = std::find(widgets.begin(), widgets.end(), m_focused_widget);
+        size_t idx;
+        if (it != widgets.end()) {
+            idx = (std::distance(widgets.begin(), it) + 1) % widgets.size();
+        } else {
+            idx = 0;
+        }
+        focus_widget(widgets[idx]);
     }
 
     auto Engine::anim_inc() -> void {

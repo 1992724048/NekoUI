@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <condition_variable>
@@ -29,8 +30,7 @@ namespace neko::engine {
         //! @brief 添加根控件
         template<typename T, typename... Args>
         auto add(Args&&... args) -> T& {
-            static_assert(std::is_base_of_v<widget::Widget, T>,
-                          "T must derive from widget::Widget");
+            static_assert(std::is_base_of_v<widget::Widget, T>, "T must derive from widget::Widget");
             auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
             ptr->set_z_order(static_cast<int>(m_root_widgets.size()));
             auto& ref = *ptr;
@@ -44,6 +44,12 @@ namespace neko::engine {
 
         //! @brief 投递窗口消息到消息队列（满时阻塞等待）
         auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+
+        //! @brief 请求焦点
+        auto focus_widget(widget::Widget* w) -> void;
+
+        //! @brief 获取当前焦点控件
+        [[nodiscard]] auto focused_widget() const -> widget::Widget* { return m_focused_widget; }
     private:
         static constexpr size_t MSG_QUEUE_MAX = 32;
 
@@ -59,6 +65,9 @@ namespace neko::engine {
 
         auto anim_inc() -> void;
         auto anim_dec() -> void;
+
+        auto focus_next() -> void;
+        static auto collect_focusable(widget::Widget* w, std::vector<widget::Widget*>& out) -> void;
 
         backend::Backend backend;
         Context context{};
@@ -79,6 +88,7 @@ namespace neko::engine {
 
         std::atomic_int animation{};
         std::atomic_bool pending{};
-        std::vector<std::unique_ptr<widget::Widget>> m_root_widgets;
+        widget::Widget* m_focused_widget = nullptr;
+        std::vector<std::unique_ptr<widget::Widget>> m_root_widgets{};
     };
 } // namespace neko::engine
