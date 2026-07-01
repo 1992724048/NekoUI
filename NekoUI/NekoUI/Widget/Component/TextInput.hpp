@@ -75,20 +75,35 @@ namespace neko::widget {
             if (msg == WM_KEYDOWN) {
                 switch (wparam) {
                     case VK_BACK:
-                        if (m_cursor_pos > 0 && !m_text.empty()) {
+                        if (has_selection()) {
+                            delete_selection();
+                            m_sel_start = -1;
+                        } else if (m_cursor_pos > 0 && !m_text.empty()) {
                             m_text.erase(m_cursor_pos - 1, 1);
                             --m_cursor_pos;
                             m_sel_start = -1;
-                            context.dirty = true;
-                            if (on_text_changed) on_text_changed(m_text);
+                        } else {
+                            return true;
                         }
+                        m_cursor_visible = true;
+                        m_cursor_tick = std::chrono::steady_clock::now();
+                        context.dirty = true;
+                        if (on_text_changed) on_text_changed(m_text);
                         return true;
                     case VK_DELETE:
-                        if (m_cursor_pos < static_cast<int>(m_text.size())) {
+                        if (has_selection()) {
+                            delete_selection();
+                            m_sel_start = -1;
+                        } else if (m_cursor_pos < static_cast<int>(m_text.size())) {
                             m_text.erase(m_cursor_pos, 1);
-                            context.dirty = true;
-                            if (on_text_changed) on_text_changed(m_text);
+                            m_sel_start = -1;
+                        } else {
+                            return true;
                         }
+                        m_cursor_visible = true;
+                        m_cursor_tick = std::chrono::steady_clock::now();
+                        context.dirty = true;
+                        if (on_text_changed) on_text_changed(m_text);
                         return true;
                     case VK_LEFT:
                         if (m_cursor_pos > 0) { --m_cursor_pos; m_sel_start = -1; context.dirty = true; }
@@ -137,6 +152,17 @@ namespace neko::widget {
         std::function<void(std::string_view)> on_text_changed;
 
     private:
+        [[nodiscard]] auto has_selection() const -> bool {
+            return m_sel_start >= 0 && m_sel_start != m_cursor_pos;
+        }
+
+        auto delete_selection() -> void {
+            int start = (std::min)(m_sel_start, m_cursor_pos);
+            int end = (std::max)(m_sel_start, m_cursor_pos);
+            m_text.erase(start, end - start);
+            m_cursor_pos = start;
+        }
+
         std::string m_text;
         std::string m_placeholder;
         int m_cursor_pos = 0;
