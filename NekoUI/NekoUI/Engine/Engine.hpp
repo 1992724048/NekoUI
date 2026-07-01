@@ -8,6 +8,8 @@
 #include <optional>
 #include <thread>
 #include <tuple>
+#include <type_traits>
+#include <vector>
 
 #include "Context.hpp"
 
@@ -24,8 +26,18 @@ namespace neko::engine {
         Engine(const Engine&) = delete;
         auto operator=(const Engine&) -> Engine& = delete;
 
-        //! @brief 设置控件树
-        auto set_widget(std::shared_ptr<widget::Widget> widget) -> void;
+        //! @brief 添加根控件
+        template<typename T, typename... Args>
+        auto add(Args&&... args) -> T& {
+            static_assert(std::is_base_of_v<widget::Widget, T>,
+                          "T must derive from widget::Widget");
+            auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
+            ptr->set_z_order(static_cast<int>(m_root_widgets.size()));
+            auto& ref = *ptr;
+            m_root_widgets.push_back(std::move(ptr));
+            rebuild();
+            return ref;
+        }
 
         //! @brief 触发重建
         auto rebuild() -> void;
@@ -67,6 +79,6 @@ namespace neko::engine {
 
         std::atomic_int animation{};
         std::atomic_bool pending{};
-        std::shared_ptr<widget::Widget> widget;
+        std::vector<std::unique_ptr<widget::Widget>> m_root_widgets;
     };
 } // namespace neko::engine

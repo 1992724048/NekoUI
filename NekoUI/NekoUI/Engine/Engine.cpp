@@ -1,4 +1,4 @@
-// 2026-07-02 00:23:43
+// 2026-07-02 00:23:43 (updated for retained mode)
 
 #include "Engine.hpp"
 
@@ -27,11 +27,6 @@ namespace neko::engine {
             msg_notify.notify_one();
             msg_thread.join();
         }
-    }
-
-    auto Engine::set_widget(std::shared_ptr<widget::Widget> widget) -> void {
-        this->widget = std::move(widget);
-        rebuild();
     }
 
     auto Engine::rebuild() -> void {
@@ -81,9 +76,9 @@ namespace neko::engine {
         }
 
         backend.begin();
-        if (widget) {
-            widget->layout({0, 0, resize_size});
-            widget->draw(context, backend);
+        for (auto& root : m_root_widgets) {
+            root->layout({0, 0, resize_size.x, resize_size.y});
+            root->draw(context, backend);
         }
         backend.end();
         context.dirty = false;
@@ -101,8 +96,8 @@ namespace neko::engine {
             context.keyboard.handle(msg, wparam, lparam);
             msg_dispatch(msg, wparam, lparam);
 
-            if (widget) {
-                widget->update(context);
+            for (auto& root : m_root_widgets) {
+                root->update(context);
             }
             if (context.dirty) {
                 rebuild();
@@ -143,8 +138,10 @@ namespace neko::engine {
                 break;
             }
             default:
-                if (widget) {
-                    widget->handle_event(context, msg, wparam, lparam);
+                for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
+                    if ((*it)->handle_event(context, msg, wparam, lparam)) {
+                        break;
+                    }
                 }
                 break;
         }
