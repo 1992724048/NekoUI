@@ -5,7 +5,7 @@
 #include <string>
 
 #include "NekoUI/Engine/Engine.hpp"
-#include "NekoUI/Widget/Component/Rect.hpp"
+#include "NekoUI/Widget/Component/Button.hpp"  // NekoUI Button
 
 static auto msg_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> LRESULT {
     switch (msg) {
@@ -27,8 +27,15 @@ static auto msg_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> LRESU
             case WM_MOUSEMOVE:
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
+            case WM_RBUTTONDOWN:
+            case WM_RBUTTONUP:
+            case WM_MBUTTONDOWN:
+            case WM_MBUTTONUP:
+            case WM_MOUSEWHEEL:
             case WM_KEYDOWN:
             case WM_KEYUP:
+            case WM_SYSKEYDOWN:
+            case WM_SYSKEYUP:
             case WM_CHAR:
                 engine->push_msg(msg, wparam, lparam);
                 break;
@@ -66,9 +73,9 @@ auto main(int argc, char* argv[]) -> int try {
     // 关联 Engine 到窗口，wndproc 通过 GWLP_USERDATA 获取
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&engine));
 
-    // 绘制一个矩形控件
-    auto rect = std::make_shared<neko::widget::RectWidget>(glm::ivec4{100, 100, 200, 150}, neko::type::Color{255, 100, 100, 255});
-    engine.set_widget(rect);
+    // 按钮控件
+    auto button = std::make_shared<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "Button");
+    engine.set_widget(button);
 
     // 消息循环
     MSG msg{};

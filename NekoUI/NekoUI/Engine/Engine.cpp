@@ -100,11 +100,14 @@ namespace neko::engine {
             }
             msg_space.notify_one();
 
-            switch (const auto [msg, wparam, lparam] = ev; msg) {
+            const auto [msg, wparam, lparam] = ev;
+            context.mouse.handle(msg, wparam, lparam);
+            context.keyboard.handle(msg, wparam, lparam);
+
+            switch (msg) {
                 case WM_SIZE:
                     resize_size = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
                     resize_pending.store(true, std::memory_order_release);
-                    rebuild();
                     break;
                 default:
                     if (widget) {
@@ -112,6 +115,12 @@ namespace neko::engine {
                     }
                     break;
             }
+
+            if (widget) {
+                widget->update(context);
+            }
+
+            rebuild();
         }
     }
 

@@ -191,11 +191,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NekoUI\Backend\Backend.hpp" />
+    <ClInclude Include="NekoUI\Backend\stb_truetype.h" />
     <ClInclude Include="NekoUI\Engine\Context.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\CSS.hpp" />
-    <ClInclude Include="NekoUI\Widget\Component\Rect.hpp" />
+    <ClInclude Include="NekoUI\Engine\Device\Keyboard.hpp" />
+    <ClInclude Include="NekoUI\Engine\Device\Mouse.hpp" />
+    <ClInclude Include="NekoUI\Widget\Component\Button.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -71,11 +71,16 @@ namespace neko::animation {
             change = true;
         }
 
+        //! @brief 值
+        auto operator()() -> T& {
+            return update();
+        }
+
         //! @brief 设置变动值
         //! @param value 值
-        //! @param duration 时间
-        auto operator()(T value, std::optional<TimeType> duration = std::nullopt) -> void {
-            return to_value(value, duration);
+        auto operator=(T value) -> Animation& {
+            to_value(value);
+            return *this;
         }
 
         //! @brief 获取进度
@@ -107,6 +112,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class LinearAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit LinearAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -125,6 +132,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInSineAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInSineAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -144,6 +153,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutSineAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutSineAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -163,6 +174,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutSineAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutSineAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -182,6 +195,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInQuadAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInQuadAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -201,6 +216,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutQuadAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutQuadAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -221,6 +238,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutQuadAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutQuadAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -240,6 +259,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInCubicAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInCubicAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -259,6 +280,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutCubicAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutCubicAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -279,6 +302,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutCubicAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutCubicAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -298,6 +323,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInQuartAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInQuartAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -318,6 +345,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutQuartAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutQuartAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -339,6 +368,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutQuartAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutQuartAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -367,6 +398,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInQuintAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInQuintAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -387,6 +420,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutQuintAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutQuintAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -408,6 +443,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutQuintAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutQuintAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -436,6 +473,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInExpoAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInExpoAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -455,6 +494,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutExpoAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutExpoAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -474,6 +515,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutExpoAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutExpoAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -502,6 +545,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInCircAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInCircAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -521,6 +566,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutCircAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutCircAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -540,6 +587,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutCircAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutCircAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -563,6 +612,8 @@ namespace neko::animation {
         static constexpr float c1 = 1.70158F;
         static constexpr float c3 = c1 + 1.0F;
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInBackAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -584,6 +635,8 @@ namespace neko::animation {
         static constexpr float c1 = 1.70158F;
         static constexpr float c3 = c1 + 1.0F;
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutBackAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -606,6 +659,8 @@ namespace neko::animation {
         static constexpr float c1 = 1.70158F;
         static constexpr float c2 = c1 * 1.525F;
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutBackAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -627,6 +682,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInElasticAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInElasticAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -652,6 +709,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutElasticAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutElasticAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -677,6 +736,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutElasticAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutElasticAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -725,6 +786,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInBounceAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInBounceAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -744,6 +807,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseOutBounceAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseOutBounceAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
@@ -763,6 +828,8 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class EaseInOutBounceAnimation final : public Animation<T, TimeType> {
     public:
+        using Animation<T, TimeType>::operator=;
+
         explicit EaseInOutBounceAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
         auto update() -> T& override {
