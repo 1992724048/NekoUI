@@ -76,11 +76,10 @@ auto main(int argc, char* argv[]) -> int try {
 
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&engine));
 
-    const auto button = std::make_shared<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
-    button->on_click = [] -> void {
+    auto& btn = engine.add<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
+    btn.on_click = [] -> void {
         std::println("[NekoUI] Button clicked!\n");
     };
-    engine.set_widget(button);
 
     MSG msg{};
     while (GetMessageW(&msg, nullptr, 0, 0) != 0) {
