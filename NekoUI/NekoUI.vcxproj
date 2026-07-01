@@ -46,6 +46,11 @@
     <CharacterSet>Unicode</CharacterSet>
     <InterproceduralOptimization>true</InterproceduralOptimization>
     <UseInteloneTBB>true</UseInteloneTBB>
+    <UseIntelIPP1A>Static_Library</UseIntelIPP1A>
+    <UseInteloneMKL>Parallel</UseInteloneMKL>
+    <UseILP64Interfaces1A>true</UseILP64Interfaces1A>
+    <UseInteloneDAL>Parallel_Static</UseInteloneDAL>
+    <UseIntelMPI>true</UseIntelMPI>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -55,11 +60,18 @@
     <CharacterSet>Unicode</CharacterSet>
     <InterproceduralOptimization>true</InterproceduralOptimization>
     <UseInteloneTBB>true</UseInteloneTBB>
+    <UseIntelIPP1A>Static_Library</UseIntelIPP1A>
+    <UseInteloneMKL>Parallel</UseInteloneMKL>
+    <UseILP64Interfaces1A>true</UseILP64Interfaces1A>
+    <UseInteloneDAL>Parallel_Static</UseInteloneDAL>
+    <UseIntelMPI>true</UseIntelMPI>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared" />
+  <ImportGroup Label="Shared">
+    <Import Project="..\..\Library\glm\glm.vcxitems" Label="Shared" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -153,11 +165,11 @@
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Async</ExceptionHandling>
       <ControlFlowGuard>false</ControlFlowGuard>
-      <EnableEnhancedInstructionSet>ARROWLAKE-S</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
       <GuardEHContMetadata>false</GuardEHContMetadata>
-      <GenerateAlternateCodePaths>ARROWLAKE-S</GenerateAlternateCodePaths>
-      <UseProcessorExtensions>ARROWLAKE-S</UseProcessorExtensions>
+      <GenerateAlternateCodePaths>AVX2</GenerateAlternateCodePaths>
+      <UseProcessorExtensions>AVX2</UseProcessorExtensions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -170,29 +182,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="NekoUI\Engine\Engine.hpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NekoUI\Backend\Backend.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
-    <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
-    <ClCompile Include="NekoUI\Window\Windows\Windows.cpp" />
-    <ClCompile Include="NekoUI\Widget\Text\Text.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="NekoUI\Engine\Engine.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NekoUI\Backend\Backend.hpp" />
     <ClInclude Include="NekoUI\Engine\Context.hpp" />
-    <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
+    <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\CSS.hpp" />
-    <ClInclude Include="NekoUI\Widget\Component\Event.hpp" />
-    <ClInclude Include="NekoUI\Widget\Component\KeyBoard.h" />
-    <ClInclude Include="NekoUI\Widget\Component\Mouse.hpp" />
-    <ClInclude Include="NekoUI\Window\Window.hpp" />
-    <ClInclude Include="NekoUI\Window\Windows\Windows.hpp" />
-    <ClInclude Include="NekoUI\Type.hpp" />
-    <ClInclude Include="NekoUI\Widget\Text\Text.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
