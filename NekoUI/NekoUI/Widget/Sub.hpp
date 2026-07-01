@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "Widget.hpp"
 
 namespace neko::widget {
@@ -14,7 +16,7 @@ namespace neko::widget {
             : T(std::forward<Args>(args)...)
         {
             if (parent) {
-                Widget::register_child(this);
+                parent->register_child(this);
             }
         }
 
