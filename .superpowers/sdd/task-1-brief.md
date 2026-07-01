@@ -1,9 +1,31 @@
-﻿#pragma once
+# Task 1: Widget 基类重构
 
-#include <algorithm>
-#include <climits>
+**Location in project:** This is the foundational task — every other task depends on it. Changes the core Widget base class to support tree structure and retained mode.
+
+**File to modify:**
+- `NekoUI/NekoUI/Widget/Widget.hpp`
+
+**What to do:**
+Replace the entire `Widget.hpp` with the new version that adds:
+1. `Constraints` struct (x, y, width, height available area)
+2. Tree structure: `m_parent`, `m_children`, `register_child()`/`unregister_child()` (private, `friend class Sub`)
+3. Coordinate system: `m_bounds` (glm::ivec4), `set_bounds()`, `bounds()`, `x()`, `y()`, `width()`, `height()`
+4. Z-order: `m_z_order`, `set_z_order()`, `z_order()`
+5. Dirty propagation: `m_dirty`, `mark_dirty()` (propagates to parent), `dirty()`, `clear_dirty()`
+6. Visibility: `m_visible`, `set_visible()`
+7. Virtual `hit_test(const neko::mouse::Mouse&)` — default: `is_inside(bounds)`
+8. Default `draw()` iterates children sorted by z_order ascending
+9. Default `update()` iterates children
+10. Default `handle_event()` tries children (z_order descending first, then self hit-test)
+11. Default `layout()` empty (subclass override)
+12. Helper sort methods: `children_sorted_asc()`, `children_sorted_desc()`
+
+## Exact code to write
+
+```cpp
+#pragma once
+
 #include <vector>
-
 #include <glm/glm.hpp>
 
 #include "../Backend/Backend.hpp"
@@ -158,9 +180,9 @@ namespace neko::widget {
         auto it = std::ranges::find(m_children, child);
         if (it != m_children.end()) {
             m_children.erase(it);
-            child->m_parent = nullptr;
-            mark_dirty();
         }
+        child->m_parent = nullptr;
+        mark_dirty();
     }
 
     inline auto Widget::children_sorted_asc() const -> std::vector<Widget*> {
@@ -176,3 +198,18 @@ namespace neko::widget {
     }
 
 } // namespace neko::widget
+```
+
+## Global Constraints
+- Trailing return types: `auto foo() -> void`
+- Namespace: `neko::widget`
+- Bounds: `glm::ivec4(x, y, width, height)` — not x1/y1/x2/y2
+
+## Verification
+This is a header-only change. No compile test possible until later tasks adapt the code that uses Widget. Verify correctness by reading the file once written.
+
+## Commit
+```bash
+git add NekoUI/NekoUI/Widget/Widget.hpp
+git commit -m "feat: Widget 基类重构 —— 树结构、bounds、z-order、dirty 传播"
+```
