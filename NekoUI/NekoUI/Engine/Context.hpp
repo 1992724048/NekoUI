@@ -13,6 +13,9 @@ namespace neko::engine {
         std::function<void()> animation_start;
         std::function<void()> animation_end;
 
+        std::atomic_bool dirty;
+        float dpi_scale = 1.0F;
+
         mouse::Mouse mouse;
         keyboard::Keyboard keyboard;
     };

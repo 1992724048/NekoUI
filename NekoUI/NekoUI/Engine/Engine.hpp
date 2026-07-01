@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <tuple>
 
@@ -15,7 +16,6 @@
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {
-    //! @brief 单窗口控件引擎
     class Engine final {
     public:
         explicit Engine(HWND hwnd);
@@ -38,7 +38,12 @@ namespace neko::engine {
         using MsgEvent = std::tuple<UINT, WPARAM, LPARAM>;
 
         auto render_loop() -> void;
+        auto render_wait() -> void;
+        auto render_frame() -> void;
+
         auto msg_loop() -> void;
+        auto msg_dequeue() -> std::optional<MsgEvent>;
+        auto msg_dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
 
         auto anim_inc() -> void;
         auto anim_dec() -> void;
@@ -46,12 +51,10 @@ namespace neko::engine {
         backend::Backend backend;
         Context context{};
 
-        // 渲染线程
         std::mutex render_lock;
         std::condition_variable render_notify;
         std::jthread render_thread;
 
-        // 消息队列/消息线程
         std::array<MsgEvent, MSG_QUEUE_MAX> msg_queue{};
         std::mutex msg_mutex;
         std::condition_variable msg_notify;
@@ -59,7 +62,6 @@ namespace neko::engine {
         std::jthread msg_thread;
         size_t msg_head{}, msg_tail{}, msg_count{};
 
-        // 窗口大小调整
         std::atomic_bool resize_pending{false};
         glm::ivec2 resize_size{};
 

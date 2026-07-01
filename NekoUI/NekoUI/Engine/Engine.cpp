@@ -10,6 +10,7 @@ namespace neko::engine {
         context.rerender = std::bind(&std::condition_variable::notify_one, &render_notify);
         context.animation_start = std::bind(&Engine::anim_inc, this);
         context.animation_end = std::bind(&Engine::anim_dec, this);
+        context.dpi_scale = backend.get_dpi_scale();
 
         msg_thread = std::jthread(std::bind(&Engine::msg_loop, this));
         render_thread = std::jthread(std::bind(&Engine::render_loop, this));
@@ -54,73 +55,98 @@ namespace neko::engine {
 
     auto Engine::render_loop() -> void {
         while (!render_thread.get_stop_token().stop_requested()) {
-            if (animation == 0) {
-                std::unique_lock lock(render_lock);
-                render_notify.wait(lock,
-                                   [this] -> bool {
-                                       return render_thread.get_stop_token().stop_requested() || pending;
-                                   });
-                pending = false;
-            }
+            render_wait();
             if (render_thread.get_stop_token().stop_requested()) {
                 break;
             }
-
-            if (resize_pending.exchange(false)) {
-                backend.resize(resize_size);
-            }
-
-            animation::new_frame();
-
-            backend.begin();
-            if (widget) {
-                widget->layout({0, 0, resize_size});
-                widget->draw(context, backend);
-            }
-            backend.end();
+            render_frame();
         }
+    }
+
+    auto Engine::render_wait() -> void {
+        if (animation != 0) {
+            return;
+        }
+        std::unique_lock lock(render_lock);
+        render_notify.wait(lock,
+                           [this] -> bool {
+                               return render_thread.get_stop_token().stop_requested() || pending || context.dirty;
+                           });
+        pending = false;
+    }
+
+    auto Engine::render_frame() -> void {
+        if (resize_pending.exchange(false)) {
+            backend.resize(resize_size);
+        }
+
+        backend.begin();
+        if (widget) {
+            widget->layout({0, 0, resize_size});
+            widget->draw(context, backend);
+        }
+        backend.end();
+        context.dirty = false;
     }
 
     auto Engine::msg_loop() -> void {
         while (!msg_thread.get_stop_token().stop_requested()) {
-            MsgEvent ev;
-            {
-                std::unique_lock lock(msg_mutex);
-                msg_notify.wait(lock,
-                                [this] -> bool {
-                                    return msg_thread.get_stop_token().stop_requested() || msg_count > 0;
-                                });
-                if (msg_thread.get_stop_token().stop_requested()) {
-                    break;
-                }
-
-                ev = msg_queue[msg_head];
-                msg_head = (msg_head + 1) % MSG_QUEUE_MAX;
-                --msg_count;
+            const auto ev = msg_dequeue();
+            if (!ev.has_value()) {
+                break;
             }
-            msg_space.notify_one();
 
-            const auto [msg, wparam, lparam] = ev;
+            const auto [msg, wparam, lparam] = *ev;
             context.mouse.handle(msg, wparam, lparam);
             context.keyboard.handle(msg, wparam, lparam);
-
-            switch (msg) {
-                case WM_SIZE:
-                    resize_size = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    resize_pending.store(true, std::memory_order_release);
-                    break;
-                default:
-                    if (widget) {
-                        widget->handle_event(context, msg, wparam, lparam);
-                    }
-                    break;
-            }
+            msg_dispatch(msg, wparam, lparam);
 
             if (widget) {
                 widget->update(context);
             }
+            if (context.dirty) {
+                rebuild();
+            }
+        }
+    }
 
-            rebuild();
+    auto Engine::msg_dequeue() -> std::optional<MsgEvent> {
+        std::unique_lock lock(msg_mutex);
+        msg_notify.wait(lock,
+                        [this] -> bool {
+                            return msg_thread.get_stop_token().stop_requested() || msg_count > 0;
+                        });
+        if (msg_thread.get_stop_token().stop_requested()) {
+            return std::nullopt;
+        }
+
+        const auto ev = msg_queue[msg_head];
+        msg_head = (msg_head + 1) % MSG_QUEUE_MAX;
+        --msg_count;
+        lock.unlock();
+        msg_space.notify_one();
+        return ev;
+    }
+
+    auto Engine::msg_dispatch(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
+        switch (msg) {
+            case WM_SIZE:
+                resize_size = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                resize_pending.store(true, std::memory_order_release);
+                context.dirty = true;
+                break;
+            case WM_DPICHANGED: {
+                const UINT dpi = LOWORD(wparam);
+                backend.set_dpi(dpi);
+                context.dpi_scale = static_cast<float>(dpi) / 96.0F;
+                context.dirty = true;
+                break;
+            }
+            default:
+                if (widget) {
+                    widget->handle_event(context, msg, wparam, lparam);
+                }
+                break;
         }
     }
 

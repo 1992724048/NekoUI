@@ -6,15 +6,6 @@
 #include <numbers>
 
 namespace neko::animation {
-    //! @brief 全局帧时间戳，由 new_frame() 每帧更新一次
-    inline static std::chrono::time_point<std::chrono::steady_clock> frame_time = std::chrono::high_resolution_clock::now();
-
-    //! @brief 帧开始回调，更新全局时间戳
-    //! @note Engine 每帧开始时调用一次，所有 Animation 共享同一时间基准
-    inline auto new_frame() -> void {
-        frame_time = std::chrono::high_resolution_clock::now();
-    }
-
     //! @brief 动画基类
     //! @tparam T 值类型
     //! @tparam TimeType 时间类型 
@@ -36,7 +27,7 @@ namespace neko::animation {
             new_value = value;
             start_value = value;
             this->duration_time = TimeType(duration);
-            start = frame_time;
+            start = std::chrono::steady_clock::now();
         }
 
         Animation(const Animation& other) = default;
@@ -62,7 +53,7 @@ namespace neko::animation {
         //! @param value 值
         //! @param duration 时间
         auto to_value(T value, std::optional<TimeType> duration = std::nullopt) -> void {
-            start = frame_time;
+            start = std::chrono::steady_clock::now();
             start_value = now_value;
             new_value = value;
             if (duration.has_value()) {
@@ -86,7 +77,7 @@ namespace neko::animation {
         //! @brief 获取进度
         //! @return 百分比
         auto progress() -> float {
-            auto elapsed = std::chrono::duration_cast<TimeType>(frame_time - start);
+            auto elapsed = std::chrono::duration_cast<TimeType>(std::chrono::steady_clock::now() - start);
 
             if (elapsed >= duration_time) {
                 this->change = false;

@@ -5,17 +5,20 @@
 #include <string>
 
 namespace neko::widget {
-    //! @brief 按钮控件（带颜色动画渐变）
     class Button final : public Widget {
     public:
-        explicit Button(glm::ivec4 rect, std::string label = "") : rect_(rect),
-                                                                   label_(std::move(label)) {}
+        explicit Button(const glm::ivec4 rect, std::string label = "") : rect_(rect),
+                                                                         label_(std::move(label)) {}
 
         //! @brief 处理数据状态（msg 线程）
         auto update(engine::Context& context) -> void override {
-            const auto mouse = context.mouse.pos;
-            const bool hover = mouse.x >= rect_.x && mouse.x <= rect_.x + rect_.z && mouse.y >= rect_.y && mouse.y <= rect_.y + rect_.w;
+            const float s = context.dpi_scale;
+            const bool hover = context.mouse.is_inside(rect_, s);
             const bool down = hover && context.mouse.left_down;
+
+            if (context.mouse.left_released() && hover && on_click) {
+                on_click();
+            }
 
             glm::vec4 target;
             if (down) {
@@ -32,19 +35,19 @@ namespace neko::widget {
                     context.animation_start();
                     anim_state = AnimState::Animating;
                 }
-            }
-
-            color_anim = target;
-
-            if (color_anim.is_done() && anim_state == AnimState::Animating) {
-                context.animation_end();
-                anim_state = AnimState::Idle;
+                color_anim = target;
+                context.dirty = true;
             }
         }
 
         //! @brief 渲染（render 线程）
         auto draw(engine::Context& context, backend::Backend& backend) -> void override {
             const glm::vec4 current_f = color_anim();
+
+            if (color_anim.is_done() && anim_state == AnimState::Animating) {
+                context.animation_end();
+                anim_state = AnimState::Idle;
+            }
             const type::Color current{
                 static_cast<int>(current_f.r * 255.0F + 0.5F),
                 static_cast<int>(current_f.g * 255.0F + 0.5F),
@@ -55,14 +58,14 @@ namespace neko::widget {
             backend.draw_rect(rect_, border_color, 2);
 
             if (!label_.empty()) {
-                const glm::ivec2 text_pos{rect_.x + 8, rect_.y + rect_.w / 2 - 8};
-                backend.draw_text(label_, text_pos, text_color, 14.0F);
+                const int y_center = rect_.y + (rect_.w - 16) / 2;
+                backend.draw_text(label_, {rect_.x + 8, y_center}, text_color);
             }
         }
 
         std::function<void()> on_click;
     private:
-        enum class AnimState { Idle, Animating };
+        enum class AnimState : std::uint8_t { Idle, Animating };
 
         glm::ivec4 rect_;
         std::string label_;
@@ -74,7 +77,7 @@ namespace neko::widget {
         glm::vec4 current_target_{idle_f};
         AnimState anim_state = AnimState::Idle;
 
-        animation::EaseOutQuadAnimation<glm::vec4> color_anim{idle_f, 120};
+        animation::EaseOutQuadAnimation<glm::vec4> color_anim{idle_f, 200};
 
         type::Color border_color{60, 80, 120, 255};
         type::Color text_color{220, 220, 230, 255};

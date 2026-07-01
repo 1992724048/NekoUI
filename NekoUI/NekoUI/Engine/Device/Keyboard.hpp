@@ -1,11 +1,12 @@
 #pragma once
 #include <Windows.h>
+#include <algorithm>
 #include <array>
 
 namespace neko::keyboard {
-    //! @brief 键盘状态组件
     struct Keyboard {
         std::array<bool, 256> down{};
+        std::array<bool, 256> prev_down{};
         std::array<wchar_t, 16> chars{};
         int char_count = 0;
 
@@ -21,15 +22,31 @@ namespace neko::keyboard {
             return down[VK_MENU];
         }
 
-        //! @brief 更新键盘状态，返回 true 若该消息是键盘事件
+        [[nodiscard]] auto just_pressed(const int vk) const -> bool {
+            return down[vk] && !prev_down[vk];
+        }
+
+        [[nodiscard]] auto just_released(const int vk) const -> bool {
+            return !down[vk] && prev_down[vk];
+        }
+
+        [[nodiscard]] auto any_down() const -> bool {
+            return std::ranges::any_of(down,
+                                       [](const auto k)-> bool {
+                                           return k;
+                                       });
+        }
+
         auto handle(const UINT msg, const WPARAM wparam, LPARAM lparam) -> bool {
             switch (msg) {
                 case WM_KEYDOWN:
                 case WM_SYSKEYDOWN:
+                    prev_down = down;
                     down[wparam & 0xFF] = true;
                     return true;
                 case WM_KEYUP:
                 case WM_SYSKEYUP:
+                    prev_down = down;
                     down[wparam & 0xFF] = false;
                     return true;
                 case WM_CHAR:

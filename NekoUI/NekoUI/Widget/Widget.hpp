@@ -1,17 +1,8 @@
 ﻿#pragma once
-#include <memory>
-#include <span>
-#include <string>
-#include <vector>
-
-#include "../Type.hpp"
 
 #include "../Backend/Backend.hpp"
 
-#include "../Engine/Engine.hpp"
-
 namespace neko::widget {
-    //! @brief 控件对象
     class Widget {
     public:
         virtual ~Widget() = default;
