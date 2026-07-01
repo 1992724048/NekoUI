@@ -204,6 +204,8 @@
     <ClInclude Include="NekoUI\Engine\Device\Keyboard.hpp" />
     <ClInclude Include="NekoUI\Engine\Device\Mouse.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\Button.hpp" />
+    <ClInclude Include="NekoUI\Widget\Sub.hpp" />
+    <ClInclude Include="NekoUI\Widget\layout\Stack.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
