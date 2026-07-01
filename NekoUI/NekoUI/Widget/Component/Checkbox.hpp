@@ -1,0 +1,122 @@
+#pragma once
+
+#include "../Widget.hpp"
+#include "Animation.hpp"
+
+#include <functional>
+#include <string>
+
+namespace neko::widget {
+
+    class Checkbox final : public Widget {
+    public:
+        explicit Checkbox(glm::ivec4 bounds = {}, std::string label = "")
+            : m_label(std::move(label))
+        {
+            set_bounds(bounds);
+            sync_anim();
+            m_anim.set_progress(1.0f);
+        }
+
+        auto update(engine::Context& context) -> void override {
+            m_anim.update();
+            Widget::update(context);
+        }
+
+        auto draw(engine::Context& context, backend::Backend& backend) -> void override {
+            const auto& b = bounds();
+            constexpr int box = 18;
+            const int bx = b.x;
+            const int by = b.y + (b.w - box) / 2;
+
+            // 方框背景（动画色）
+            glm::ivec4 box_color{
+                static_cast<int>(m_anim()(0) * 255.0f + 0.5f),
+                static_cast<int>(m_anim()(1) * 255.0f + 0.5f),
+                static_cast<int>(m_anim()(2) * 255.0f + 0.5f),
+                255,
+            };
+
+            if (m_checked || m_anim.progress() > 0.0f) {
+                backend.draw_rect_fill({bx, by, box, box}, box_color);
+            }
+
+            auto border = has_focus() ? m_focus_border : m_normal_border;
+            backend.draw_rect({bx, by, box, box}, border, 1);
+
+            // 勾号（白色矩形近似）
+            if (m_checked || m_anim.progress() > 0.0f) {
+                backend.draw_rect_fill({bx + 4, by + 4, box - 8, box - 8}, m_check_color);
+            }
+
+            // 标签
+            if (!m_label.empty()) {
+                backend.draw_text(m_label, {bx + box + 8, b.y + 4}, m_text_color);
+            }
+
+            Widget::draw(context, backend);
+        }
+
+        auto handle_event(engine::Context& context, UINT msg,
+                          WPARAM wparam, LPARAM lparam) -> bool override
+        {
+            if (msg == WM_LBUTTONDOWN && hit_test(context.mouse)) {
+                toggle(context);
+                return true;
+            }
+            if (msg == WM_KEYDOWN && wparam == VK_SPACE) {
+                toggle(context);
+                return true;
+            }
+            return Widget::handle_event(context, msg, wparam, lparam);
+        }
+
+        auto focusable() const -> bool override { return true; }
+
+        auto is_checked() const -> bool { return m_checked; }
+        auto set_checked(bool checked) -> void {
+            if (m_checked == checked) return;
+            m_checked = checked;
+            sync_anim();
+        }
+        auto toggle() -> void {
+            m_checked = !m_checked;
+            sync_anim();
+            if (on_toggled) on_toggled(m_checked);
+        }
+
+        std::function<void(bool)> on_toggled;
+
+    private:
+        auto toggle(engine::Context& context) -> void {
+            m_checked = !m_checked;
+            sync_anim();
+            context.dirty = true;
+            if (on_toggled) on_toggled(m_checked);
+        }
+
+        auto sync_anim() -> void {
+            if (m_checked) {
+                m_anim = animation::EaseOutQuadAnimation<glm::vec4>{m_unchecked_color, m_checked_color, 150};
+            } else {
+                m_anim = animation::EaseOutQuadAnimation<glm::vec4>{m_checked_color, m_unchecked_color, 150};
+            }
+        }
+
+        bool m_checked = false;
+        std::string m_label;
+        animation::EaseOutQuadAnimation<glm::vec4> m_anim{
+            {0.7f, 0.7f, 0.75f, 1.0f},
+            {0.24f, 0.47f, 0.86f, 1.0f},
+            150
+        };
+
+        glm::vec4 m_unchecked_color{0.7f, 0.7f, 0.75f, 1.0f};
+        glm::vec4 m_checked_color{0.24f, 0.47f, 0.86f, 1.0f};
+        type::Color m_check_color{255, 255, 255, 255};
+        type::Color m_text_color{30, 30, 30, 255};
+        type::Color m_normal_border{140, 140, 150, 255};
+        type::Color m_focus_border{60, 120, 220, 255};
+    };
+
+} // namespace neko::widget
