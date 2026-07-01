@@ -13,35 +13,22 @@
 namespace neko::widget {
     //! @brief 控件对象
     class Widget {
-    protected:
-        std::string key;
-        std::vector<std::shared_ptr<Widget>> widgets{};
     public:
-        explicit Widget(const std::string& key = std::string("")) {
-            if (key.empty()) {
-                this->key = std::to_string(reinterpret_cast<std::uintptr_t>(this));
-            } else {
-                this->key = key;
-            }
-        }
+        virtual ~Widget() = default;
+        virtual auto draw(engine::Context& context, backend::Backend& backend) -> void {}
+        virtual auto layout(glm::vec4 constraints) -> void {};
+        virtual auto update(engine::Context& context) -> void {}
 
-        auto id() -> const std::string& {
-            return key;
+        [[nodiscard]] virtual auto child_count() const -> size_t {
+            return 0;
         }
 
         virtual auto dirty() -> bool {
             return false;
         }
 
-        virtual ~Widget() = default;
-        virtual auto draw(engine::Context& context, backend::Backend& backend) -> void {}
-        virtual auto update(engine::Context& context) -> void {}
-
-        //! @brief 获取子控件
-        //! @return 控件数组
-        //! @note 循序决定层次, 请将最底层控件放置在数组底部
-        [[nodiscard]] virtual auto children() const -> const std::vector<std::shared_ptr<Widget>>& {
-            return widgets;
+        virtual auto handle_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool {
+            return false;
         }
     };
 } // namespace neko::widget

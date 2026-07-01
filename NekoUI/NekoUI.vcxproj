@@ -195,6 +195,7 @@
     <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Component\CSS.hpp" />
+    <ClInclude Include="NekoUI\Widget\Component\Rect.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
