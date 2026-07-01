@@ -2,18 +2,22 @@
 #include "Animation.hpp"
 #include "../Widget.hpp"
 
+#include <functional>
 #include <string>
 
 namespace neko::widget {
     class Button final : public Widget {
     public:
-        explicit Button(const glm::ivec4 rect, std::string label = "") : rect_(rect),
-                                                                         label_(std::move(label)) {}
+        explicit Button(const glm::ivec4 rect, std::string label = "")
+            : label_(std::move(label))
+        {
+            set_bounds(rect);
+        }
 
         //! @brief 处理数据状态（msg 线程）
         auto update(engine::Context& context) -> void override {
             const float s = context.dpi_scale;
-            const bool hover = context.mouse.is_inside(rect_, s);
+            const bool hover = context.mouse.is_inside(bounds(), s);
             const bool down = hover && context.mouse.left_down;
 
             if (context.mouse.left_released() && hover && on_click) {
@@ -38,6 +42,8 @@ namespace neko::widget {
                 color_anim = target;
                 context.dirty = true;
             }
+
+            Widget::update(context);
         }
 
         //! @brief 渲染（render 线程）
@@ -54,20 +60,22 @@ namespace neko::widget {
                 static_cast<int>(current_f.b * 255.0F + 0.5F),
                 static_cast<int>(current_f.a * 255.0F + 0.5F),
             };
-            backend.draw_rect_fill(rect_, current);
-            backend.draw_rect(rect_, border_color, 2);
+            backend.draw_rect_fill(bounds(), current);
+            backend.draw_rect(bounds(), border_color, 2);
 
             if (!label_.empty()) {
-                const int y_center = rect_.y + (rect_.w - 16) / 2;
-                backend.draw_text(label_, {rect_.x + 8, y_center}, text_color);
+                const auto& b = bounds();
+                const int y_center = b.y + (b.w - 16) / 2;
+                backend.draw_text(label_, {b.x + 8, y_center}, text_color);
             }
+
+            Widget::draw(context, backend);
         }
 
         std::function<void()> on_click;
     private:
         enum class AnimState : std::uint8_t { Idle, Animating };
 
-        glm::ivec4 rect_;
         std::string label_;
 
         glm::vec4 idle_f{100.0F / 255.0F, 130.0F / 255.0F, 180.0F / 255.0F, 1.0F};
