@@ -21,15 +21,6 @@
     <ClCompile Include="NekoUI\Engine\Engine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Widget\Text\Text.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NekoUI\Window\Windows\Windows.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NekoUI\Widget\Button\Button.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="NekoUI\Backend\Backend.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -41,16 +32,7 @@
     <ClInclude Include="NekoUI\Widget\Widget.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Text\Text.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="NekoUI\Backend\Backend.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Window\Window.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Window\Windows\Windows.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Type.hpp">
@@ -59,22 +41,10 @@
     <ClInclude Include="NekoUI\Widget\Component\CSS.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Component\Mouse.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Component\KeyBoard.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="NekoUI\Widget\Component\Animation.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\Context.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Button\Button.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Component\Event.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,14 +8,14 @@
 
 #include "../Backend/Backend.hpp"
 
-#include "../Engine/Context.hpp"
+#include "../Engine/Engine.hpp"
 
 namespace neko::widget {
     //! @brief 控件对象
     class Widget {
     protected:
         std::string key;
-        std::vector<std::shared_ptr<Widget>> widgets;
+        std::vector<std::shared_ptr<Widget>> widgets{};
     public:
         explicit Widget(const std::string& key = std::string("")) {
             if (key.empty()) {
@@ -34,7 +34,7 @@ namespace neko::widget {
         }
 
         virtual ~Widget() = default;
-        virtual auto draw(engine::Context& context, std::shared_ptr<backend::Backend>& backend) -> void {}
+        virtual auto draw(engine::Context& context, backend::Backend& backend) -> void {}
         virtual auto update(engine::Context& context) -> void {}
 
         //! @brief 获取子控件

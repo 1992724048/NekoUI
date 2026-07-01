@@ -1,35 +1,51 @@
 ﻿#pragma once
-#include "../Window/Window.hpp"
+#include <DirectXMath.h>
+#include <Windows.h>
+#include <d3d11.h>
+#include <dxgi1_2.h>
 
-#include <memory>
+#include <functional>
+#include <string_view>
+
+#include "../Type.hpp"
 
 namespace neko::backend {
     using namespace neko::type;
 
-    //! @brief 渲染后端
-    //! @note vulkan only
+    //! @brief 单窗口 DirectX 11 渲染后端
     class Backend final {
     public:
-        Backend();
+        //! @param hwnd 窗口句柄（立即创建设备 + SwapChain）
+        explicit Backend(HWND hwnd);
         ~Backend();
 
-        auto get_handle() -> Handle;
+        Backend(const Backend&) = delete;
+        auto operator=(const Backend&) -> Backend& = delete;
 
-        auto resize(Handle window_handle, Vec2<int> new_size) -> void;
+        //! @brief 窗口尺寸变化时重建 SwapChain
+        auto resize(glm::ivec2 new_size) -> void;
 
-        auto attach(const std::shared_ptr<window::Window>& window) -> bool;
-        auto deattach(const std::shared_ptr<window::Window>& window) -> bool;
+        //! @brief 开始一帧
+        auto begin() const -> void;
+        //! @brief 结束一帧并 Present
+        auto end() const -> void;
 
-        auto submit(Handle window_handle) -> void;
-
-        auto draw_text(Handle window_handle) -> void;
-        auto draw_line(Handle window_handle) -> void;
-        auto draw_triangle(Handle window_handle) -> void;
-        auto draw_rect(Handle window_handle, Vec4<int> range, Color rgba, int thickness) -> void;
-        auto draw_rect_fill(Handle window_handle) -> void;
-        auto draw_circle_fill(Handle window_handle) -> void;
-        auto draw_image(Handle window_handle) -> void;
+        auto draw_rect_fill(glm::ivec4 rect, Color color) const -> void;
+        auto draw_rect(glm::ivec4 rect, Color color, int thickness) const -> void;
+        auto draw_line(glm::ivec2 from, glm::ivec2 to, Color color, int thickness) const -> void;
+        auto draw_circle_fill(glm::ivec2 center, int radius, Color color) const -> void;
+        auto draw_text(std::string_view text, glm::ivec2 pos, Color color, float font_size) -> void;
 
         std::function<void()> render_callback;
+    private:
+        ID3D11Device* device{};
+        ID3D11DeviceContext* ctx{};
+        IDXGISwapChain1* swap_chain{};
+        ID3D11RenderTargetView* rtv{};
+        ID3D11VertexShader* vs{};
+        ID3D11PixelShader* ps{};
+        ID3D11InputLayout* layout{};
+        ID3D11Buffer* cb_rect{};
+        glm::ivec2 size{};
     };
 } // namespace neko::backend

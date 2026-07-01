@@ -1,10 +1,20 @@
-﻿// 2026-06-02 20:38:26
+﻿// 2026-07-01 23:43:09
 
 #pragma once
 #include <chrono>
+#include <cmath>
 #include <numbers>
 
 namespace neko::animation {
+    //! @brief 全局帧时间戳，由 new_frame() 每帧更新一次
+    inline static std::chrono::time_point<std::chrono::steady_clock> frame_time = std::chrono::high_resolution_clock::now();
+
+    //! @brief 帧开始回调，更新全局时间戳
+    //! @note Engine 每帧开始时调用一次，所有 Animation 共享同一时间基准
+    inline auto new_frame() -> void {
+        frame_time = std::chrono::high_resolution_clock::now();
+    }
+
     //! @brief 动画基类
     //! @tparam T 值类型
     //! @tparam TimeType 时间类型 
@@ -12,12 +22,12 @@ namespace neko::animation {
     template<typename T, typename TimeType = std::chrono::milliseconds>
     class Animation {
     protected:
-        TimeType duration;
+        TimeType duration_time;
         T now_value;
         T new_value;
         T start_value;
 
-        std::chrono::time_point<std::chrono::steady_clock> start;
+        std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::high_resolution_clock::now();
 
         bool change{false};
     public:
@@ -25,8 +35,8 @@ namespace neko::animation {
             now_value = value;
             new_value = value;
             start_value = value;
-            this->duration = TimeType(duration);
-            start = std::chrono::high_resolution_clock::now();
+            this->duration_time = TimeType(duration);
+            start = frame_time;
         }
 
         Animation(const Animation& other) = default;
@@ -44,7 +54,7 @@ namespace neko::animation {
         }
 
         //! @brief 值
-        operator T() {
+        explicit operator T() {
             return update();
         }
 
@@ -52,11 +62,11 @@ namespace neko::animation {
         //! @param value 值
         //! @param duration 时间
         auto to_value(T value, std::optional<TimeType> duration = std::nullopt) -> void {
-            start = std::chrono::high_resolution_clock::now();
+            start = frame_time;
             start_value = now_value;
             new_value = value;
             if (duration.has_value()) {
-                this->duration = duration.value();
+                this->duration_time = duration.value();
             }
             change = true;
         }
@@ -71,17 +81,16 @@ namespace neko::animation {
         //! @brief 获取进度
         //! @return 百分比
         auto progress() -> float {
-            const auto now = std::chrono::high_resolution_clock::now();
-            auto elapsed = std::chrono::duration_cast<TimeType>(now - start);
+            auto elapsed = std::chrono::duration_cast<TimeType>(frame_time - start);
 
-            if (elapsed >= duration) {
+            if (elapsed >= duration_time) {
                 this->change = false;
                 now_value = new_value;
                 start_value = new_value;
                 return 1.0F;
             }
 
-            return static_cast<float>(elapsed.count()) / static_cast<float>(duration.count());
+            return static_cast<float>(elapsed.count()) / static_cast<float>(duration_time.count());
         }
 
         //! @brief 是否完成
@@ -100,8 +109,6 @@ namespace neko::animation {
     public:
         explicit LinearAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
-        //! @brief 更新并获取当前变换值
-        //! @return 值
         auto update() -> T& override {
             if (this->change) {
                 float process = this->progress();
@@ -111,7 +118,45 @@ namespace neko::animation {
         }
     };
 
-    //! @brief EaseInOut
+    //! @brief easeInSine
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInSineAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInSineAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = 1.0F - std::cos(process * std::numbers::pi_v<float> * 0.5F);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutSine
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutSineAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutSineAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = std::sin(process * std::numbers::pi_v<float> * 0.5F);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutSine
     //! @tparam T 值类型
     //! @tparam TimeType 时间类型
     //! @note https://easings.net/
@@ -120,12 +165,610 @@ namespace neko::animation {
     public:
         explicit EaseInOutSineAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
 
-        //! @brief 更新并获取当前变换值
-        //! @return 值
         auto update() -> T& override {
             if (this->change) {
                 const float process = this->progress();
-                const float eased = (1.0F - std::cos(std::numbers::pi_v<float> * process)) * 0.5F;
+                const float eased = -(std::cos(std::numbers::pi_v<float> * process) - 1.0F) * 0.5F;
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInQuad
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInQuadAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInQuadAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process * process;
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutQuad
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutQuadAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutQuadAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float u = 1.0F - process;
+                const float eased = 1.0F - (u * u);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutQuad
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutQuadAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutQuadAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process < 0.5F ? 2.0F * process * process : 1.0F - (((-2.0F * process) + 2.0F) * ((-2.0F * process) + 2.0F) * 0.5F);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInCubic
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInCubicAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInCubicAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process * process * process;
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutCubic
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutCubicAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutCubicAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float u = 1.0F - process;
+                const float eased = 1.0F - (u * u * u);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutCubic
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutCubicAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutCubicAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process < 0.5F ? 4.0F * process * process * process : 1.0F - (((-2.0F * process) + 2.0F) * ((-2.0F * process) + 2.0F) * ((-2.0F * process) + 2.0F) * 0.5F);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInQuart
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInQuartAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInQuartAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float v = process * process;
+                const float eased = v * v;
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutQuart
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutQuartAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutQuartAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float u = 1.0F - process;
+                const float v = u * u;
+                const float eased = 1.0F - (v * v);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutQuart
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutQuartAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutQuartAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                float eased;
+                if (process < 0.5F) {
+                    const float u = 2.0F * process;
+                    const float v = u * u;
+                    eased = v * v * 0.5F;
+                } else {
+                    const float u = (-2.0F * process) + 2.0F;
+                    const float v = u * u;
+                    eased = (2.0F - (v * v)) * 0.5F;
+                }
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInQuint
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInQuintAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInQuintAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float v = process * process;
+                const float eased = v * v * process;
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutQuint
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutQuintAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutQuintAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float u = 1.0F - process;
+                const float v = u * u;
+                const float eased = 1.0F - (v * v * u);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutQuint
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutQuintAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutQuintAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                float eased;
+                if (process < 0.5F) {
+                    const float u = 2.0F * process;
+                    const float v = u * u;
+                    eased = v * v * u * 0.5F;
+                } else {
+                    const float u = (-2.0F * process) + 2.0F;
+                    const float v = u * u;
+                    eased = (2.0F - (v * v * u)) * 0.5F;
+                }
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInExpo
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInExpoAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInExpoAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process == 0.0F ? 0.0F : std::pow(2.0F, (10.0F * process) - 10.0F);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutExpo
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutExpoAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutExpoAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process == 1.0F ? 1.0F : 1.0F - std::pow(2.0F, -10.0F * process);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutExpo
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutExpoAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutExpoAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                float eased;
+                if (process == 0.0F) {
+                    eased = 0.0F;
+                } else if (process == 1.0F) {
+                    eased = 1.0F;
+                } else if (process < 0.5F) {
+                    eased = std::pow(2.0F, (20.0F * process) - 10.0F) * 0.5F;
+                } else {
+                    eased = (2.0F - std::pow(2.0F, (-20.0F * process) + 10.0F)) * 0.5F;
+                }
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInCirc
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInCircAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInCircAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = 1.0F - std::sqrt(1.0F - (process * process));
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutCirc
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutCircAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutCircAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = std::sqrt(1.0F - ((process - 1.0F) * (process - 1.0F)));
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutCirc
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutCircAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutCircAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process < 0.5F ?
+                                        (1.0F - std::sqrt(1.0F - (4.0F * process * process))) * 0.5F :
+                                        (std::sqrt(1.0F - (((-2.0F * process) + 2.0F) * ((-2.0F * process) + 2.0F))) + 1.0F) * 0.5F;
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInBack
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInBackAnimation final : public Animation<T, TimeType> {
+        static constexpr float c1 = 1.70158F;
+        static constexpr float c3 = c1 + 1.0F;
+    public:
+        explicit EaseInBackAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = (c3 * process * process * process) - (c1 * process * process);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutBack
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutBackAnimation final : public Animation<T, TimeType> {
+        static constexpr float c1 = 1.70158F;
+        static constexpr float c3 = c1 + 1.0F;
+    public:
+        explicit EaseOutBackAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float u = process - 1.0F;
+                const float eased = 1.0F + (c3 * u * u * u) + (c1 * u * u);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutBack
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutBackAnimation final : public Animation<T, TimeType> {
+        static constexpr float c1 = 1.70158F;
+        static constexpr float c2 = c1 * 1.525F;
+    public:
+        explicit EaseInOutBackAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process < 0.5F ?
+                                        2.0F * process * (2.0F * process) * (((c2 + 1.0F) * 2.0F * process) - c2) * 0.5F :
+                                        ((((2.0F * process) - 2.0F) * ((2.0F * process) - 2.0F) * (((c2 + 1.0F) * ((process * 2.0F) - 2.0F)) + c2)) + 2.0F) * 0.5F;
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInElastic
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInElasticAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInElasticAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                float eased;
+                if (process == 0.0F || process == 1.0F) {
+                    eased = process;
+                } else {
+                    constexpr float c4 = 2.0F * std::numbers::pi_v<float> / 3.0F;
+                    eased = -std::pow(2.0F, (10.0F * process) - 10.0F) * std::sin(((process * 10.0F) - 10.75F) * c4);
+                }
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutElastic
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutElasticAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutElasticAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                float eased;
+                if (process == 0.0F || process == 1.0F) {
+                    eased = process;
+                } else {
+                    constexpr float c4 = 2.0F * std::numbers::pi_v<float> / 3.0F;
+                    eased = (std::pow(2.0F, -10.0F * process) * std::sin(((process * 10.0F) - 0.75F) * c4)) + 1.0F;
+                }
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutElastic
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutElasticAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutElasticAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                float eased;
+                if (process == 0.0F || process == 1.0F) {
+                    eased = process;
+                } else {
+                    constexpr float c5 = 2.0F * std::numbers::pi_v<float> / 4.5F;
+                    if (process < 0.5F) {
+                        eased = -(std::pow(2.0F, (20.0F * process) - 10.0F) * std::sin(((20.0F * process) - 11.125F) * c5)) * 0.5F;
+                    } else {
+                        eased = (std::pow(2.0F, (-20.0F * process) + 10.0F) * std::sin(((20.0F * process) - 11.125F) * c5) * 0.5F) + 1.0F;
+                    }
+                }
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutBounce 内部实现
+    inline auto out_bounce_impl(float t) -> float {
+        constexpr float n1 = 7.5625F;
+        constexpr float d1 = 2.75F;
+        if (t < 1.0F / d1) {
+            return n1 * t * t;
+        }
+        if (t < 2.0F / d1) {
+            t -= 1.5F / d1;
+            return (n1 * t * t) + 0.75F;
+        }
+        if (t < 2.5F / d1) {
+            t -= 2.25F / d1;
+            return (n1 * t * t) + 0.9375F;
+        }
+        t -= 2.625F / d1;
+        return (n1 * t * t) + 0.984375F;
+    }
+
+    //! @brief easeInBounce
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInBounceAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInBounceAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = 1.0F - out_bounce_impl(1.0F - process);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeOutBounce
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseOutBounceAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseOutBounceAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = out_bounce_impl(process);
+                this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
+            }
+            return this->now_value;
+        }
+    };
+
+    //! @brief easeInOutBounce
+    //! @tparam T 值类型
+    //! @tparam TimeType 时间类型
+    //! @note https://easings.net/
+    template<typename T, typename TimeType = std::chrono::milliseconds>
+    class EaseInOutBounceAnimation final : public Animation<T, TimeType> {
+    public:
+        explicit EaseInOutBounceAnimation(T value, int duration = 0) : Animation<T, TimeType>(value, duration) {}
+
+        auto update() -> T& override {
+            if (this->change) {
+                const float process = this->progress();
+                const float eased = process < 0.5F ? (1.0F - out_bounce_impl(1.0F - (2.0F * process))) * 0.5F : (1.0F + out_bounce_impl((2.0F * process) - 1.0F)) * 0.5F;
                 this->now_value = this->start_value + ((this->new_value - this->start_value) * eased);
             }
             return this->now_value;

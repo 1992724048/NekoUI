@@ -1,7 +1,19 @@
 ﻿#pragma once
+#include "../../Type.hpp"
 
 namespace neko::css {
-    class CSS {};
+    struct Background {
+        type::Color color;
+    };
 
-    class Background {};
+    struct Size {
+        glm::vec2 size;
+        glm::vec2 margin;
+        glm::vec2 padding;
+    };
+
+    struct Border {
+        float size;
+        type::Color color;
+    };
 } // namespace neko::css
