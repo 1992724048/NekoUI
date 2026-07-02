@@ -4,9 +4,9 @@
 #include <string>
 
 #include "NekoUI/Engine/Engine.hpp"
-#include "NekoUI/Widget/Component/Button.hpp"
-#include "NekoUI/Widget/Component/TextInput.hpp"
-#include "NekoUI/Widget/Component/Checkbox.hpp"
+#include "NekoUI/Widget/Button/Button.hpp"
+#include "NekoUI/Widget/Checkbox/Checkbox.hpp"
+#include "NekoUI/Widget/TextInput/TextInput.hpp"
 
 namespace {
     auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> LRESULT {

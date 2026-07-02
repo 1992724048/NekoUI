@@ -156,46 +156,41 @@ namespace neko::engine {
                 context.dirty = true;
                 break;
             }
-            default:
-                switch (msg) {
-                    case WM_MOUSEMOVE:
-                    case WM_LBUTTONDOWN:
-                    case WM_LBUTTONUP:
-                    case WM_RBUTTONDOWN:
-                    case WM_RBUTTONUP:
-                    case WM_MBUTTONDOWN:
-                    case WM_MBUTTONUP:
-                    case WM_MOUSEWHEEL:
-                        for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
-                            if ((*it)->handle_event(context, msg, wparam, lparam)) {
-                                break;
-                            }
-                        }
+            case WM_MOUSEMOVE:
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+            case WM_RBUTTONDOWN:
+            case WM_RBUTTONUP:
+            case WM_MBUTTONDOWN:
+            case WM_MBUTTONUP:
+            case WM_MOUSEWHEEL:
+                for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
+                    if ((*it)->handle_event(context, msg, wparam, lparam)) {
                         break;
-                    case WM_KEYDOWN:
-                        if (wparam == VK_TAB) {
-                            focus_next();
-                            return;
-                        }
-                        [[fallthrough]];
-                    case WM_KEYUP:
-                    case WM_CHAR:
-                        if (wparam == '\t') {
-                            break;
-                        }
-                        if (m_focused_widget != nullptr) {
-                            m_focused_widget->handle_event(context, msg, wparam, lparam);
-                        }
-                        break;
-                    default:
-                        for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
-                            if ((*it)->handle_event(context, msg, wparam, lparam)) {
-                                break;
-                            }
-                        }
-                        break;
+                    }
                 }
                 break;
+            case WM_KEYDOWN:
+                if (wparam == VK_TAB) {
+                    focus_next();
+                    return;
+                }
+                [[fallthrough]];
+            case WM_KEYUP:
+            case WM_CHAR:
+                if (wparam == '\t') {
+                    break;
+                }
+                if (m_focused_widget != nullptr) {
+                    m_focused_widget->handle_event(context, msg, wparam, lparam);
+                }
+                break;
+            default:
+                for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
+                    if ((*it)->handle_event(context, msg, wparam, lparam)) {
+                        break;
+                    }
+                }
         }
     }
 

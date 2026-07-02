@@ -5,9 +5,9 @@
 namespace neko::widget::layout {
     class VStack final : public Widget {
     public:
-        explicit VStack(int spacing = 4) : m_spacing(spacing) {}
+        explicit VStack(const int spacing = 4) : m_spacing(spacing) {}
 
-        auto layout(Constraints constraints) -> void override {
+        auto layout(const Constraints constraints) -> void override {
             int current_y = constraints.y;
             for (auto* child : children()) {
                 child->set_bounds(constraints.x, current_y, constraints.width, child->height());
@@ -21,9 +21,9 @@ namespace neko::widget::layout {
 
     class HStack final : public Widget {
     public:
-        explicit HStack(int spacing = 4) : m_spacing(spacing) {}
+        explicit HStack(const int spacing = 4) : m_spacing(spacing) {}
 
-        auto layout(Constraints constraints) -> void override {
+        auto layout(const Constraints constraints) -> void override {
             int current_x = constraints.x;
             for (auto* child : children()) {
                 child->set_bounds(current_x, constraints.y, child->width(), constraints.height);
@@ -37,7 +37,7 @@ namespace neko::widget::layout {
 
     class ZStack final : public Widget {
     public:
-        auto layout(Constraints constraints) -> void override {
+        auto layout(const Constraints constraints) -> void override {
             for (auto* child : children()) {
                 child->set_bounds(constraints.x, constraints.y, constraints.width, constraints.height);
                 child->layout(constraints);
