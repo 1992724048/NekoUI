@@ -65,7 +65,7 @@ namespace neko::widget {
         }
 
         auto handle_event(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool override {
-            if (msg == WM_LBUTTONDOWN && hit_test(context.mouse)) {
+            if (msg == WM_LBUTTONDOWN && context.mouse.is_inside(bounds(), context.dpi_scale)) {
                 if (context.request_focus) {
                     context.request_focus(this);
                 }

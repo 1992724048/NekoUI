@@ -142,7 +142,7 @@ namespace neko::widget {
         }
         switch (msg) {
             case WM_LBUTTONDOWN:
-                if (hit_test(context.mouse)) {
+                if (context.mouse.is_inside(m_bounds, context.dpi_scale)) {
                     if (focusable()) {
                         if (context.request_focus) {
                             context.request_focus(this);
@@ -158,7 +158,7 @@ namespace neko::widget {
             case WM_MBUTTONDOWN:
             case WM_MBUTTONUP:
             case WM_MOUSEWHEEL:
-                if (hit_test(context.mouse)) {
+                if (context.mouse.is_inside(m_bounds, context.dpi_scale)) {
                     return true;
                 }
                 return false;
