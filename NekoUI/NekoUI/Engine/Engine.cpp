@@ -88,12 +88,18 @@ namespace neko::engine {
     }
 
     auto Engine::render_frame() -> void {
+        // Delta time for animations
+        const auto now = Clock::now();
+        const auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_last_frame);
+        m_last_frame = now;
+
         if (resize_pending.exchange(false)) {
             backend.resize(resize_size);
         }
 
         backend.begin();
         for (const auto& root : m_root_widgets) {
+            root->animate(dt);
             root->layout({0, 0, resize_size.x, resize_size.y});
             root->draw(context, backend);
         }

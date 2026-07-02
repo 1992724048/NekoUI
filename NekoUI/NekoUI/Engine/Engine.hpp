@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <memory>
@@ -89,6 +90,8 @@ namespace neko::engine {
         glm::ivec2 resize_size{};
 
         std::atomic_int animation{};
+        using Clock = std::chrono::steady_clock;
+        Clock::time_point m_last_frame{Clock::now()};
         std::atomic_bool pending{};
         widget::Widget* m_focused_widget = nullptr;
         std::vector<std::unique_ptr<widget::Widget>> m_root_widgets{};
