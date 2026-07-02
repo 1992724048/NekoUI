@@ -367,3 +367,4 @@ FodyWeavers.xsd
 /x64-Debug
 /x64-Release
 /AGENTS.md
+stb_truetype.h
