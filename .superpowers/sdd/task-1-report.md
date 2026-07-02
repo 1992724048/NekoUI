@@ -1,29 +1,33 @@
-# Task 1 Report: Widget 基类重构
+# Task 1: Extract standalone easing functions to Animation.hpp
 
-## Status
-**DONE**
+## Implementation
 
-## Commit
-`190eb86` — `feat: Widget 基类重构 —— 树结构、bounds、z-order、dirty 传播`
+Added 30 standalone `inline auto easing_name(float t) -> float` easing functions in the `neko::animation` namespace, right before the closing `}` brace.
 
-## Summary
-Replaced entire `Widget.hpp` (25 lines) with new retained-mode base class (175 lines), adding:
+## Files Changed
 
-| Feature | Description |
-|---------|-------------|
-| `Constraints` struct | Available area for layout (x, y, width, height, defaults INT_MAX) |
-| Tree structure | `m_parent`/`m_children`, `register_child()`/`unregister_child()` (private, friend `Sub`) |
-| Bounds | `glm::ivec4` with `set_bounds()`, `bounds()`, `x()`, `y()`, `width()`, `height()` |
-| Z-order | `m_z_order`, `set_z_order()`, `z_order()` |
-| Dirty propagation | `mark_dirty()` cascades to parent, `dirty()`, `clear_dirty()` |
-| Visibility | `m_visible`, `set_visible()`, checked in `hit_test` |
-| `hit_test()` | Virtual, default uses `mouse.is_inside(m_bounds)` |
-| Default `draw()` | Iterates children sorted by z_order ascending |
-| Default `update()` | Iterates children |
-| Default `handle_event()` | Children first (z_order descending), then self hit-test for mouse events |
-| Default `layout()` | Empty (subclass override) |
-| Sort helpers | `children_sorted_asc()`, `children_sorted_desc()` using `std::ranges::sort` |
+- `NekoUI/NekoUI/Widget/Component/Animation.hpp` — inserted 89 lines (functions + comments) at line 835, before the namespace closing brace. File grew from 835 to 924 lines.
 
-## Concerns
-- No compile test possible until later tasks adapt dependent code. Pre-existing GLM include path issue (`glm/glm.hpp` not found by LSP) is unchanged — GLM lives at `../Library/glm/` and is resolved at build time.
-- `std::ranges::find`/`sort` require `<algorithm>` which is not explicitly included but likely comes transitively; if compilation fails, add `#include <algorithm>`.
+## Functions Added
+
+- `linear`
+- `ease_in_sine`, `ease_out_sine`, `ease_in_out_sine`
+- `ease_in_quad`, `ease_out_quad`, `ease_in_out_quad`
+- `ease_in_cubic`, `ease_out_cubic`, `ease_in_out_cubic`
+- `ease_in_quart`, `ease_out_quart`, `ease_in_out_quart`
+- `ease_in_quint`, `ease_out_quint`, `ease_in_out_quint`
+- `ease_in_expo`, `ease_out_expo`, `ease_in_out_expo`
+- `ease_in_circ`, `ease_out_circ`, `ease_in_out_circ`
+- `ease_in_back`, `ease_out_back`, `ease_in_out_back`
+- `ease_in_elastic`, `ease_out_elastic`, `ease_in_out_elastic`
+- `ease_in_bounce`, `ease_out_bounce`, `ease_in_out_bounce`
+
+## Self-Review Findings
+
+- Bounce functions correctly delegate to existing `out_bounce_impl` helper — no duplication.
+- No existing code was modified or removed.
+- LSP diagnostics shown after edit are all pre-existing (errors relating to `std::numbers` and `std::optional` not being recognized by the LSP compiler). The project builds with Intel C++ 2026 / MSVC v145 with `stdcpplatest` which has full `<numbers>` support.
+
+## Commits
+
+- `ee5a6da` — feat: extract 30 standalone easing functions to Animation.hpp

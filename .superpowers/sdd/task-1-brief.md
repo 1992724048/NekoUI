@@ -1,215 +1,114 @@
-# Task 1: Widget 基类重构
+### Task 1: Extract standalone easing functions to Animation.hpp
 
-**Location in project:** This is the foundational task — every other task depends on it. Changes the core Widget base class to support tree structure and retained mode.
+**Files:**
+- Modify: `NekoUI/NekoUI/Widget/Component/Animation.hpp`
 
-**File to modify:**
-- `NekoUI/NekoUI/Widget/Widget.hpp`
+**Interfaces:**
+- Produces: 30 standalone `auto easing_name(float t) -> float` functions in `neko::animation` namespace
+- Keeps existing `out_bounce_impl` helper as-is
 
-**What to do:**
-Replace the entire `Widget.hpp` with the new version that adds:
-1. `Constraints` struct (x, y, width, height available area)
-2. Tree structure: `m_parent`, `m_children`, `register_child()`/`unregister_child()` (private, `friend class Sub`)
-3. Coordinate system: `m_bounds` (glm::ivec4), `set_bounds()`, `bounds()`, `x()`, `y()`, `width()`, `height()`
-4. Z-order: `m_z_order`, `set_z_order()`, `z_order()`
-5. Dirty propagation: `m_dirty`, `mark_dirty()` (propagates to parent), `dirty()`, `clear_dirty()`
-6. Visibility: `m_visible`, `set_visible()`
-7. Virtual `hit_test(const neko::mouse::Mouse&)` — default: `is_inside(bounds)`
-8. Default `draw()` iterates children sorted by z_order ascending
-9. Default `update()` iterates children
-10. Default `handle_event()` tries children (z_order descending first, then self hit-test)
-11. Default `layout()` empty (subclass override)
-12. Helper sort methods: `children_sorted_asc()`, `children_sorted_desc()`
+- [ ] **Step 1: Add 30 easing functions at end of Animation.hpp**
 
-## Exact code to write
+Add after line 835 (the line `} // namespace neko::animation`), before the closing brace.
+
+In the `neko::animation` namespace, right before the closing `}`, add:
 
 ```cpp
-#pragma once
+// ── Standalone easing functions ──
+inline auto linear(float t) -> float { return t; }
 
-#include <vector>
-#include <glm/glm.hpp>
+// Sine
+inline auto ease_in_sine(float t) -> float { return 1.0F - std::cos(t * std::numbers::pi_v<float> * 0.5F); }
+inline auto ease_out_sine(float t) -> float { return std::sin(t * std::numbers::pi_v<float> * 0.5F); }
+inline auto ease_in_out_sine(float t) -> float { return -(std::cos(std::numbers::pi_v<float> * t) - 1.0F) * 0.5F; }
 
-#include "../Backend/Backend.hpp"
+// Quad
+inline auto ease_in_quad(float t) -> float { return t * t; }
+inline auto ease_out_quad(float t) -> float { return 1.0F - (1.0F - t) * (1.0F - t); }
+inline auto ease_in_out_quad(float t) -> float {
+    return t < 0.5F ? 2.0F * t * t : 1.0F - (-2.0F * t + 2.0F) * (-2.0F * t + 2.0F) * 0.5F;
+}
 
-namespace neko::widget {
+// Cubic
+inline auto ease_in_cubic(float t) -> float { return t * t * t; }
+inline auto ease_out_cubic(float t) -> float { return 1.0F - (1.0F - t) * (1.0F - t) * (1.0F - t); }
+inline auto ease_in_out_cubic(float t) -> float {
+    return t < 0.5F ? 4.0F * t * t * t : 1.0F - (-2.0F * t + 2.0F) * (-2.0F * t + 2.0F) * (-2.0F * t + 2.0F) * 0.5F;
+}
 
-    struct Constraints {
-        int x = 0, y = 0;
-        int width = INT_MAX;
-        int height = INT_MAX;
-    };
+// Quart
+inline auto ease_in_quart(float t) -> float { auto v = t * t; return v * v; }
+inline auto ease_out_quart(float t) -> float { auto u = 1.0F - t; auto v = u * u; return 1.0F - v * v; }
+inline auto ease_in_out_quart(float t) -> float {
+    if (t < 0.5F) { auto u = 2.0F * t; auto v = u * u; return v * v * 0.5F; }
+    auto u = -2.0F * t + 2.0F; auto v = u * u; return (2.0F - v * v) * 0.5F;
+}
 
-    class Widget {
-        template<typename T> friend class Sub;
+// Quint
+inline auto ease_in_quint(float t) -> float { auto v = t * t; return v * v * t; }
+inline auto ease_out_quint(float t) -> float { auto u = 1.0F - t; auto v = u * u; return 1.0F - v * v * u; }
+inline auto ease_in_out_quint(float t) -> float {
+    if (t < 0.5F) { auto u = 2.0F * t; auto v = u * u; return v * v * u * 0.5F; }
+    auto u = -2.0F * t + 2.0F; auto v = u * u; return (2.0F - v * v * u) * 0.5F;
+}
 
-    public:
-        virtual ~Widget() = default;
+// Expo
+inline auto ease_in_expo(float t) -> float { return t == 0.0F ? 0.0F : std::pow(2.0F, 10.0F * t - 10.0F); }
+inline auto ease_out_expo(float t) -> float { return t == 1.0F ? 1.0F : 1.0F - std::pow(2.0F, -10.0F * t); }
+inline auto ease_in_out_expo(float t) -> float {
+    if (t == 0.0F || t == 1.0F) return t;
+    return t < 0.5F ? std::pow(2.0F, 20.0F * t - 10.0F) * 0.5F
+                    : (2.0F - std::pow(2.0F, -20.0F * t + 10.0F)) * 0.5F;
+}
 
-        virtual auto draw(engine::Context& context, backend::Backend& backend) -> void;
-        virtual auto layout(Constraints constraints) -> void;
-        virtual auto update(engine::Context& context) -> void;
-        virtual auto handle_event(engine::Context& context, UINT msg,
-                                  WPARAM wparam, LPARAM lparam) -> bool;
+// Circ
+inline auto ease_in_circ(float t) -> float { return 1.0F - std::sqrt(1.0F - t * t); }
+inline auto ease_out_circ(float t) -> float { return std::sqrt(1.0F - (t - 1.0F) * (t - 1.0F)); }
+inline auto ease_in_out_circ(float t) -> float {
+    return t < 0.5F ? (1.0F - std::sqrt(1.0F - 4.0F * t * t)) * 0.5F
+                    : (std::sqrt(1.0F - (-2.0F * t + 2.0F) * (-2.0F * t + 2.0F)) + 1.0F) * 0.5F;
+}
 
-        [[nodiscard]] virtual auto hit_test(const neko::mouse::Mouse& mouse) const -> bool;
+// Back
+inline auto ease_in_back(float t) -> float { constexpr float c1 = 1.70158F; constexpr float c3 = c1 + 1.0F; return c3 * t * t * t - c1 * t * t; }
+inline auto ease_out_back(float t) -> float { constexpr float c1 = 1.70158F; constexpr float c3 = c1 + 1.0F; auto u = t - 1.0F; return 1.0F + c3 * u * u * u + c1 * u * u; }
+inline auto ease_in_out_back(float t) -> float {
+    constexpr float c1 = 1.70158F; constexpr float c2 = c1 * 1.525F;
+    return t < 0.5F ? (2.0F * t * 2.0F * t * ((c2 + 1.0F) * 2.0F * t - c2)) * 0.5F
+                    : ((2.0F * t - 2.0F) * (2.0F * t - 2.0F) * ((c2 + 1.0F) * (t * 2.0F - 2.0F) + c2) + 2.0F) * 0.5F;
+}
 
-        auto mark_dirty() -> void;
-        [[nodiscard]] auto dirty() const -> bool { return m_dirty; }
-        auto clear_dirty() -> void { m_dirty = false; }
+// Elastic
+inline auto ease_in_elastic(float t) -> float {
+    if (t == 0.0F || t == 1.0F) return t;
+    constexpr float c4 = 2.0F * std::numbers::pi_v<float> / 3.0F;
+    return -std::pow(2.0F, 10.0F * t - 10.0F) * std::sin((t * 10.0F - 10.75F) * c4);
+}
+inline auto ease_out_elastic(float t) -> float {
+    if (t == 0.0F || t == 1.0F) return t;
+    constexpr float c4 = 2.0F * std::numbers::pi_v<float> / 3.0F;
+    return std::pow(2.0F, -10.0F * t) * std::sin((t * 10.0F - 0.75F) * c4) + 1.0F;
+}
+inline auto ease_in_out_elastic(float t) -> float {
+    if (t == 0.0F || t == 1.0F) return t;
+    constexpr float c5 = 2.0F * std::numbers::pi_v<float> / 4.5F;
+    if (t < 0.5F) return -(std::pow(2.0F, 20.0F * t - 10.0F) * std::sin((20.0F * t - 11.125F) * c5)) * 0.5F;
+    return (std::pow(2.0F, -20.0F * t + 10.0F) * std::sin((20.0F * t - 11.125F) * c5)) * 0.5F + 1.0F;
+}
 
-        [[nodiscard]] auto children() const -> const std::vector<Widget*>& { return m_children; }
-        [[nodiscard]] auto parent() const -> Widget* { return m_parent; }
-        [[nodiscard]] auto child_count() const -> size_t { return m_children.size(); }
-        [[nodiscard]] auto root() -> Widget*;
-
-        auto set_bounds(int x, int y, int w, int h) -> void;
-        auto set_bounds(glm::ivec4 bounds) -> void;
-        [[nodiscard]] auto bounds() const -> const glm::ivec4& { return m_bounds; }
-        [[nodiscard]] auto x() const -> int { return m_bounds.x; }
-        [[nodiscard]] auto y() const -> int { return m_bounds.y; }
-        [[nodiscard]] auto width() const -> int { return m_bounds.z; }
-        [[nodiscard]] auto height() const -> int { return m_bounds.w; }
-
-        auto set_z_order(int order) -> void { m_z_order = order; }
-        [[nodiscard]] auto z_order() const -> int { return m_z_order; }
-
-        auto set_visible(bool v) -> void;
-        [[nodiscard]] auto visible() const -> bool { return m_visible; }
-
-    protected:
-        Widget() = default;
-
-    private:
-        auto register_child(Widget* child) -> void;
-        auto unregister_child(Widget* child) -> void;
-        [[nodiscard]] auto children_sorted_asc() const -> std::vector<Widget*>;
-        [[nodiscard]] auto children_sorted_desc() const -> std::vector<Widget*>;
-
-        Widget* m_parent = nullptr;
-        std::vector<Widget*> m_children;
-        glm::ivec4 m_bounds{};
-        int m_z_order = 0;
-        bool m_dirty = true;
-        bool m_visible = true;
-    };
-
-    // === inline implementations ===
-
-    inline auto Widget::draw(engine::Context& context, backend::Backend& backend) -> void {
-        for (auto* child : children_sorted_asc()) {
-            child->draw(context, backend);
-        }
-        m_dirty = false;
-    }
-
-    inline auto Widget::layout(Constraints /*constraints*/) -> void {}
-
-    inline auto Widget::update(engine::Context& context) -> void {
-        for (auto* child : m_children) {
-            child->update(context);
-        }
-    }
-
-    inline auto Widget::handle_event(engine::Context& context, UINT msg,
-                                     WPARAM wparam, LPARAM lparam) -> bool
-    {
-        for (auto* child : children_sorted_desc()) {
-            if (child->handle_event(context, msg, wparam, lparam)) {
-                return true;
-            }
-        }
-        switch (msg) {
-            case WM_MOUSEMOVE:
-            case WM_LBUTTONDOWN:
-            case WM_LBUTTONUP:
-            case WM_RBUTTONDOWN:
-            case WM_RBUTTONUP:
-            case WM_MBUTTONDOWN:
-            case WM_MBUTTONUP:
-            case WM_MOUSEWHEEL:
-                if (hit_test(context.mouse)) {
-                    return true;
-                }
-                return false;
-            default:
-                return false;
-        }
-    }
-
-    inline auto Widget::hit_test(const neko::mouse::Mouse& mouse) const -> bool {
-        if (!m_visible) return false;
-        return mouse.is_inside(m_bounds);
-    }
-
-    inline auto Widget::mark_dirty() -> void {
-        m_dirty = true;
-        if (m_parent) {
-            m_parent->mark_dirty();
-        }
-    }
-
-    inline auto Widget::root() -> Widget* {
-        auto* cur = this;
-        while (cur->m_parent) {
-            cur = cur->m_parent;
-        }
-        return cur;
-    }
-
-    inline auto Widget::set_bounds(int x, int y, int w, int h) -> void {
-        m_bounds = {x, y, w, h};
-        mark_dirty();
-    }
-
-    inline auto Widget::set_bounds(glm::ivec4 bounds) -> void {
-        m_bounds = bounds;
-        mark_dirty();
-    }
-
-    inline auto Widget::set_visible(bool v) -> void {
-        m_visible = v;
-        mark_dirty();
-    }
-
-    inline auto Widget::register_child(Widget* child) -> void {
-        child->m_parent = this;
-        m_children.push_back(child);
-        mark_dirty();
-    }
-
-    inline auto Widget::unregister_child(Widget* child) -> void {
-        auto it = std::ranges::find(m_children, child);
-        if (it != m_children.end()) {
-            m_children.erase(it);
-        }
-        child->m_parent = nullptr;
-        mark_dirty();
-    }
-
-    inline auto Widget::children_sorted_asc() const -> std::vector<Widget*> {
-        auto sorted = m_children;
-        std::ranges::sort(sorted, std::ranges::less{}, &Widget::z_order);
-        return sorted;
-    }
-
-    inline auto Widget::children_sorted_desc() const -> std::vector<Widget*> {
-        auto sorted = m_children;
-        std::ranges::sort(sorted, std::ranges::greater{}, &Widget::z_order);
-        return sorted;
-    }
-
-} // namespace neko::widget
+// Bounce
+inline auto ease_in_bounce(float t) -> float { return 1.0F - out_bounce_impl(1.0F - t); }
+inline auto ease_out_bounce(float t) -> float { return out_bounce_impl(t); }
+inline auto ease_in_out_bounce(float t) -> float {
+    return t < 0.5F ? (1.0F - out_bounce_impl(1.0F - 2.0F * t)) * 0.5F
+                    : (1.0F + out_bounce_impl(2.0F * t - 1.0F)) * 0.5F;
+}
 ```
 
-## Global Constraints
-- Trailing return types: `auto foo() -> void`
-- Namespace: `neko::widget`
-- Bounds: `glm::ivec4(x, y, width, height)` — not x1/y1/x2/y2
+- [ ] **Step 2: Verify** — Animation.hpp compiles standalone with `<cmath>`, `<numbers>` already included.
 
-## Verification
-This is a header-only change. No compile test possible until later tasks adapt the code that uses Widget. Verify correctness by reading the file once written.
-
-## Commit
+- [ ] **Step 3: Commit**
 ```bash
-git add NekoUI/NekoUI/Widget/Widget.hpp
-git commit -m "feat: Widget 基类重构 —— 树结构、bounds、z-order、dirty 传播"
+git add NekoUI/NekoUI/Widget/Component/Animation.hpp
+git commit -m "feat: extract 30 standalone easing functions to Animation.hpp"
 ```
