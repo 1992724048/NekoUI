@@ -40,8 +40,19 @@ namespace {
                 case WM_SYSKEYDOWN:
                 case WM_SYSKEYUP:
                 case WM_CHAR:
+                case WM_TIMER:
                     engine->push_msg(msg, wparam, lparam);
                     break;
+                case WM_SETCURSOR: {
+                    if (LOWORD(lparam) == HTCLIENT) {
+                        POINT pt;
+                        GetCursorPos(&pt);
+                        ScreenToClient(hwnd, &pt);
+                        SetCursor(LoadCursorW(nullptr, engine->has_interactive_at(pt) ? IDC_HAND : IDC_ARROW));
+                        return TRUE;
+                    }
+                    break;
+                }
                 default: ;
             }
         }
@@ -73,6 +84,7 @@ auto main(int argc, char* argv[]) -> int try {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    SetTimer(hwnd, 1, 500, nullptr); // 500ms 定时器驱动光标闪烁
 
     neko::engine::Engine engine(hwnd);
 

@@ -57,6 +57,9 @@ namespace neko::widget {
         [[nodiscard]] auto visible() const -> bool;
 
         [[nodiscard]] virtual auto focusable() const -> bool;
+        [[nodiscard]] virtual auto wants_hand_cursor() const -> bool {
+            return focusable();
+        }
         virtual auto on_focus_gained() -> void;
         virtual auto on_focus_lost() -> void;
         [[nodiscard]] auto has_focus() const -> bool;

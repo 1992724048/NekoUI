@@ -11,6 +11,8 @@ namespace neko::widget {
     public:
         explicit Button(glm::ivec4 rect, std::string label = "");
 
+        [[nodiscard]] auto wants_hand_cursor() const -> bool override { return true; }
+
         std::function<void()> on_click;
     protected:
         auto on_update(engine::Context& context) -> void override;

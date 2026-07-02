@@ -58,6 +58,9 @@ namespace neko::engine {
         [[nodiscard]] auto focused_widget() const -> widget::Widget* {
             return m_focused_widget;
         }
+
+        //! @brief 判断某点下是否有需要手型光标的控件
+        [[nodiscard]] auto has_interactive_at(POINT pt) const -> bool;
     private:
         static constexpr size_t MSG_QUEUE_MAX = 32;
 

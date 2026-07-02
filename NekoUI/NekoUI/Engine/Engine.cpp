@@ -188,6 +188,8 @@ namespace neko::engine {
                     m_focused_widget->handle_event(context, msg, wparam, lparam);
                 }
                 break;
+            case WM_TIMER:
+                break; // 仅用于周期唤醒 msg_loop → update() → 光标闪烁
             default:
                 for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
                     if ((*it)->handle_event(context, msg, wparam, lparam)) {
@@ -203,6 +205,26 @@ namespace neko::engine {
 
     auto Engine::anim_dec() -> void {
         --animation;
+    }
+
+    auto Engine::has_interactive_at(const POINT pt) const -> bool {
+        const auto deepest = [&](const auto& self, const widget::Widget* w) -> const widget::Widget* {
+            if (!w->visible()) return nullptr;
+            const auto& b = w->bounds();
+            if (pt.x < b.x || pt.x >= b.x + b.z || pt.y < b.y || pt.y >= b.y + b.w) {
+                return nullptr;
+            }
+            for (auto* child : w->children_sorted_desc()) {
+                if (const auto* found = self(self, child)) return found;
+            }
+            return w;
+        };
+        for (const auto& root : m_root_widgets) {
+            if (const auto* w = deepest(deepest, root.get())) {
+                if (w->wants_hand_cursor()) return true;
+            }
+        }
+        return false;
     }
 
     auto Engine::focus_next() -> void {
