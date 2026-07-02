@@ -5,6 +5,8 @@
 
 #include "NekoUI/Engine/Engine.hpp"
 #include "NekoUI/Widget/Component/Button.hpp"
+#include "NekoUI/Widget/Component/TextInput.hpp"
+#include "NekoUI/Widget/Component/Checkbox.hpp"
 
 namespace {
     auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> LRESULT {
@@ -79,6 +81,16 @@ auto main(int argc, char* argv[]) -> int try {
     auto& btn = engine.add<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
     btn.on_click = [] -> void {
         std::println("[NekoUI] Button clicked!\n");
+    };
+
+    auto& input = engine.add<neko::widget::TextInput>(glm::ivec4{100, 170, 200, 30}, "请输入...");
+    input.on_text_changed = [](std::string_view text) -> void {
+        std::println("[NekoUI] Text: {}", text);
+    };
+
+    auto& cb = engine.add<neko::widget::Checkbox>(glm::ivec4{100, 220, 200, 24}, "同意协议");
+    cb.on_toggled = [](bool checked) -> void {
+        std::println("[NekoUI] Checkbox: {}", checked);
     };
 
     MSG msg{};
