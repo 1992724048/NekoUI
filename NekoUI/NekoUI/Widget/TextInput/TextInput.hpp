@@ -1,8 +1,7 @@
-// 2026-07-02 08:06:31
-
 #pragma once
 
 #include "../Widget.hpp"
+#include "../State/State.hpp"
 
 #include <chrono>
 #include <functional>
@@ -31,7 +30,7 @@ namespace neko::widget {
         [[nodiscard]] auto has_selection() const -> bool;
         auto delete_selection() -> void;
 
-        std::string m_text;
+        neko::state::State<std::string> m_text;
         std::string m_placeholder;
         int m_cursor_pos = 0;
         int m_sel_start = -1;
