@@ -51,14 +51,14 @@ namespace neko::widget {
             // 光标
             if (has_focus() && m_cursor_visible) {
                 int cx = b.x + 4 + m_cursor_pos * 8;
-                backend.draw_rect({cx, b.y + 3, 2, b.w - 6}, m_cursor_color);
+                backend.draw_rect({cx, b.y + 3, 2, b.w - 6}, m_cursor_color, 1);
             }
 
             Widget::draw(context, backend);
         }
 
         auto handle_event(engine::Context& context, UINT msg,
-                          WPARAM wparam, LPARAM /*lparam*/) -> bool override
+                          WPARAM wparam, LPARAM lparam) -> bool override
         {
             if (msg == WM_CHAR) {
                 const auto ch = static_cast<char>(wparam);
