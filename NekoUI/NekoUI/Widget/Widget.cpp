@@ -2,21 +2,35 @@
 neko::widget::Widget::~Widget() = default;
 
 auto neko::widget::Widget::draw(engine::Context& context, backend::Backend& backend) -> void {
+    on_draw(context, backend);
     for (auto* child : children_sorted_asc()) {
         child->draw(context, backend);
     }
     m_dirty = false;
 }
 
+auto neko::widget::Widget::animate(const std::chrono::milliseconds dt) -> void {
+    on_animate(dt);
+    for (auto* child : m_children) {
+        if (child->m_visible) {
+            child->animate(dt);
+        }
+    }
+}
+
 auto neko::widget::Widget::layout(Constraints constraints) -> void {}
 
 auto neko::widget::Widget::update(engine::Context& context) -> void {
+    on_update(context);
     for (auto* child : m_children) {
         child->update(context);
     }
 }
 
 auto neko::widget::Widget::handle_event(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
+    if (on_handle(context, msg, wparam, lparam)) {
+        return true;
+    }
     for (auto* child : children_sorted_desc()) {
         if (child->handle_event(context, msg, wparam, lparam)) {
             return true;
@@ -143,18 +157,11 @@ auto neko::widget::Widget::focusable() const -> bool {
 }
 
 auto neko::widget::Widget::on_focus_gained() -> void {}
+
 auto neko::widget::Widget::on_focus_lost() -> void {}
 
 auto neko::widget::Widget::has_focus() const -> bool {
     return m_has_focus;
-}
-
-auto neko::widget::Widget::animate(const std::chrono::milliseconds dt) -> void {
-    for (auto* child : m_children) {
-        if (child->m_visible) {
-            child->animate(dt);
-        }
-    }
 }
 
 neko::widget::Widget::Widget() {

@@ -6,17 +6,15 @@ neko::widget::Checkbox::Checkbox(const glm::ivec4 bounds, std::string label) : m
     m_bg_anim = m_checked ? m_checked_color : m_unchecked_color;
 }
 
-auto neko::widget::Checkbox::update(engine::Context& context) -> void {
+auto neko::widget::Checkbox::on_update(engine::Context& context) -> void {
     m_bg_anim.set_context(context);
-    Widget::update(context);
 }
 
-auto neko::widget::Checkbox::animate(const std::chrono::milliseconds dt) -> void {
+auto neko::widget::Checkbox::on_animate(const std::chrono::milliseconds dt) -> void {
     m_bg_anim.update(dt);
-    Widget::animate(dt);
 }
 
-auto neko::widget::Checkbox::draw(engine::Context& context, backend::Backend& backend) -> void {
+auto neko::widget::Checkbox::on_draw(engine::Context& context, backend::Backend& backend) -> void {
     const auto& b = bounds();
     constexpr int box = 18;
     const int bx = b.x;
@@ -25,12 +23,7 @@ auto neko::widget::Checkbox::draw(engine::Context& context, backend::Backend& ba
     const glm::vec4 current_f = m_bg_anim;
 
     // Box background (animated color)
-    const glm::ivec4 box_color{
-        static_cast<int>(current_f.r * 255.0F + 0.5F),
-        static_cast<int>(current_f.g * 255.0F + 0.5F),
-        static_cast<int>(current_f.b * 255.0F + 0.5F),
-        255,
-    };
+    const glm::ivec4 box_color{static_cast<int>(current_f.r * 255.0F + 0.5F), static_cast<int>(current_f.g * 255.0F + 0.5F), static_cast<int>(current_f.b * 255.0F + 0.5F), 255,};
 
     if (m_checked || m_bg_anim.animating()) {
         backend.draw_rect_fill({bx, by, box, box}, box_color);
@@ -55,11 +48,9 @@ auto neko::widget::Checkbox::draw(engine::Context& context, backend::Backend& ba
     if (has_focus()) {
         backend.draw_rect(b, m_focus_border, 1);
     }
-
-    Widget::draw(context, backend);
 }
 
-auto neko::widget::Checkbox::handle_event(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
+auto neko::widget::Checkbox::on_handle(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
     if (msg == WM_LBUTTONDOWN && context.mouse.is_inside(bounds(), context.dpi_scale)) {
         if (context.request_focus) {
             context.request_focus(this);
@@ -71,7 +62,7 @@ auto neko::widget::Checkbox::handle_event(engine::Context& context, const UINT m
         toggle(context);
         return true;
     }
-    return Widget::handle_event(context, msg, wparam, lparam);
+    return false;
 }
 
 auto neko::widget::Checkbox::focusable() const -> bool {
@@ -97,7 +88,7 @@ auto neko::widget::Checkbox::toggle() -> void {
 
 auto neko::widget::Checkbox::toggle(engine::Context& context) -> void {
     m_checked = !m_checked;
-    m_bg_anim = m_checked ? m_checked_color : m_unchecked_color;  // handles animation_start via ctx_
+    m_bg_anim = m_checked ? m_checked_color : m_unchecked_color; // handles animation_start via ctx_
     context.dirty = true;
     if (on_toggled) {
         on_toggled(m_checked);

@@ -11,11 +11,11 @@ namespace neko::widget {
     public:
         explicit Button(glm::ivec4 rect, std::string label = "");
 
-        auto update(engine::Context& context) -> void override;
-        auto animate(std::chrono::milliseconds dt) -> void override;
-        auto draw(engine::Context& context, backend::Backend& backend) -> void override;
-
         std::function<void()> on_click;
+    protected:
+        auto on_update(engine::Context& context) -> void override;
+        auto on_animate(std::chrono::milliseconds dt) -> void override;
+        auto on_draw(engine::Context& context, backend::Backend& backend) -> void override;
     private:
         std::string label_;
 

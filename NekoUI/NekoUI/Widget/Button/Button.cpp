@@ -4,7 +4,7 @@ neko::widget::Button::Button(const glm::ivec4 rect, std::string label) : label_(
     set_bounds(rect);
 }
 
-auto neko::widget::Button::update(engine::Context& context) -> void {
+auto neko::widget::Button::on_update(engine::Context& context) -> void {
     fill_color_.set_context(context);
     const float s = context.dpi_scale;
     const bool hover = context.mouse.is_inside(bounds(), s);
@@ -27,16 +27,13 @@ auto neko::widget::Button::update(engine::Context& context) -> void {
         target_ = new_target;
         fill_color_ = new_target; // triggers animation (handles animation_start via ctx_)
     }
-
-    Widget::update(context);
 }
 
-auto neko::widget::Button::animate(const std::chrono::milliseconds dt) -> void {
+auto neko::widget::Button::on_animate(const std::chrono::milliseconds dt) -> void {
     fill_color_.update(dt);
-    Widget::animate(dt);
 }
 
-auto neko::widget::Button::draw(engine::Context& context, backend::Backend& backend) -> void {
+auto neko::widget::Button::on_draw(engine::Context& context, backend::Backend& backend) -> void {
     const glm::vec4 current_f = fill_color_;
 
     if (fill_color_.animating()) {
@@ -57,6 +54,4 @@ auto neko::widget::Button::draw(engine::Context& context, backend::Backend& back
         const int y_center = b.y + (b.w - 16) / 2;
         backend.draw_text(label_, {b.x + 8, y_center}, text_color_);
     }
-
-    Widget::draw(context, backend);
 }

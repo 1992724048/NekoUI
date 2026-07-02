@@ -4,17 +4,16 @@ neko::widget::TextInput::TextInput(const glm::ivec4 bounds, std::string placehol
     set_bounds(bounds);
 }
 
-auto neko::widget::TextInput::update(engine::Context& context) -> void {
+auto neko::widget::TextInput::on_update(engine::Context& context) -> void {
     const auto now = std::chrono::steady_clock::now();
     if (now - m_cursor_tick > std::chrono::milliseconds(500)) {
         m_cursor_visible = !m_cursor_visible;
         m_cursor_tick = now;
         context.dirty = true;
     }
-    Widget::update(context);
 }
 
-auto neko::widget::TextInput::draw(engine::Context& context, backend::Backend& backend) -> void {
+auto neko::widget::TextInput::on_draw(engine::Context& context, backend::Backend& backend) -> void {
     const auto& b = bounds();
     const auto& text = m_text.get();
 
@@ -43,11 +42,9 @@ auto neko::widget::TextInput::draw(engine::Context& context, backend::Backend& b
         int cx = b.x + 4 + (m_cursor_pos * 8);
         backend.draw_rect({cx, b.y + 2, 2, b.w - 4}, m_cursor_color, 1);
     }
-
-    Widget::draw(context, backend);
 }
 
-auto neko::widget::TextInput::handle_event(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
+auto neko::widget::TextInput::on_handle(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
     if (msg == WM_CHAR) {
         const auto ch = static_cast<char>(wparam);
         if (ch >= 32 && ch <= 126) {
@@ -147,7 +144,7 @@ auto neko::widget::TextInput::handle_event(engine::Context& context, const UINT 
         return true;
     }
 
-    return Widget::handle_event(context, msg, wparam, lparam);
+    return false;
 }
 
 auto neko::widget::TextInput::focusable() const -> bool {

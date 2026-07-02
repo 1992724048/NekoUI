@@ -63,6 +63,14 @@ namespace neko::widget {
     protected:
         Widget();
 
+        // Override these hooks instead of update/animate/draw/handle_event
+        virtual auto on_update(engine::Context& context) -> void {}
+        virtual auto on_animate(std::chrono::milliseconds dt) -> void {}
+        virtual auto on_draw(engine::Context& context, backend::Backend& backend) -> void {}
+        [[nodiscard]] virtual auto on_handle(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool {
+            return false;
+        }
+
         bool m_has_focus = false;
     private:
         std::function<void()> m_notify_rerender;

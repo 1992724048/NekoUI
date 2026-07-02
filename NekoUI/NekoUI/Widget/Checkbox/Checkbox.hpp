@@ -12,12 +12,12 @@ namespace neko::widget {
     public:
         explicit Checkbox(glm::ivec4 bounds = {}, std::string label = "");
 
-        auto update(engine::Context& context) -> void override;
-        auto animate(std::chrono::milliseconds dt) -> void override;
-        auto draw(engine::Context& context, backend::Backend& backend) -> void override;
-        auto handle_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool override;
-
         [[nodiscard]] auto focusable() const -> bool override;
+    protected:
+        auto on_update(engine::Context& context) -> void override;
+        auto on_animate(std::chrono::milliseconds dt) -> void override;
+        auto on_draw(engine::Context& context, backend::Backend& backend) -> void override;
+        auto on_handle(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool override;
         [[nodiscard]] auto is_checked() const -> bool;
 
         auto set_checked(bool checked) -> void;

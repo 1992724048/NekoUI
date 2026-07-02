@@ -34,7 +34,9 @@ namespace neko::engine {
             static_assert(std::is_base_of_v<widget::Widget, T>, "T must derive from widget::Widget");
             const auto prev_depth = state::g_auto_bind_stack.size();
             auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
-            ptr->m_notify_rerender = [this]() { rebuild(); };
+            ptr->m_notify_rerender = [this]() {
+                rebuild();
+            };
             ptr->set_z_order(static_cast<int>(m_root_widgets.size()));
             auto& ref = *ptr;
             m_root_widgets.push_back(std::move(ptr));

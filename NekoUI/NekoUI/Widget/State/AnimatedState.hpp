@@ -73,7 +73,7 @@ namespace neko::state {
             }
         }
 
-        void set_on_change(std::function<void()> fn) {
+        auto set_on_change(std::function<void()> fn) -> void {
             current_.set_on_change(std::move(fn));
         }
 
