@@ -10,7 +10,9 @@ namespace neko::engine {
         context.rerender = std::bind(&std::condition_variable::notify_one, &render_notify);
         context.animation_start = std::bind(&Engine::anim_inc, this);
         context.animation_end = std::bind(&Engine::anim_dec, this);
-        context.request_focus = [this](widget::Widget* w) -> void { focus_widget(w); };
+        context.request_focus = [this](widget::Widget* w) -> void {
+            focus_widget(w);
+        };
         context.dpi_scale = backend.get_dpi_scale();
 
         msg_thread = std::jthread(std::bind(&Engine::msg_loop, this));
@@ -47,6 +49,22 @@ namespace neko::engine {
         ++msg_count;
 
         msg_notify.notify_one();
+    }
+
+    auto Engine::focus_widget(widget::Widget* w) -> void {
+        if (m_focused_widget == w) {
+            return;
+        }
+        if (m_focused_widget) {
+            m_focused_widget->m_has_focus = false;
+            m_focused_widget->on_focus_lost();
+        }
+        m_focused_widget = w;
+        if (w) {
+            w->m_has_focus = true;
+            w->on_focus_gained();
+        }
+        context.dirty = true;
     }
 
     auto Engine::render_loop() -> void {
@@ -162,8 +180,10 @@ namespace neko::engine {
                         [[fallthrough]];
                     case WM_KEYUP:
                     case WM_CHAR:
-                        if (wparam == '\t') break;  // Tab 切换焦点时的残留字符
-                        if (m_focused_widget) {
+                        if (wparam == '\t') {
+                            break;
+                        }
+                        if (m_focused_widget != nullptr) {
                             m_focused_widget->handle_event(context, msg, wparam, lparam);
                         }
                         break;
@@ -179,26 +199,12 @@ namespace neko::engine {
         }
     }
 
-    auto Engine::focus_widget(widget::Widget* w) -> void {
-        if (m_focused_widget == w) return;
-        if (m_focused_widget) {
-            m_focused_widget->m_has_focus = false;
-            m_focused_widget->on_focus_lost();
-        }
-        m_focused_widget = w;
-        if (w) {
-            w->m_has_focus = true;
-            w->on_focus_gained();
-        }
-        context.dirty = true;
+    auto Engine::anim_inc() -> void {
+        ++animation;
     }
 
-    auto Engine::collect_focusable(widget::Widget* w, std::vector<widget::Widget*>& out) -> void {
-        if (!w) return;
-        if (w->focusable()) out.push_back(w);
-        for (auto* child : w->children()) {
-            collect_focusable(child, out);
-        }
+    auto Engine::anim_dec() -> void {
+        --animation;
     }
 
     auto Engine::focus_next() -> void {
@@ -211,7 +217,7 @@ namespace neko::engine {
             return;
         }
 
-        auto it = std::find(widgets.begin(), widgets.end(), m_focused_widget);
+        const auto it = std::ranges::find(widgets, m_focused_widget);
         size_t idx;
         if (it != widgets.end()) {
             idx = (std::distance(widgets.begin(), it) + 1) % widgets.size();
@@ -221,11 +227,15 @@ namespace neko::engine {
         focus_widget(widgets[idx]);
     }
 
-    auto Engine::anim_inc() -> void {
-        ++animation;
-    }
-
-    auto Engine::anim_dec() -> void {
-        --animation;
+    auto Engine::collect_focusable(widget::Widget* w, std::vector<widget::Widget*>& out) -> void {
+        if (w == nullptr) {
+            return;
+        }
+        if (w->focusable()) {
+            out.push_back(w);
+        }
+        for (auto* child : w->children()) {
+            collect_focusable(child, out);
+        }
     }
 } // namespace neko::engine

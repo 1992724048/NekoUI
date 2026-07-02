@@ -193,6 +193,10 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NekoUI\Backend\Backend.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
+    <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
+    <ClCompile Include="NekoUI\Widget\Checkbox\Checkbox.cpp" />
+    <ClCompile Include="NekoUI\Widget\TextInput\TextInput.cpp" />
+    <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NekoUI\Backend\Backend.hpp" />
@@ -203,9 +207,9 @@
     <ClInclude Include="NekoUI\Widget\Component\CSS.hpp" />
     <ClInclude Include="NekoUI\Engine\Device\Keyboard.hpp" />
     <ClInclude Include="NekoUI\Engine\Device\Mouse.hpp" />
-    <ClInclude Include="NekoUI\Widget\Component\Button.hpp" />
-    <ClInclude Include="NekoUI\Widget\Component\TextInput.hpp" />
-    <ClInclude Include="NekoUI\Widget\Component\Checkbox.hpp" />
+    <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
+    <ClInclude Include="NekoUI\Widget\TextInput\TextInput.hpp" />
+    <ClInclude Include="NekoUI\Widget\Checkbox\Checkbox.hpp" />
     <ClInclude Include="NekoUI\Widget\Sub.hpp" />
     <ClInclude Include="NekoUI\Widget\layout\Stack.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />

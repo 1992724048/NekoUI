@@ -24,6 +24,18 @@
     <ClCompile Include="NekoUI\Backend\Backend.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Widget.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Button\Button.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Checkbox\Checkbox.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\TextInput\TextInput.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
@@ -45,6 +57,30 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\Context.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Backend\stb_truetype.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\Device\Keyboard.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\Device\Mouse.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Button\Button.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Sub.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\TextInput\TextInput.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Checkbox\Checkbox.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\layout\Stack.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

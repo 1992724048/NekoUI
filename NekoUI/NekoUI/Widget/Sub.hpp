@@ -5,16 +5,12 @@
 #include "Widget.hpp"
 
 namespace neko::widget {
-
     template<typename T>
     class Sub : public T {
         static_assert(std::is_base_of_v<Widget, T>);
-
     public:
         template<typename... Args>
-        explicit Sub(Widget* parent, Args&&... args)
-            : T(std::forward<Args>(args)...)
-        {
+        explicit Sub(Widget* parent, Args&&... args) : T(std::forward<Args>(args)...) {
             if (parent) {
                 parent->register_child(this);
             }
@@ -31,5 +27,4 @@ namespace neko::widget {
         Sub(Sub&&) = default;
         auto operator=(Sub&&) -> Sub& = default;
     };
-
 } // namespace neko::widget
