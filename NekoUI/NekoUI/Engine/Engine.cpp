@@ -162,6 +162,7 @@ namespace neko::engine {
                         [[fallthrough]];
                     case WM_KEYUP:
                     case WM_CHAR:
+                        if (wparam == '\t') break;  // Tab 切换焦点时的残留字符
                         if (m_focused_widget) {
                             m_focused_widget->handle_event(context, msg, wparam, lparam);
                         }
@@ -189,6 +190,7 @@ namespace neko::engine {
             w->m_has_focus = true;
             w->on_focus_gained();
         }
+        context.dirty = true;
     }
 
     auto Engine::collect_focusable(widget::Widget* w, std::vector<widget::Widget*>& out) -> void {

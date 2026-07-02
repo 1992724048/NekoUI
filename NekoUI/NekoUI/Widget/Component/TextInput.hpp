@@ -44,7 +44,9 @@ namespace neko::widget {
             const bool empty = m_text.empty();
             const auto display_text = empty ? m_placeholder : m_text;
             const auto text_color = empty ? m_placeholder_color : m_text_color;
-            const int text_y = b.y + (b.w - 16) / 2;
+            constexpr int font_size = 16;
+            constexpr int font_ascent = 13;  // stb_truetype ascent ≈ 0.8 * font_size
+            const int text_y = b.y + (b.w - font_size) / 2 + font_ascent;
             backend.draw_text(display_text, {b.x + 4, text_y}, text_color);
 
             // 光标

@@ -49,9 +49,10 @@ namespace neko::widget {
                 backend.draw_rect_fill({bx + 4, by + 4, box - 8, box - 8}, m_check_color);
             }
 
-            // 标签（垂直居中）
+            // 标签（垂直居中，baseline 偏移）
             if (!m_label.empty()) {
-                const int label_y = b.y + (b.w - 16) / 2;
+                constexpr int font_ascent = 13;
+                const int label_y = b.y + (b.w - 16) / 2 + font_ascent;
                 backend.draw_text(m_label, {bx + box + 8, label_y}, m_text_color);
             }
 
