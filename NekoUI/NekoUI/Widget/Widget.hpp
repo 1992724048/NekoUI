@@ -25,7 +25,6 @@ namespace neko::widget {
 
         virtual auto draw(engine::Context& context, backend::Backend& backend) -> void;
         virtual auto layout(Constraints constraints) -> void;
-
         virtual auto update(engine::Context& context) -> void;
         virtual auto handle_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool;
 
@@ -42,7 +41,6 @@ namespace neko::widget {
 
         auto set_bounds(int x, int y, int w, int h) -> void;
         auto set_bounds(glm::ivec4 bounds) -> void;
-
         [[nodiscard]] auto bounds() const -> const glm::ivec4&;
         [[nodiscard]] auto x() const -> int;
         [[nodiscard]] auto y() const -> int;

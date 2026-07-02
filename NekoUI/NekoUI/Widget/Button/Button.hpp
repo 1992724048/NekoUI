@@ -10,10 +10,7 @@ namespace neko::widget {
     public:
         explicit Button(glm::ivec4 rect, std::string label = "");
 
-        //! @brief 处理数据状态（msg 线程）
         auto update(engine::Context& context) -> void override;
-
-        //! @brief 渲染（render 线程）
         auto draw(engine::Context& context, backend::Backend& backend) -> void override;
 
         std::function<void()> on_click;

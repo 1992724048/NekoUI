@@ -99,6 +99,7 @@ StyleCopReport.xml
 *.scc
 .superpowers
 .superpowers\sdd
+.opencode
 
 # Chutzpah Test files
 _Chutzpah*

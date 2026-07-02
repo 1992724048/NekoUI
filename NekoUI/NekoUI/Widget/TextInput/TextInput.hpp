@@ -15,27 +15,20 @@ namespace neko::widget {
         explicit TextInput(glm::ivec4 bounds = {}, std::string placeholder = "");
 
         auto update(engine::Context& context) -> void override;
-
         auto draw(engine::Context& context, backend::Backend& backend) -> void override;
-
         auto handle_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool override;
 
         [[nodiscard]] auto focusable() const -> bool override;
-
         auto on_focus_gained() -> void override;
-
         auto on_focus_lost() -> void override;
 
         [[nodiscard]] auto text() const -> const std::string&;
-
         auto set_text(std::string_view t) -> void;
-
         auto set_placeholder(std::string_view t) -> void;
 
         std::function<void(std::string_view)> on_text_changed;
     private:
         [[nodiscard]] auto has_selection() const -> bool;
-
         auto delete_selection() -> void;
 
         std::string m_text;

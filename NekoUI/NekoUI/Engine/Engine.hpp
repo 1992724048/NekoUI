@@ -49,7 +49,9 @@ namespace neko::engine {
         auto focus_widget(widget::Widget* w) -> void;
 
         //! @brief 获取当前焦点控件
-        [[nodiscard]] auto focused_widget() const -> widget::Widget* { return m_focused_widget; }
+        [[nodiscard]] auto focused_widget() const -> widget::Widget* {
+            return m_focused_widget;
+        }
     private:
         static constexpr size_t MSG_QUEUE_MAX = 32;
 
