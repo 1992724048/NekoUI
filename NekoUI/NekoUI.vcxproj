@@ -212,6 +212,9 @@
     <ClInclude Include="NekoUI\Widget\Checkbox\Checkbox.hpp" />
     <ClInclude Include="NekoUI\Widget\Sub.hpp" />
     <ClInclude Include="NekoUI\Widget\layout\Stack.hpp" />
+    <ClInclude Include="NekoUI\Widget\State\AnimatedState.hpp" />
+    <ClInclude Include="NekoUI\Widget\State\Computed.hpp" />
+    <ClInclude Include="NekoUI\Widget\State\State.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
