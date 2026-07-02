@@ -88,7 +88,6 @@ namespace neko::engine {
     }
 
     auto Engine::render_frame() -> void {
-        // Delta time for animations
         const auto now = Clock::now();
         const auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_last_frame);
         m_last_frame = now;

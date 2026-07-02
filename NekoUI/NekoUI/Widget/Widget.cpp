@@ -151,11 +151,20 @@ auto neko::widget::Widget::has_focus() const -> bool {
 
 auto neko::widget::Widget::animate(const std::chrono::milliseconds dt) -> void {
     for (auto* child : m_children) {
-        if (child->m_visible) child->animate(dt);
+        if (child->m_visible) {
+            child->animate(dt);
+        }
     }
 }
 
-neko::widget::Widget::Widget() = default;
+neko::widget::Widget::Widget() {
+    state::g_auto_bind_stack.push_back([this]() {
+        mark_dirty();
+        if (m_notify_rerender) {
+            m_notify_rerender();
+        }
+    });
+}
 
 auto neko::widget::Widget::register_child(Widget* child) -> void {
     child->m_parent = this;

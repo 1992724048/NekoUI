@@ -2,7 +2,6 @@
 
 neko::widget::TextInput::TextInput(const glm::ivec4 bounds, std::string placeholder) : m_placeholder(std::move(placeholder)) {
     set_bounds(bounds);
-    bind_state(m_text);
 }
 
 auto neko::widget::TextInput::update(engine::Context& context) -> void {

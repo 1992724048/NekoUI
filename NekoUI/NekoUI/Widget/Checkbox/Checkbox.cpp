@@ -2,7 +2,6 @@
 
 neko::widget::Checkbox::Checkbox(const glm::ivec4 bounds, std::string label) : m_label(std::move(label)) {
     set_bounds(bounds);
-    m_bg_anim.set_observer([this](const glm::vec4&) { mark_dirty(); });
     // Set target to match initial checked state
     m_bg_anim = m_checked ? m_checked_color : m_unchecked_color;
 }

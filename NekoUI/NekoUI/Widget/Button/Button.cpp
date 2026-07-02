@@ -2,7 +2,6 @@
 
 neko::widget::Button::Button(const glm::ivec4 rect, std::string label) : label_(std::move(label)) {
     set_bounds(rect);
-    fill_color_.set_observer([this](const glm::vec4&) { mark_dirty(); });
 }
 
 auto neko::widget::Button::update(engine::Context& context) -> void {
@@ -26,7 +25,7 @@ auto neko::widget::Button::update(engine::Context& context) -> void {
 
     if (target_ != new_target) {
         target_ = new_target;
-        fill_color_ = new_target;  // triggers animation (handles animation_start via ctx_)
+        fill_color_ = new_target; // triggers animation (handles animation_start via ctx_)
     }
 
     Widget::update(context);

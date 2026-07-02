@@ -28,9 +28,8 @@ namespace neko::widget {
         std::function<void(std::string_view)> on_text_changed;
     private:
         [[nodiscard]] auto has_selection() const -> bool;
-        auto delete_selection() -> void;
 
-        neko::state::State<std::string> m_text;
+        state::State<std::string> m_text;
         std::string m_placeholder;
         int m_cursor_pos = 0;
         int m_sel_start = -1;

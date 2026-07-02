@@ -23,9 +23,7 @@ namespace neko::widget {
         glm::vec4 hover_f{130.0F / 255.0F, 160.0F / 255.0F, 210.0F / 255.0F, 1.0F};
         glm::vec4 press_f{200.0F / 255.0F, 100.0F / 255.0F, 100.0F / 255.0F, 1.0F};
 
-        state::AnimatedState<glm::vec4> fill_color_{
-            idle_f, std::chrono::milliseconds(200), animation::ease_out_quad
-        };
+        state::AnimatedState<glm::vec4> fill_color_{idle_f, std::chrono::milliseconds(200), animation::ease_out_quad};
         glm::vec4 target_{idle_f};
 
         type::Color border_color_{60, 80, 120, 255};

@@ -26,6 +26,7 @@ namespace neko::widget {
         virtual ~Widget();
 
         virtual auto draw(engine::Context& context, backend::Backend& backend) -> void;
+        virtual auto animate(std::chrono::milliseconds dt) -> void;
         virtual auto layout(Constraints constraints) -> void;
         virtual auto update(engine::Context& context) -> void;
         virtual auto handle_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool;
@@ -62,15 +63,9 @@ namespace neko::widget {
     protected:
         Widget();
 
-        template<typename T>
-        auto bind_state(neko::state::State<T>& state) -> void {
-            state.set_observer([this](const T&) { mark_dirty(); });
-        }
-
-        virtual auto animate(std::chrono::milliseconds dt) -> void;
-
         bool m_has_focus = false;
     private:
+        std::function<void()> m_notify_rerender;
         auto register_child(Widget* child) -> void;
         auto unregister_child(Widget* child) -> void;
 
