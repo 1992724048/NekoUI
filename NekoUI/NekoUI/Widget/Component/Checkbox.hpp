@@ -15,7 +15,6 @@ namespace neko::widget {
         {
             set_bounds(bounds);
             sync_anim();
-            m_anim.set_progress(1.0f);
         }
 
         auto update(engine::Context& context) -> void override {
@@ -29,11 +28,20 @@ namespace neko::widget {
             const int bx = b.x;
             const int by = b.y + (b.w - box) / 2;
 
-            // 方框背景（动画色）
+            // Cache animated value
+            const glm::vec4 current_f = m_anim();
+
+            // Animation lifecycle
+            if (m_anim.is_done() && m_prev_animating) {
+                context.animation_end();
+                m_prev_animating = false;
+            }
+
+            // Box background (animated color)
             glm::ivec4 box_color{
-                static_cast<int>(m_anim()(0) * 255.0f + 0.5f),
-                static_cast<int>(m_anim()(1) * 255.0f + 0.5f),
-                static_cast<int>(m_anim()(2) * 255.0f + 0.5f),
+                static_cast<int>(current_f.r * 255.0f + 0.5f),
+                static_cast<int>(current_f.g * 255.0f + 0.5f),
+                static_cast<int>(current_f.b * 255.0f + 0.5f),
                 255,
             };
 
@@ -61,6 +69,7 @@ namespace neko::widget {
                           WPARAM wparam, LPARAM lparam) -> bool override
         {
             if (msg == WM_LBUTTONDOWN && hit_test(context.mouse)) {
+                if (context.request_focus) context.request_focus(this);
                 toggle(context);
                 return true;
             }
@@ -91,23 +100,27 @@ namespace neko::widget {
         auto toggle(engine::Context& context) -> void {
             m_checked = !m_checked;
             sync_anim();
+            context.animation_start();
+            m_prev_animating = true;
             context.dirty = true;
             if (on_toggled) on_toggled(m_checked);
         }
 
         auto sync_anim() -> void {
             if (m_checked) {
-                m_anim = animation::EaseOutQuadAnimation<glm::vec4>{m_unchecked_color, m_checked_color, 150};
+                m_anim = animation::EaseOutQuadAnimation<glm::vec4>{m_unchecked_color, 150};
+                m_anim = m_checked_color;
             } else {
-                m_anim = animation::EaseOutQuadAnimation<glm::vec4>{m_checked_color, m_unchecked_color, 150};
+                m_anim = animation::EaseOutQuadAnimation<glm::vec4>{m_checked_color, 150};
+                m_anim = m_unchecked_color;
             }
         }
 
         bool m_checked = false;
+        bool m_prev_animating = false;
         std::string m_label;
         animation::EaseOutQuadAnimation<glm::vec4> m_anim{
             {0.7f, 0.7f, 0.75f, 1.0f},
-            {0.24f, 0.47f, 0.86f, 1.0f},
             150
         };
 
