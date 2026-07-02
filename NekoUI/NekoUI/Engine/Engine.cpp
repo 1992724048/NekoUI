@@ -10,9 +10,7 @@ namespace neko::engine {
         context.rerender = std::bind(&std::condition_variable::notify_one, &render_notify);
         context.animation_start = std::bind(&Engine::anim_inc, this);
         context.animation_end = std::bind(&Engine::anim_dec, this);
-        context.request_focus = [this](widget::Widget* w) -> void {
-            focus_widget(w);
-        };
+        context.request_focus = std::bind(&Engine::focus_widget, this, std::placeholders::_1);
         context.dpi_scale = backend.get_dpi_scale();
 
         msg_thread = std::jthread(std::bind(&Engine::msg_loop, this));
