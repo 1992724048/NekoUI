@@ -2,6 +2,7 @@
 
 neko::widget::Button::Button(const glm::ivec4 rect, std::string label) : label_(std::move(label)) {
     set_bounds(rect);
+    fill_color_.set_observer([this](const glm::vec4&) { mark_dirty(); });
 }
 
 auto neko::widget::Button::update(engine::Context& context) -> void {
@@ -13,35 +14,38 @@ auto neko::widget::Button::update(engine::Context& context) -> void {
         on_click();
     }
 
-    glm::vec4 target;
+    glm::vec4 new_target;
     if (down) {
-        target = press_f;
+        new_target = press_f;
     } else if (hover) {
-        target = hover_f;
+        new_target = hover_f;
     } else {
-        target = idle_f;
+        new_target = idle_f;
     }
 
-    if (target != current_target_) {
-        current_target_ = target;
-        if (anim_state == AnimState::Idle) {
+    if (target_ != new_target) {
+        target_ = new_target;
+        if (!fill_color_.animating()) {
             context.animation_start();
-            anim_state = AnimState::Animating;
         }
-        color_anim = target;
-        context.dirty = true;
+        fill_color_ = new_target;  // triggers animation
     }
 
     Widget::update(context);
 }
 
-auto neko::widget::Button::draw(engine::Context& context, backend::Backend& backend) -> void {
-    const glm::vec4 current_f = color_anim();
+auto neko::widget::Button::animate(const std::chrono::milliseconds dt) -> void {
+    fill_color_.update(dt);
+    Widget::animate(dt);
+}
 
-    if (color_anim.is_done() && anim_state == AnimState::Animating) {
-        context.animation_end();
-        anim_state = AnimState::Idle;
+auto neko::widget::Button::draw(engine::Context& context, backend::Backend& backend) -> void {
+    const glm::vec4 current_f = fill_color_;
+
+    if (fill_color_.animating()) {
+        context.dirty = true;
     }
+
     const type::Color current{
         static_cast<int>(current_f.r * 255.0F + 0.5F),
         static_cast<int>(current_f.g * 255.0F + 0.5F),
@@ -49,12 +53,12 @@ auto neko::widget::Button::draw(engine::Context& context, backend::Backend& back
         static_cast<int>(current_f.a * 255.0F + 0.5F),
     };
     backend.draw_rect_fill(bounds(), current);
-    backend.draw_rect(bounds(), border_color, 2);
+    backend.draw_rect(bounds(), border_color_, 2);
 
     if (!label_.empty()) {
         const auto& b = bounds();
         const int y_center = b.y + (b.w - 16) / 2;
-        backend.draw_text(label_, {b.x + 8, y_center}, text_color);
+        backend.draw_text(label_, {b.x + 8, y_center}, text_color_);
     }
 
     Widget::draw(context, backend);

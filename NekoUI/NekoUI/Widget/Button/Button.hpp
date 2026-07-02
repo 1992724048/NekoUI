@@ -1,6 +1,7 @@
 #pragma once
 #include "../Widget.hpp"
-#include "../Component/Animation.hpp"
+#include "../State/AnimatedState.hpp"
+#include "../State/State.hpp"
 
 #include <functional>
 #include <string>
@@ -11,24 +12,23 @@ namespace neko::widget {
         explicit Button(glm::ivec4 rect, std::string label = "");
 
         auto update(engine::Context& context) -> void override;
+        auto animate(std::chrono::milliseconds dt) -> void override;
         auto draw(engine::Context& context, backend::Backend& backend) -> void override;
 
         std::function<void()> on_click;
     private:
-        enum class AnimState : std::uint8_t { Idle, Animating };
-
         std::string label_;
 
         glm::vec4 idle_f{100.0F / 255.0F, 130.0F / 255.0F, 180.0F / 255.0F, 1.0F};
         glm::vec4 hover_f{130.0F / 255.0F, 160.0F / 255.0F, 210.0F / 255.0F, 1.0F};
         glm::vec4 press_f{200.0F / 255.0F, 100.0F / 255.0F, 100.0F / 255.0F, 1.0F};
 
-        glm::vec4 current_target_{idle_f};
-        AnimState anim_state = AnimState::Idle;
+        AnimatedState<glm::vec4> fill_color_{
+            idle_f, std::chrono::milliseconds(200), animation::ease_out_quad
+        };
+        glm::vec4 target_{idle_f};
 
-        animation::EaseOutQuadAnimation<glm::vec4> color_anim{idle_f, 200};
-
-        type::Color border_color{60, 80, 120, 255};
-        type::Color text_color{220, 220, 230, 255};
+        type::Color border_color_{60, 80, 120, 255};
+        type::Color text_color_{220, 220, 230, 255};
     };
 } // namespace neko::widget
