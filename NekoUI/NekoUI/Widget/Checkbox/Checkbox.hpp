@@ -30,7 +30,7 @@ namespace neko::widget {
         bool m_checked = false;
         std::string m_label;
 
-        AnimatedState<glm::vec4> m_bg_anim{{0.7F, 0.7F, 0.75F, 1.0F}, std::chrono::milliseconds(150), animation::ease_out_quad};
+        state::AnimatedState<glm::vec4> m_bg_anim{{0.7F, 0.7F, 0.75F, 1.0F}, std::chrono::milliseconds(150), animation::ease_out_quad};
 
         glm::vec4 m_unchecked_color{0.7F, 0.7F, 0.75F, 1.0F};
         glm::vec4 m_checked_color{0.24F, 0.47F, 0.86F, 1.0F};
