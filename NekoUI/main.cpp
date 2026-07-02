@@ -48,7 +48,7 @@ namespace {
                         POINT pt;
                         GetCursorPos(&pt);
                         ScreenToClient(hwnd, &pt);
-                        SetCursor(LoadCursorW(nullptr, engine->has_interactive_at(pt) ? IDC_HAND : IDC_ARROW));
+                        SetCursor(LoadCursorW(GetModuleHandleW(nullptr), engine->has_interactive_at(pt) ? MAKEINTRESOURCEW(32649) : MAKEINTRESOURCEW(32512)));
                         return TRUE;
                     }
                     break;
@@ -68,7 +68,7 @@ auto main(int argc, char* argv[]) -> int try {
     win_class.lpszClassName = class_name.data();
     win_class.hInstance = GetModuleHandleW(nullptr);
     win_class.lpfnWndProc = msg_proc;
-    win_class.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    win_class.hCursor = LoadCursorW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(32512));
     win_class.style = CS_HREDRAW | CS_VREDRAW;
 
     if (RegisterClassW(&win_class) == 0U) {
