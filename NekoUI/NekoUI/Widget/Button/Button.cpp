@@ -6,6 +6,7 @@ neko::widget::Button::Button(const glm::ivec4 rect, std::string label) : label_(
 }
 
 auto neko::widget::Button::update(engine::Context& context) -> void {
+    fill_color_.set_context(context);
     const float s = context.dpi_scale;
     const bool hover = context.mouse.is_inside(bounds(), s);
     const bool down = hover && context.mouse.left_down;
@@ -25,10 +26,7 @@ auto neko::widget::Button::update(engine::Context& context) -> void {
 
     if (target_ != new_target) {
         target_ = new_target;
-        if (!fill_color_.animating()) {
-            context.animation_start();
-        }
-        fill_color_ = new_target;  // triggers animation
+        fill_color_ = new_target;  // triggers animation (handles animation_start via ctx_)
     }
 
     Widget::update(context);

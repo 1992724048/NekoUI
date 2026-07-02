@@ -183,11 +183,3 @@ auto neko::widget::TextInput::has_selection() const -> bool {
     return m_sel_start >= 0 && m_sel_start != m_cursor_pos;
 }
 
-auto neko::widget::TextInput::delete_selection() -> void {
-    const int start = (std::min)(m_sel_start, m_cursor_pos);
-    const int end = (std::max)(m_sel_start, m_cursor_pos);
-    auto new_text = m_text.get();
-    new_text.erase(start, end - start);
-    m_text = std::move(new_text);
-    m_cursor_pos = start;
-}

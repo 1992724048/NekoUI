@@ -8,6 +8,7 @@ neko::widget::Checkbox::Checkbox(const glm::ivec4 bounds, std::string label) : m
 }
 
 auto neko::widget::Checkbox::update(engine::Context& context) -> void {
+    m_bg_anim.set_context(context);
     Widget::update(context);
 }
 
@@ -97,8 +98,7 @@ auto neko::widget::Checkbox::toggle() -> void {
 
 auto neko::widget::Checkbox::toggle(engine::Context& context) -> void {
     m_checked = !m_checked;
-    m_bg_anim = m_checked ? m_checked_color : m_unchecked_color;
-    context.animation_start();
+    m_bg_anim = m_checked ? m_checked_color : m_unchecked_color;  // handles animation_start via ctx_
     context.dirty = true;
     if (on_toggled) {
         on_toggled(m_checked);
