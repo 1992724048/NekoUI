@@ -1,7 +1,8 @@
 # SDD Progress Ledger
 
-# Reactive State System ¡ª 2026-07-02
+# Reactive State System â€” 2026-07-02
 
 Task 1: complete (commits c1183f9..ee5a6da, review clean)
 Task 2: complete (commits ee5a6da..d740c87, review clean)
-Task 3: complete (commits d740c87..2c7945f, review clean ¡ª data race noted as by-design per spec)
+Task 3: complete (commits d740c87..2c7945f, review clean â€” data race noted as by-design per spec)
+Task 4: complete (commits 2c7945f..93e60eb, review clean â€” unused include noted)

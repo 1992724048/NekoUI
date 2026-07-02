@@ -149,6 +149,12 @@ auto neko::widget::Widget::has_focus() const -> bool {
     return m_has_focus;
 }
 
+auto neko::widget::Widget::animate(const std::chrono::milliseconds dt) -> void {
+    for (auto* child : m_children) {
+        if (child->m_visible) child->animate(dt);
+    }
+}
+
 neko::widget::Widget::Widget() = default;
 
 auto neko::widget::Widget::register_child(Widget* child) -> void {

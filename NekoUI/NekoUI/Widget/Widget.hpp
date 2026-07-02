@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <climits>
 #include <vector>
 
@@ -8,6 +9,7 @@
 
 #include "../Backend/Backend.hpp"
 #include "../Engine/Context.hpp"
+#include "State/State.hpp"
 
 namespace neko::widget {
     struct Constraints {
@@ -59,6 +61,13 @@ namespace neko::widget {
         [[nodiscard]] auto has_focus() const -> bool;
     protected:
         Widget();
+
+        template<typename T>
+        auto bind_state(neko::state::State<T>& state) -> void {
+            state.set_observer([this](const T&) { mark_dirty(); });
+        }
+
+        virtual auto animate(std::chrono::milliseconds dt) -> void;
 
         bool m_has_focus = false;
     private:
