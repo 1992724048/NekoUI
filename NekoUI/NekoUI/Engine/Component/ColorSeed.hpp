@@ -234,18 +234,22 @@ namespace neko::color {
             // SCALED_DISCOUNT_FROM_LINRGB: Maps linear RGB to scaled discount space.
             // Embeds the CAT02 chromatic adaptation transform with D65 illuminant
             // discounting baked in, allowing hueOf() to work directly on linear RGB.
-            static constexpr std::array<std::array<double, 3>, 3> SCALED_DISCOUNT_FROM_LINRGB{{
-                {0.001200833568784504, 0.002389694492170889, 0.0002795742885861124},
-                {0.0005891086651375999, 0.0029785502573438758, 0.0003270666104008398},
-                {0.00010146692491640572, 0.0005364214359186694, 0.0032979401770712076},
-            }};
+            static constexpr std::array<std::array<double, 3>, 3> SCALED_DISCOUNT_FROM_LINRGB{
+                {
+                    {0.001200833568784504, 0.002389694492170889, 0.0002795742885861124},
+                    {0.0005891086651375999, 0.0029785502573438758, 0.0003270666104008398},
+                    {0.00010146692491640572, 0.0005364214359186694, 0.0032979401770712076},
+                }
+            };
 
             // LINRGB_FROM_SCALED_DISCOUNT: Inverse of SCALED_DISCOUNT_FROM_LINRGB.
             // Used in findResultByJ to recover linear RGB from adapted cone responses.
-            static constexpr std::array<std::array<double, 3>, 3> LINRGB_FROM_SCALED_DISCOUNT = {
-                {1373.2198709594231, -1100.4251190754821, -7.278681089101213},
-                {-271.815969077903, 559.6580465940733, -32.46047482791194},
-                {1.9622899599665666, -57.173814538844006, 308.7233197812385},
+            static constexpr std::array<std::array<double, 3>, 3> LINRGB_FROM_SCALED_DISCOUNT{
+                {
+                    {1373.2198709594231, -1100.4251190754821, -7.278681089101213},
+                    {-271.815969077903, 559.6580465940733, -32.46047482791194},
+                    {1.9622899599665666, -57.173814538844006, 308.7233197812385},
+                }
             };
 
             // Y_FROM_LINRGB: Coefficients for computing Y (relative luminance) from
@@ -1599,4 +1603,4 @@ namespace neko::color {
             };
         }
     };
-} // namespace neko::seed
+} // namespace neko::color

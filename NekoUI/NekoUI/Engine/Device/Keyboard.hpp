@@ -30,11 +30,6 @@ namespace neko::keyboard {
             return !down[vk] && prev_down[vk];
         }
 
-        auto set_dpi(const UINT /*dpi*/) -> void {
-            // Keyboard doesn't deal with pixel coordinates
-            // Method exists for API symmetry with Mouse
-        }
-
         [[nodiscard]] auto any_down() const -> bool {
             return std::ranges::any_of(down,
                                        [](const auto k)-> bool {

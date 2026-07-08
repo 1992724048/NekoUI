@@ -8,12 +8,13 @@
 
 namespace neko::engine {
     Engine::Engine(const HWND hwnd) {
-        backend = std::unique_ptr<backend::Backend>(new backend::Backend(hwnd));
+        backend = std::make_unique<backend::Backend>(hwnd);
         context = std::make_unique<Context>();
 
         mouse = std::make_shared<mouse::Mouse>();
         keyboard = std::make_shared<keyboard::Keyboard>();
         scheme = std::make_shared<color::ColorScheme>();
+        *scheme = scheme->from_seed({19, 161, 14, 255});
 
         const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
@@ -99,10 +100,12 @@ namespace neko::engine {
             backend->resize(resize_size);
         }
 
-        backend->begin();
+        backend->begin(scheme->surface / 255.F);
         const auto widget = root.load();
-        widget->layout({.x = 0, .y = 0, .width = resize_size.x, .height = resize_size.y});
-        widget->draw(*context, *backend);
+        if (widget) {
+            widget->layout({.x = 0, .y = 0, .width = resize_size.x, .height = resize_size.y});
+            widget->draw(*context, *backend);
+        }
         backend->end();
         dirty = false;
     }
@@ -195,6 +198,9 @@ namespace neko::engine {
     }
 
     auto Engine::anim_dec() -> void {
+        if (animation == 0) {
+            return;
+        }
         --animation;
     }
 

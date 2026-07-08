@@ -2,5 +2,5 @@
 #include <glm/glm.hpp>
 
 namespace neko::type {
-    using Color = glm::ivec4;
+    using Color = glm::vec4;
 } // namespace neko::type

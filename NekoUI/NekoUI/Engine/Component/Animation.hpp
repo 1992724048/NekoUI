@@ -3,20 +3,35 @@
 #pragma once
 #include <chrono>
 #include <cmath>
+#include <functional>
 #include <numbers>
 
 namespace neko::animation {
+    class AnimationBase {
+    protected:
+        std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::high_resolution_clock::now();
+        std::atomic_bool change{false};
+
+        std::function<void()> inc;
+        std::function<void()> dec;
+    public:
+        auto set_callback(const std::function<void()>& start, const std::function<void()>& end) -> void {
+            inc = start;
+            dec = end;
+        }
+
+        [[nodiscard]] auto is_done() const -> bool {
+            return !change;
+        }
+    };
+
     template<typename T, typename TimeType = std::chrono::milliseconds>
-    class Animation {
+    class Animation : public AnimationBase {
     protected:
         TimeType duration_time;
         T now_value;
         T new_value;
         T start_value;
-
-        std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::high_resolution_clock::now();
-
-        std::atomic_bool change{false};
     public:
         explicit Animation(T value, int duration = 0) {
             now_value = value;
@@ -29,16 +44,18 @@ namespace neko::animation {
         Animation(const Animation& other) : duration_time(other.duration_time),
                                             now_value(other.now_value),
                                             new_value(other.new_value),
-                                            start_value(other.start_value),
-                                            start(other.start),
-                                            change(other.change.load()) {}
+                                            start_value(other.start_value) {
+            start = other.start;
+            change = other.change.load();
+        }
 
         Animation(Animation&& other) noexcept : duration_time(std::move(other.duration_time)),
                                                 now_value(std::move(other.now_value)),
                                                 new_value(std::move(other.new_value)),
-                                                start_value(std::move(other.start_value)),
-                                                start(std::move(other.start)),
-                                                change(other.change.load()) {}
+                                                start_value(std::move(other.start_value)) {
+            start = other.start;
+            change = other.change.load();
+        }
 
         auto operator=(const Animation& other) -> Animation& {
             if (this != &other) {
@@ -82,6 +99,9 @@ namespace neko::animation {
             if (duration.has_value()) {
                 this->duration_time = duration.value();
             }
+            if (!change && inc) {
+                inc();
+            }
             change = true;
         }
 
@@ -102,14 +122,13 @@ namespace neko::animation {
                 if (this->change) {
                     this->change = false;
                 }
+                if (!change && dec) {
+                    dec();
+                }
                 return 1.0F;
             }
 
             return static_cast<float>(elapsed.count()) / static_cast<float>(duration_time.count());
-        }
-
-        [[nodiscard]] auto is_done() const -> bool {
-            return !change;
         }
     };
 

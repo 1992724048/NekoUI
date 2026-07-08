@@ -6,7 +6,7 @@ neko::widget::Widget::~Widget() {
     engine->del(this);
 }
 
-auto neko::widget::Widget::raw_event(std::unique_ptr<engine::Context>& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool {
+auto neko::widget::Widget::raw_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool {
     return false;
 }
 
@@ -19,14 +19,8 @@ neko::widget::Widget::Widget(engine::Engine* engine) {
     this->root = engine->root.load();
 }
 
-neko::widget::Widget::Widget(const std::weak_ptr<Widget>& parent) {
-    if (!parent.expired()) {
-        return;
-    }
-
-    const auto ptr = parent.lock();
-
-    this->engine = ptr->engine;
-    this->root = ptr->root.load();
+neko::widget::Widget::Widget(Widget* parent) {
+    this->engine = parent->engine;
+    this->root = parent->root.load();
     this->parent = parent;
 }

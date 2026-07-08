@@ -15,6 +15,8 @@
 #include "../Backend/Backend.hpp"
 #include "../Widget/Widget.hpp"
 
+#include "Component/ColorSeed.hpp"
+
 namespace neko::engine {
     class Engine final {
     public:
@@ -25,10 +27,19 @@ namespace neko::engine {
         auto operator=(const Engine&) -> Engine& = delete;
 
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
-        auto set(Args&&... args) -> std::shared_ptr<T> {
-            std::shared_ptr<widget::Widget> widget = root = std::make_shared<T>(this, std::forward<Args>(args)...);
+        auto set(Args&&... args) -> std::weak_ptr<T> {
+            const std::shared_ptr<widget::Widget> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
+            root = widget;
             present();
-            return widget;
+            return std::static_pointer_cast<T>(widget);
+        }
+
+        template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
+        auto get(Args&&... args) -> std::weak_ptr<T> {
+            const std::shared_ptr<widget::Widget> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
+            root = widget;
+            present();
+            return std::static_pointer_cast<T>(widget);
         }
 
         auto clear() -> void;
@@ -59,6 +70,7 @@ namespace neko::engine {
 
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};
+        std::shared_ptr<color::ColorScheme> scheme{};
         std::shared_ptr<mouse::Mouse> mouse;
         std::shared_ptr<keyboard::Keyboard> keyboard;
 

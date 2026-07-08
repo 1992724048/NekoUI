@@ -23,9 +23,8 @@ namespace neko::backend {
 
     class Backend final {
         friend class engine::Engine;
-
-        explicit Backend(HWND hwnd);
     public:
+        explicit Backend(HWND hwnd);
         ~Backend();
         Backend(const Backend&) = delete;
         auto operator=(const Backend&) -> Backend& = delete;
@@ -37,7 +36,7 @@ namespace neko::backend {
             return dpi_scale;
         }
 
-        auto begin() const -> void;
+        auto begin(glm::vec4 color) const -> void;
         auto end() const -> void;
 
         auto draw_rect_fill(glm::ivec4 rect, Color color) const -> void;

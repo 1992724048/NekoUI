@@ -194,7 +194,7 @@ auto Backend::set_dpi(const UINT dpi) -> void {
     dpi_scale = static_cast<float>(dpi) / 96.0F;
 }
 
-auto Backend::begin() const -> void {
+auto Backend::begin(const glm::vec4 color) const -> void {
     ctx->OMSetRenderTargets(1, &rtv, nullptr);
     D3D11_VIEWPORT vp{};
     vp.Width = static_cast<float>(size.x);
@@ -202,8 +202,7 @@ auto Backend::begin() const -> void {
     vp.MaxDepth = 1.0F;
     ctx->RSSetViewports(1, &vp);
 
-    constexpr std::array clear{0.11F, 0.11F, 0.13F, 1.0F};
-    ctx->ClearRenderTargetView(rtv, clear.data());
+    ctx->ClearRenderTargetView(rtv, &color.r);
 
     ctx->RSSetState(rs);
     ctx->OMSetBlendState(bs_opaque, nullptr, 0xFFFFFFFF);
