@@ -13,16 +13,18 @@ namespace neko::engine {
 
         mouse = std::make_shared<mouse::Mouse>();
         keyboard = std::make_shared<keyboard::Keyboard>();
+        scheme = std::make_shared<color::ColorScheme>();
 
-        // Initialize DPI from initial backend state
         const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
-        keyboard->set_dpi(initial_dpi);
 
         context->present = std::bind(&Engine::present, this);
         context->mark_dirty = std::bind(&Engine::mark_dirty, this);
+        context->anim_inc = std::bind(&Engine::anim_inc, this);
+        context->anim_dec = std::bind(&Engine::anim_dec, this);
         context->mouse = mouse;
         context->keyboard = keyboard;
+        context->color_scheme = scheme;
 
         msg_thread = std::jthread(&Engine::msg_loop, this);
         render_thread = std::jthread(&Engine::render_loop, this);
@@ -100,7 +102,7 @@ namespace neko::engine {
         backend->begin();
         const auto widget = root.load();
         widget->layout({.x = 0, .y = 0, .width = resize_size.x, .height = resize_size.y});
-        widget->draw(context, backend);
+        widget->draw(*context, *backend);
         backend->end();
         dirty = false;
     }
@@ -117,7 +119,7 @@ namespace neko::engine {
             keyboard->handle(msg, wparam, lparam);
             msg_dispatch(msg, wparam, lparam);
 
-            root.load()->update(context);
+            root.load()->update(*context);
             if (dirty) {
                 present();
             }
@@ -153,8 +155,7 @@ namespace neko::engine {
                 const UINT dpi = LOWORD(wparam);
                 backend->set_dpi(dpi);
                 mouse->set_dpi(dpi);
-                keyboard->set_dpi(dpi);
-                context->dpi_scale = dpi / 96.0F; // sync context for widgets
+                context->dpi_scale = dpi / 96.0F;
                 dirty = true;
                 break;
             }
@@ -166,7 +167,7 @@ namespace neko::engine {
             case WM_MBUTTONDOWN:
             case WM_MBUTTONUP:
             case WM_MOUSEWHEEL:
-                if (root.load()->raw_event(context, msg, wparam, lparam)) {
+                if (root.load()->raw_event(*context, msg, wparam, lparam) || root.load()->hit_test(*mouse)) {
                     break;
                 }
                 break;
@@ -180,7 +181,7 @@ namespace neko::engine {
                     break;
                 }
                 if (!focused.load().expired()) {
-                    focused.load().lock()->raw_event(context, msg, wparam, lparam);
+                    focused.load().lock()->raw_event(*context, msg, wparam, lparam);
                 }
                 break;
             case WM_TIMER:
