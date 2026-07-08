@@ -1190,6 +1190,10 @@ namespace neko::seed {
                 return 30.0;
             }
 
+            static auto tone30_80(const DynamicScheme& s) -> double {
+                return s.isDark_ ? 80.0 : 30.0;
+            }
+
             static auto tone98_6(const DynamicScheme& s) -> double {
                 return s.isDark_ ? 6.0 : 98.0;
             }
