@@ -793,5 +793,137 @@ public:
     }
 };
 
+// === ContrastCurve ===
+// Interpolates contrast level values at standard breakpoints:
+//   cl = -1.0 -> low
+//   cl =  0.0 -> normal
+//   cl =  1.0 -> high
+//   cl =  2.0 -> highest
+struct ContrastCurve {
+    double low, normal, high, highest;
+
+    auto get(double cl) const -> double {
+        if (cl <= -1.0) return low;
+        if (cl < 0.0)   return low + (normal - low) * (cl + 1.0);
+        if (cl < 1.0)   return normal + (high - normal) * cl;
+        return high + (highest - high) * (cl - 1.0);
+    }
+};
+
+class DynamicColor;  // forward declaration for ToneDeltaPair
+
+// === Polarity for ToneDeltaPair ===
+enum class Polarity { Nearer, Lighter, Darker, NoPreference };
+
+// === ToneDeltaPair ===
+struct ToneDeltaPair {
+    const DynamicColor* roleA;
+    const DynamicColor* roleB;
+    double delta;
+    Polarity polarity;
+    bool stayTogether;
+};
+
+// === DynamicColor ===
+// Core color role resolver: given a DynamicScheme, resolves a "color role"
+// (e.g. primary, onPrimary) to an actual ARGB color via a palette + tone
+// pipeline with optional light-foreground and tone-delta-pair adjustments.
+class DynamicColor {
+public:
+    using PaletteFn = const TonalPalette& (*)(const DynamicScheme&);
+    using ToneFn     = double (*)(const DynamicScheme&);
+    using BgFn       = const DynamicColor& (*)(const DynamicScheme&);
+
+private:
+    PaletteFn paletteFn_ = nullptr;
+    ToneFn toneFn_ = nullptr;
+    BgFn bgFn_ = nullptr;
+    ContrastCurve curve_{};
+    std::optional<ToneDeltaPair> pair_;
+    bool enableLightFg_ = true;
+
+public:
+    DynamicColor() = default; // placeholder for noBg
+
+    DynamicColor(PaletteFn p, ToneFn t, BgFn b, ContrastCurve cc,
+                 std::optional<ToneDeltaPair> pr = std::nullopt,
+                 bool elf = true)
+        : paletteFn_(p), toneFn_(t), bgFn_(b), curve_(cc), pair_(pr), enableLightFg_(elf) {}
+
+    auto getArgb(const DynamicScheme& s) const -> std::int32_t;
+    auto getTone(const DynamicScheme& s) const -> double;
+
+    auto getPalette(const DynamicScheme& s) const -> const TonalPalette& {
+        return paletteFn_(s);
+    }
+};
+
+// === WCAG contrast ratio ===
+inline auto ratioOfTones(double ta, double tb) -> double {
+    auto ya = yFromLstar(ta), yb = yFromLstar(tb);
+    auto l = std::max(ya, yb), d = std::min(ya, yb);
+    return (l + 0.05) / (d + 0.05);
+}
+
+// === Find foreground tone meeting target contrast ratio against background ===
+inline auto foregroundTone(double bgTone, double targetRatio) -> double {
+    auto lightFg = [&] { return 100.0; };
+    auto darkFg  = [&] { return 0.0; };
+    if (ratioOfTones(100.0, bgTone) >= targetRatio) return 100.0;
+    if (ratioOfTones(0.0, bgTone) >= targetRatio) return 0.0;
+    // Pick whichever is closer (MCU prefers light foreground when possible)
+    return (ratioOfTones(100.0, bgTone) >= ratioOfTones(0.0, bgTone)) ? 100.0 : 0.0;
+}
+
+// === noBg: placeholder for roles with enableLightForeground=false ===
+// Returns a const reference to a default-constructed DynamicColor.
+// When used as a BgFn, getTone() will never be called on it because
+// enableLightFg_ is false for the foreground role.
+inline auto noBg() -> const DynamicColor& {
+    static const DynamicColor instance;
+    return instance;
+}
+
+// === Full tone resolution pipeline ===
+inline auto DynamicColor::getTone(const DynamicScheme& s) const -> double {
+    auto tone = toneFn_(s);
+    if (enableLightFg_) {
+        auto bg = bgFn_(s).getTone(s);
+        auto target = curve_.get(s.contrastLevel_);
+        tone = foregroundTone(bg, target);
+    }
+    if (pair_.has_value()) {
+        auto& p = pair_.value();
+        auto tB = p.roleB->getTone(s);
+        switch (p.polarity) {
+            case Polarity::Nearer:
+                if (std::abs(tone - tB) < p.delta)
+                    tone = (tone < tB) ? (tB - p.delta) : (tB + p.delta);
+                break;
+            case Polarity::Lighter:
+                if (tone < tB + p.delta) tone = tB + p.delta;
+                break;
+            case Polarity::Darker:
+                if (tone > tB - p.delta) tone = tB - p.delta;
+                break;
+            case Polarity::NoPreference:
+                if (std::abs(tone - tB) < p.delta) {
+                    auto dLight = (tone + p.delta) - tB;
+                    auto dDark  = tB - (tone - p.delta);
+                    tone = (dLight < dDark) ? (tB - p.delta) : (tB + p.delta);
+                }
+                break;
+        }
+        tone = std::clamp(tone, 0.0, 100.0);
+    }
+    return tone;
+}
+
+// === ARGB resolution ===
+inline auto DynamicColor::getArgb(const DynamicScheme& s) const -> std::int32_t {
+    auto color = getPalette(s).tone(getTone(s));
+    return argbFromRgb(color.r, color.g, color.b);
+}
+
 } // namespace detail
 } // namespace neko::seed
