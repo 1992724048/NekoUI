@@ -26,10 +26,43 @@ namespace neko::animation {
             start = std::chrono::steady_clock::now();
         }
 
-        Animation(const Animation& other) = default;
-        Animation(Animation&& other) noexcept = default;
-        auto operator=(const Animation& other) -> Animation& = default;
-        auto operator=(Animation&& other) noexcept -> Animation& = default;
+        Animation(const Animation& other) : duration_time(other.duration_time),
+                                            now_value(other.now_value),
+                                            new_value(other.new_value),
+                                            start_value(other.start_value),
+                                            start(other.start),
+                                            change(other.change.load()) {}
+
+        Animation(Animation&& other) noexcept : duration_time(std::move(other.duration_time)),
+                                                now_value(std::move(other.now_value)),
+                                                new_value(std::move(other.new_value)),
+                                                start_value(std::move(other.start_value)),
+                                                start(std::move(other.start)),
+                                                change(other.change.load()) {}
+
+        auto operator=(const Animation& other) -> Animation& {
+            if (this != &other) {
+                duration_time = other.duration_time;
+                now_value = other.now_value;
+                new_value = other.new_value;
+                start_value = other.start_value;
+                start = other.start;
+                change.store(other.change.load());
+            }
+            return *this;
+        }
+
+        auto operator=(Animation&& other) noexcept -> Animation& {
+            if (this != &other) {
+                duration_time = std::move(other.duration_time);
+                now_value = std::move(other.now_value);
+                new_value = std::move(other.new_value);
+                start_value = std::move(other.start_value);
+                start = std::move(other.start);
+                change.store(other.change.load());
+            }
+            return *this;
+        }
     protected:
         virtual ~Animation() = default;
     public:
