@@ -23,8 +23,9 @@ namespace neko::backend {
 
     class Backend final {
         friend class engine::Engine;
-    public:
+
         explicit Backend(HWND hwnd);
+    public:
         ~Backend();
         Backend(const Backend&) = delete;
         auto operator=(const Backend&) -> Backend& = delete;

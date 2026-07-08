@@ -8,7 +8,7 @@
 
 namespace neko::engine {
     Engine::Engine(const HWND hwnd) {
-        backend = std::make_unique<backend::Backend>(hwnd);
+        backend = std::unique_ptr<backend::Backend>(new backend::Backend(hwnd));
         context = std::make_unique<Context>();
 
         mouse = std::make_shared<mouse::Mouse>();
