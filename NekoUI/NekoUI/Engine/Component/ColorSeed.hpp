@@ -879,9 +879,9 @@ inline auto foregroundTone(double bgTone, double targetRatio) -> double {
 // Returns a const reference to a default-constructed DynamicColor.
 // When used as a BgFn, getTone() will never be called on it because
 // enableLightFg_ is false for the foreground role.
-inline auto noBg() -> const DynamicColor& {
-    static const DynamicColor instance;
-    return instance;
+inline auto noBg(const DynamicScheme&) -> const DynamicColor& {
+    static DynamicColor dummy;
+    return dummy;
 }
 
 // === Full tone resolution pipeline ===
@@ -924,6 +924,250 @@ inline auto DynamicColor::getArgb(const DynamicScheme& s) const -> std::int32_t 
     auto color = getPalette(s).tone(getTone(s));
     return argbFromRgb(color.r, color.g, color.b);
 }
+
+// ─── MaterialDynamicColors ─────────────────────────────
+// All color role definitions for `tonalSpot` scheme variant.
+// Uses `contrastLevel=0.0` as base; `getTone` applies contrast curves dynamically.
+struct MaterialDynamicColors {
+    // Palette accessors
+    static auto priPal(const DynamicScheme& s) -> const TonalPalette& { return s.primaryPalette_; }
+    static auto secPal(const DynamicScheme& s) -> const TonalPalette& { return s.secondaryPalette_; }
+    static auto terPal(const DynamicScheme& s) -> const TonalPalette& { return s.tertiaryPalette_; }
+    static auto neuPal(const DynamicScheme& s) -> const TonalPalette& { return s.neutralPalette_; }
+    static auto nvpPal(const DynamicScheme& s) -> const TonalPalette& { return s.neutralVariantPalette_; }
+    static auto errPal(const DynamicScheme& s) -> const TonalPalette& { return s.errorPalette_; }
+
+    // Tone accessors
+    static auto tone40_80(const DynamicScheme& s) -> double { return s.isDark_ ? 80.0 : 40.0; }
+    static auto tone100_20(const DynamicScheme& s) -> double { return s.isDark_ ? 20.0 : 100.0; }
+    static auto tone90_30(const DynamicScheme& s) -> double { return s.isDark_ ? 30.0 : 90.0; }
+    static auto tone10_90(const DynamicScheme& s) -> double { return s.isDark_ ? 90.0 : 10.0; }
+    static auto tone90_90(const DynamicScheme&) -> double { return 90.0; }
+    static auto tone80_80(const DynamicScheme&) -> double { return 80.0; }
+    static auto tone10_10(const DynamicScheme&) -> double { return 10.0; }
+    static auto tone30_30(const DynamicScheme&) -> double { return 30.0; }
+    static auto tone98_6(const DynamicScheme& s) -> double { return s.isDark_ ? 6.0 : 98.0; }
+    static auto tone87_6(const DynamicScheme& s) -> double { return s.isDark_ ? 6.0 : 87.0; }
+    static auto tone98_24(const DynamicScheme& s) -> double { return s.isDark_ ? 24.0 : 98.0; }
+    static auto tone100_4(const DynamicScheme& s) -> double { return s.isDark_ ? 4.0 : 100.0; }
+    static auto tone96_10(const DynamicScheme& s) -> double { return s.isDark_ ? 10.0 : 96.0; }
+    static auto tone94_12(const DynamicScheme& s) -> double { return s.isDark_ ? 12.0 : 94.0; }
+    static auto tone92_22(const DynamicScheme& s) -> double { return s.isDark_ ? 22.0 : 92.0; }
+    static auto tone90_24(const DynamicScheme& s) -> double { return s.isDark_ ? 24.0 : 90.0; }
+    static auto tone50_60(const DynamicScheme& s) -> double { return s.isDark_ ? 60.0 : 50.0; }
+    static auto tone80_30(const DynamicScheme& s) -> double { return s.isDark_ ? 30.0 : 80.0; }
+    static auto tone20_90(const DynamicScheme& s) -> double { return s.isDark_ ? 90.0 : 20.0; }
+    static auto tone95_20(const DynamicScheme& s) -> double { return s.isDark_ ? 20.0 : 95.0; }
+    static auto tone0_0(const DynamicScheme&) -> double { return 0.0; }
+
+    // Background resolver for contrast: highest surface
+    // Defined as standalone static to avoid circular dependency
+    // (enableLightForeground=false since it IS a surface, not a foreground on it)
+    static auto highestSurface(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone90_24, noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+
+    // ─── Primary group ───
+    static auto primary(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone40_80,     highestSurface, ContrastCurve{3,4.5,7,7});
+        return inst;
+    }
+    static auto onPrimary(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone100_20,    primary,        ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto primaryContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone90_30,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto onPrimaryContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone10_90,     primaryContainer, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto primaryFixed(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone90_90,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto primaryFixedDim(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone80_80,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto onPrimaryFixed(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone10_10,     primaryFixedDim, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto onPrimaryFixedVariant(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone30_30,     primaryFixedDim, ContrastCurve{3,4.5,7,11});
+        return inst;
+    }
+
+    // ─── Secondary group ───
+    static auto secondary(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone40_80,     highestSurface, ContrastCurve{3,4.5,7,7});
+        return inst;
+    }
+    static auto onSecondary(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone100_20,    secondary,      ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto secondaryContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone90_30,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto onSecondaryContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone10_90,     secondaryContainer, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto secondaryFixed(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone90_90,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto secondaryFixedDim(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone80_80,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto onSecondaryFixed(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone10_10,     secondaryFixedDim, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto onSecondaryFixedVariant(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(secPal, tone30_30,     secondaryFixedDim, ContrastCurve{3,4.5,7,11});
+        return inst;
+    }
+
+    // ─── Tertiary group ───
+    static auto tertiary(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone40_80,     highestSurface, ContrastCurve{3,4.5,7,7});
+        return inst;
+    }
+    static auto onTertiary(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone100_20,    tertiary,       ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto tertiaryContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone90_30,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto onTertiaryContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone10_90,     tertiaryContainer, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto tertiaryFixed(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone90_90,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto tertiaryFixedDim(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone80_80,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto onTertiaryFixed(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone10_10,     tertiaryFixedDim, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto onTertiaryFixedVariant(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(terPal, tone30_30,     tertiaryFixedDim, ContrastCurve{3,4.5,7,11});
+        return inst;
+    }
+
+    // ─── Error group ───
+    static auto error(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(errPal, tone40_80,     highestSurface, ContrastCurve{3,4.5,7,7});
+        return inst;
+    }
+    static auto onError(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(errPal, tone100_20,    error,          ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto errorContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(errPal, tone90_30,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+    static auto onErrorContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(errPal, tone10_90,     errorContainer, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+
+    // ─── Surface group (all enableLightForeground=false — they ARE surfaces) ───
+    static auto surface(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone98_6,      noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto surfaceDim(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone87_6,      noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto surfaceBright(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone98_24,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto surfaceContainerLowest(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone100_4,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto surfaceContainerLow(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone96_10,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto surfaceContainer(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone94_12,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto surfaceContainerHigh(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone92_22,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto surfaceContainerHighest(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone90_24,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto onSurface(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone10_90,     highestSurface, ContrastCurve{4.5,7,11,21});
+        return inst;
+    }
+    static auto surfaceVariant(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(nvpPal, tone90_30,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto onSurfaceVariant(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(nvpPal, tone30_80,     highestSurface, ContrastCurve{3,4.5,7,11});
+        return inst;
+    }
+
+    // ─── Outline ───
+    static auto outline(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(nvpPal, tone50_60,     highestSurface, ContrastCurve{1.5,3,4.5,7});
+        return inst;
+    }
+    static auto outlineVariant(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(nvpPal, tone80_30,     highestSurface, ContrastCurve{1,1,3,4.5});
+        return inst;
+    }
+
+    // ─── Inverse ───
+    static auto inverseSurface(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone20_90,     noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto inverseOnSurface(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone95_20,     inverseSurface, ContrastCurve{3,4.5,7,11});
+        return inst;
+    }
+    static auto inversePrimary(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(priPal, tone80_40,     inverseSurface, ContrastCurve{3,4.5,7,7});
+        return inst;
+    }
+
+    // ─── Other ───
+    static auto shadow(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone0_0,       noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+    static auto scrim(const DynamicScheme&) -> const DynamicColor& {
+        static DynamicColor inst(neuPal, tone0_0,       noBg, ContrastCurve{0,0,0,0}, std::nullopt, false);
+        return inst;
+    }
+};
 
 } // namespace detail
 } // namespace neko::seed
