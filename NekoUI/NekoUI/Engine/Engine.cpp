@@ -2,19 +2,23 @@
 
 #include "Engine.hpp"
 
-#include "../Widget/Component/Animation.hpp"
+#include "Component/Animation.hpp"
 
 namespace neko::engine {
-    Engine::Engine(const HWND hwnd) : backend(hwnd) {
-        context.rebuild = std::bind(&Engine::rebuild, this);
-        context.rerender = std::bind(&std::condition_variable::notify_one, &render_notify);
-        context.animation_start = std::bind(&Engine::anim_inc, this);
-        context.animation_end = std::bind(&Engine::anim_dec, this);
-        context.request_focus = std::bind(&Engine::focus_widget, this, std::placeholders::_1);
-        context.dpi_scale = backend.get_dpi_scale();
+    Engine::Engine(const HWND hwnd) {
+        backend = std::make_unique<backend::Backend>(hwnd);
+        context = std::make_unique<Context>();
 
-        msg_thread = std::jthread(std::bind(&Engine::msg_loop, this));
-        render_thread = std::jthread(std::bind(&Engine::render_loop, this));
+        mouse = std::make_shared<mouse::Mouse>();
+        keyboard = std::make_shared<keyboard::Keyboard>();
+
+        context->present = std::bind(&Engine::present, this);
+        context->mark_dirty = std::bind(&Engine::mark_dirty, this);
+        context->mouse = mouse;
+        context->keyboard = keyboard;
+
+        msg_thread = std::jthread(&Engine::msg_loop, this);
+        render_thread = std::jthread(&Engine::render_loop, this);
     }
 
     Engine::~Engine() {
@@ -30,7 +34,12 @@ namespace neko::engine {
         }
     }
 
-    auto Engine::rebuild() -> void {
+    auto Engine::clear() -> void {
+        root = nullptr;
+        focused.load().reset();
+    }
+
+    auto Engine::present() -> void {
         pending = true;
         render_notify.notify_one();
     }
@@ -49,20 +58,9 @@ namespace neko::engine {
         msg_notify.notify_one();
     }
 
-    auto Engine::focus_widget(widget::Widget* w) -> void {
-        if (m_focused_widget == w) {
-            return;
-        }
-        if (m_focused_widget) {
-            m_focused_widget->m_has_focus = false;
-            m_focused_widget->on_focus_lost();
-        }
-        m_focused_widget = w;
-        if (w) {
-            w->m_has_focus = true;
-            w->on_focus_gained();
-        }
-        context.dirty = true;
+    auto Engine::del(widget::Widget* widget) -> bool {
+        present();
+        return true;
     }
 
     auto Engine::render_loop() -> void {
@@ -82,28 +80,22 @@ namespace neko::engine {
         std::unique_lock lock(render_lock);
         render_notify.wait(lock,
                            [this] -> bool {
-                               return render_thread.get_stop_token().stop_requested() || pending || context.dirty;
+                               return render_thread.get_stop_token().stop_requested() || pending || dirty;
                            });
         pending = false;
     }
 
     auto Engine::render_frame() -> void {
-        const auto now = Clock::now();
-        const auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_last_frame);
-        m_last_frame = now;
-
         if (resize_pending.exchange(false)) {
-            backend.resize(resize_size);
+            backend->resize(resize_size);
         }
 
-        backend.begin();
-        for (const auto& root : m_root_widgets) {
-            root->animate(dt);
-            root->layout({0, 0, resize_size.x, resize_size.y});
-            root->draw(context, backend);
-        }
-        backend.end();
-        context.dirty = false;
+        backend->begin();
+        const auto widget = root.load();
+        widget->layout({.x = 0, .y = 0, .width = resize_size.x, .height = resize_size.y});
+        widget->draw(context, backend);
+        backend->end();
+        dirty = false;
     }
 
     auto Engine::msg_loop() -> void {
@@ -114,15 +106,13 @@ namespace neko::engine {
             }
 
             const auto [msg, wparam, lparam] = *ev;
-            context.mouse.handle(msg, wparam, lparam);
-            context.keyboard.handle(msg, wparam, lparam);
+            mouse->handle(msg, wparam, lparam);
+            keyboard->handle(msg, wparam, lparam);
             msg_dispatch(msg, wparam, lparam);
 
-            for (const auto& root : m_root_widgets) {
-                root->update(context);
-            }
-            if (context.dirty) {
-                rebuild();
+            root.load()->update(context);
+            if (dirty) {
+                present();
             }
         }
     }
@@ -150,13 +140,12 @@ namespace neko::engine {
             case WM_SIZE:
                 resize_size = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
                 resize_pending.store(true, std::memory_order_release);
-                context.dirty = true;
+                dirty = true;
                 break;
             case WM_DPICHANGED: {
                 const UINT dpi = LOWORD(wparam);
-                backend.set_dpi(dpi);
-                context.dpi_scale = static_cast<float>(dpi) / 96.0F;
-                context.dirty = true;
+                backend->set_dpi(dpi);
+                dirty = true;
                 break;
             }
             case WM_MOUSEMOVE:
@@ -167,35 +156,26 @@ namespace neko::engine {
             case WM_MBUTTONDOWN:
             case WM_MBUTTONUP:
             case WM_MOUSEWHEEL:
-                for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
-                    if ((*it)->handle_event(context, msg, wparam, lparam)) {
-                        break;
-                    }
+                if (root.load()->raw_event(context, msg, wparam, lparam)) {
+                    break;
                 }
                 break;
             case WM_KEYDOWN:
                 if (wparam == VK_TAB) {
-                    focus_next();
                     return;
                 }
-                [[fallthrough]];
             case WM_KEYUP:
             case WM_CHAR:
                 if (wparam == '\t') {
                     break;
                 }
-                if (m_focused_widget != nullptr) {
-                    m_focused_widget->handle_event(context, msg, wparam, lparam);
+                if (!focused.load().expired()) {
+                    focused.load().lock()->raw_event(context, msg, wparam, lparam);
                 }
                 break;
             case WM_TIMER:
-                break; // 仅用于周期唤醒 msg_loop → update() → 光标闪烁
-            default:
-                for (auto it = m_root_widgets.rbegin(); it != m_root_widgets.rend(); ++it) {
-                    if ((*it)->handle_event(context, msg, wparam, lparam)) {
-                        break;
-                    }
-                }
+                break;
+            default: ;
         }
     }
 
@@ -207,55 +187,7 @@ namespace neko::engine {
         --animation;
     }
 
-    auto Engine::has_interactive_at(const POINT pt) const -> bool {
-        const auto deepest = [&](const auto& self, const widget::Widget* w) -> const widget::Widget* {
-            if (!w->visible()) return nullptr;
-            const auto& b = w->bounds();
-            if (pt.x < b.x || pt.x >= b.x + b.z || pt.y < b.y || pt.y >= b.y + b.w) {
-                return nullptr;
-            }
-            for (auto* child : w->children_sorted_desc()) {
-                if (const auto* found = self(self, child)) return found;
-            }
-            return w;
-        };
-        for (const auto& root : m_root_widgets) {
-            if (const auto* w = deepest(deepest, root.get())) {
-                if (w->wants_hand_cursor()) return true;
-            }
-        }
-        return false;
-    }
-
-    auto Engine::focus_next() -> void {
-        std::vector<widget::Widget*> widgets;
-        for (auto& root : m_root_widgets) {
-            collect_focusable(root.get(), widgets);
-        }
-        if (widgets.empty()) {
-            focus_widget(nullptr);
-            return;
-        }
-
-        const auto it = std::ranges::find(widgets, m_focused_widget);
-        size_t idx;
-        if (it != widgets.end()) {
-            idx = (std::distance(widgets.begin(), it) + 1) % widgets.size();
-        } else {
-            idx = 0;
-        }
-        focus_widget(widgets[idx]);
-    }
-
-    auto Engine::collect_focusable(widget::Widget* w, std::vector<widget::Widget*>& out) -> void {
-        if (w == nullptr) {
-            return;
-        }
-        if (w->focusable()) {
-            out.push_back(w);
-        }
-        for (auto* child : w->children()) {
-            collect_focusable(child, out);
-        }
+    auto Engine::mark_dirty() -> void {
+        dirty = true;
     }
 } // namespace neko::engine

@@ -1,7 +1,5 @@
 #pragma once
 #include "../Widget.hpp"
-#include "../State/AnimatedState.hpp"
-#include "../State/State.hpp"
 
 #include <functional>
 #include <string>
@@ -11,7 +9,9 @@ namespace neko::widget {
     public:
         explicit Button(glm::ivec4 rect, std::string label = "");
 
-        [[nodiscard]] auto wants_hand_cursor() const -> bool override { return true; }
+        [[nodiscard]] auto wants_hand_cursor() const -> bool override {
+            return true;
+        }
 
         std::function<void()> on_click;
     protected:

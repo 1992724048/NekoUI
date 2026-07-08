@@ -1,21 +1,17 @@
 #pragma once
-#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <thread>
 #include <tuple>
 #include <type_traits>
-#include <vector>
 
 #include "Context.hpp"
 
-#include "../Type.hpp"
 #include "../Backend/Backend.hpp"
 #include "../Widget/Widget.hpp"
 
@@ -28,43 +24,25 @@ namespace neko::engine {
         Engine(const Engine&) = delete;
         auto operator=(const Engine&) -> Engine& = delete;
 
-        //! @brief 添加根控件
-        template<typename T, typename... Args>
-        auto add(Args&&... args) -> T& {
-            static_assert(std::is_base_of_v<widget::Widget, T>, "T must derive from widget::Widget");
-            const auto prev_depth = state::g_auto_bind_stack.size();
-            auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
-            ptr->m_notify_rerender = [this]() {
-                rebuild();
-            };
-            ptr->set_z_order(static_cast<int>(m_root_widgets.size()));
-            auto& ref = *ptr;
-            m_root_widgets.push_back(std::move(ptr));
-            state::g_auto_bind_stack.resize(prev_depth);
-            rebuild();
-            return ref;
+        template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
+        auto set(Args&&... args) -> std::shared_ptr<T> {
+            std::shared_ptr<widget::Widget> widget = root = std::make_shared<T>(this, std::forward<Args>(args)...);
+            present();
+            return widget;
         }
 
-        //! @brief 触发重建
-        auto rebuild() -> void;
-
-        //! @brief 投递窗口消息到消息队列（满时阻塞等待）
+        auto clear() -> void;
+        auto present() -> void;
         auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+    protected:
+        friend widget::Widget;
 
-        //! @brief 请求焦点
-        auto focus_widget(widget::Widget* w) -> void;
-
-        //! @brief 获取当前焦点控件
-        [[nodiscard]] auto focused_widget() const -> widget::Widget* {
-            return m_focused_widget;
-        }
-
-        //! @brief 判断某点下是否有需要手型光标的控件
-        [[nodiscard]] auto has_interactive_at(POINT pt) const -> bool;
+        auto del(widget::Widget* widget) -> bool;
     private:
         static constexpr size_t MSG_QUEUE_MAX = 32;
 
         using MsgEvent = std::tuple<UINT, WPARAM, LPARAM>;
+        using Clock = std::chrono::steady_clock;
 
         auto render_loop() -> void;
         auto render_wait() -> void;
@@ -77,11 +55,12 @@ namespace neko::engine {
         auto anim_inc() -> void;
         auto anim_dec() -> void;
 
-        auto focus_next() -> void;
-        static auto collect_focusable(widget::Widget* w, std::vector<widget::Widget*>& out) -> void;
+        auto mark_dirty() -> void;
 
-        backend::Backend backend;
-        Context context{};
+        std::unique_ptr<Context> context{};
+        std::unique_ptr<backend::Backend> backend{};
+        std::shared_ptr<mouse::Mouse> mouse;
+        std::shared_ptr<keyboard::Keyboard> keyboard;
 
         std::mutex render_lock;
         std::condition_variable render_notify;
@@ -94,14 +73,13 @@ namespace neko::engine {
         std::jthread msg_thread;
         size_t msg_head{}, msg_tail{}, msg_count{};
 
-        std::atomic_bool resize_pending{false};
         glm::ivec2 resize_size{};
-
         std::atomic_int animation{};
-        using Clock = std::chrono::steady_clock;
-        Clock::time_point m_last_frame{Clock::now()};
+        std::atomic_bool dirty{true};
         std::atomic_bool pending{};
-        widget::Widget* m_focused_widget = nullptr;
-        std::vector<std::unique_ptr<widget::Widget>> m_root_widgets{};
+        std::atomic_bool resize_pending{false};
+
+        std::atomic<std::weak_ptr<widget::Widget>> focused{};
+        std::atomic<std::shared_ptr<widget::Widget>> root{};
     };
 } // namespace neko::engine

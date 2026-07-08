@@ -30,12 +30,6 @@
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Widget\Checkbox\Checkbox.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NekoUI\Widget\TextInput\TextInput.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
@@ -48,12 +42,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Type.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Component\CSS.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Component\Animation.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\Context.hpp">
@@ -71,16 +59,16 @@
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Sub.hpp">
+    <ClInclude Include="NekoUI\Engine\Component\ValueState.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Widget\TextInput\TextInput.hpp">
+    <ClInclude Include="NekoUI\Engine\Component\Animation.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Checkbox\Checkbox.hpp">
+    <ClInclude Include="NekoUI\Widget\Style\CSS.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Widget\layout\Stack.hpp">
+    <ClInclude Include="NekoUI\Engine\Component\ColorSeed.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

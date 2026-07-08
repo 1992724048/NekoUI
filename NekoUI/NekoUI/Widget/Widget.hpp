@@ -9,7 +9,6 @@
 
 #include "../Backend/Backend.hpp"
 #include "../Engine/Context.hpp"
-#include "State/State.hpp"
 
 namespace neko::widget {
     struct Constraints {
@@ -19,75 +18,34 @@ namespace neko::widget {
     };
 
     class Widget {
-        template<typename T>
-        friend class Sub;
         friend class engine::Engine;
     public:
-        virtual ~Widget();
+        virtual auto draw(std::unique_ptr<engine::Context>& context, std::unique_ptr<backend::Backend>& backend) -> void {}
+        virtual auto layout(Constraints constraints) -> void {}
+        virtual auto update(std::unique_ptr<engine::Context>& context) -> void {}
+        virtual auto raw_event(std::unique_ptr<engine::Context>& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool;
 
-        virtual auto draw(engine::Context& context, backend::Backend& backend) -> void;
-        virtual auto animate(std::chrono::milliseconds dt) -> void;
-        virtual auto layout(Constraints constraints) -> void;
-        virtual auto update(engine::Context& context) -> void;
-        virtual auto handle_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool;
+        template<typename T, typename... Args> requires std::is_base_of_v<Widget, T>
+        auto add(Args&&... args) -> std::shared_ptr<T> {
+            return std::make_shared<T>(this, std::forward<Args>(args)...);
+        }
 
         [[nodiscard]] virtual auto hit_test(const mouse::Mouse& mouse) const -> bool;
-
-        auto mark_dirty() -> void;
-        [[nodiscard]] auto dirty() const -> bool;
-        auto clear_dirty() -> void;
-
-        [[nodiscard]] auto children() const -> const std::vector<Widget*>&;
-        [[nodiscard]] auto parent() const -> Widget*;
-        [[nodiscard]] auto child_count() const -> size_t;
-        [[nodiscard]] auto root() -> Widget*;
-
-        auto set_bounds(int x, int y, int w, int h) -> void;
-        auto set_bounds(glm::ivec4 bounds) -> void;
-        [[nodiscard]] auto bounds() const -> const glm::ivec4&;
-        [[nodiscard]] auto x() const -> int;
-        [[nodiscard]] auto y() const -> int;
-        [[nodiscard]] auto width() const -> int;
-        [[nodiscard]] auto height() const -> int;
-
-        auto set_z_order(int order) -> void;
-        [[nodiscard]] auto z_order() const -> int;
-
-        auto set_visible(bool v) -> void;
-        [[nodiscard]] auto visible() const -> bool;
-
-        [[nodiscard]] virtual auto focusable() const -> bool;
-        [[nodiscard]] virtual auto wants_hand_cursor() const -> bool {
-            return focusable();
-        }
-        virtual auto on_focus_gained() -> void;
-        virtual auto on_focus_lost() -> void;
-        [[nodiscard]] auto has_focus() const -> bool;
     protected:
-        Widget();
+        ~Widget();
+        explicit Widget(engine::Engine* engine);
+        explicit Widget(const std::weak_ptr<Widget>& parent);
 
-        // Override these hooks instead of update/animate/draw/handle_event
-        virtual auto on_update(engine::Context& context) -> void {}
-        virtual auto on_animate(std::chrono::milliseconds dt) -> void {}
-        virtual auto on_draw(engine::Context& context, backend::Backend& backend) -> void {}
-        [[nodiscard]] virtual auto on_handle(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool {
-            return false;
-        }
-
-        bool m_has_focus = false;
+        engine::Engine* engine;
     private:
-        std::function<void()> m_notify_rerender;
-        auto register_child(Widget* child) -> void;
-        auto unregister_child(Widget* child) -> void;
+        std::atomic<std::weak_ptr<Widget>> parent{};
+        std::atomic<std::weak_ptr<Widget>> root{};
 
-        [[nodiscard]] auto children_sorted_asc() const -> std::vector<Widget*>;
-        [[nodiscard]] auto children_sorted_desc() const -> std::vector<Widget*>;
+        glm::ivec4 bounds{};
 
-        Widget* m_parent = nullptr;
-        std::vector<Widget*> m_children;
-        glm::ivec4 m_bounds{};
-        int m_z_order = 0;
-        bool m_dirty = true;
-        bool m_visible = true;
+        int z_index{0};
+
+        std::atomic_bool isVisible{true};
+        std::atomic_bool isFocus{true};
     };
 } // namespace neko::widget

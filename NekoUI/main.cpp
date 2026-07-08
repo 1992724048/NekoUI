@@ -84,25 +84,14 @@ auto main(int argc, char* argv[]) -> int try {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
-    SetTimer(hwnd, 1, 500, nullptr); // 500ms 定时器驱动光标闪烁
 
     neko::engine::Engine engine(hwnd);
 
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&engine));
 
-    auto& btn = engine.add<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
+    auto& btn = engine.set<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
     btn.on_click = [] -> void {
         std::println("[NekoUI] Button clicked!\n");
-    };
-
-    auto& input = engine.add<neko::widget::TextInput>(glm::ivec4{100, 170, 200, 30}, "请输入...");
-    input.on_text_changed = [](std::string_view text) -> void {
-        std::println("[NekoUI] Text: {}", text);
-    };
-
-    auto& cb = engine.add<neko::widget::Checkbox>(glm::ivec4{100, 220, 200, 24}, "同意协议");
-    cb.on_toggled = [](bool checked) -> void {
-        std::println("[NekoUI] Checkbox: {}", checked);
     };
 
     MSG msg{};
