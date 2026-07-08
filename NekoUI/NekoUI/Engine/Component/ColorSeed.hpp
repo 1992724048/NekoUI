@@ -769,5 +769,29 @@ private:
     }
 };
 
+// === DynamicScheme (tonalSpot) ===
+// Holds the 6 tonal palettes for a tonalSpot color scheme variant
+// alongside isDark / contrastLevel flags.
+class DynamicScheme {
+public:
+    Hct sourceHct_;
+    TonalPalette primaryPalette_, secondaryPalette_, tertiaryPalette_;
+    TonalPalette neutralPalette_, neutralVariantPalette_, errorPalette_;
+    bool isDark_;
+    double contrastLevel_;
+
+    DynamicScheme(Hct source, bool isDark, double contrastLevel)
+        : sourceHct_(source), isDark_(isDark), contrastLevel_(contrastLevel)
+    {
+        auto h = source.hue();
+        primaryPalette_         = TonalPalette::fromHueAndChroma(h, 36.0);
+        secondaryPalette_       = TonalPalette::fromHueAndChroma(h, 16.0);
+        tertiaryPalette_        = TonalPalette::fromHueAndChroma(sanitizeDegrees(h + 60.0), 24.0);
+        neutralPalette_         = TonalPalette::fromHueAndChroma(h, 6.0);
+        neutralVariantPalette_  = TonalPalette::fromHueAndChroma(h, 8.0);
+        errorPalette_           = TonalPalette::fromHueAndChroma(25.0, 84.0);
+    }
+};
+
 } // namespace detail
 } // namespace neko::seed
