@@ -17,7 +17,7 @@
               "Items": [
                 {
                   "Id": "613d42c7-85cd-45ac-b7e5-7817355cc671",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 },
                 {
@@ -33,7 +33,7 @@
               "Items": [
                 {
                   "Id": "c8d847cf-b3f7-4e19-859a-d2e289002b52",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 }
               ]
@@ -52,7 +52,7 @@
               "Items": [
                 {
                   "Id": "5f6a229b-3f9c-4ea3-b5a7-9f7b9dda8801",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 },
                 {
@@ -68,7 +68,7 @@
               "Items": [
                 {
                   "Id": "34a0f088-1886-4665-979c-40869f383c3f",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 }
               ]
@@ -87,7 +87,7 @@
               "Items": [
                 {
                   "Id": "98348403-4cb5-4adb-b281-a41b2eebf387",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 },
                 {
@@ -103,7 +103,7 @@
               "Items": [
                 {
                   "Id": "01dbe4ac-8d29-49c2-ac85-11037bbaa614",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 }
               ]
@@ -122,7 +122,7 @@
               "Items": [
                 {
                   "Id": "c0610412-03b1-43b8-bc5a-af84e80e1e1c",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 },
                 {
@@ -138,7 +138,7 @@
               "Items": [
                 {
                   "Id": "3d82f884-dfb3-4e07-a7b5-76bc6f8ea54d",
-                  "Command": "$(ProjectDir)",
+                  "Command": "$(TargetPath)",
                   "Type": 2
                 }
               ]
