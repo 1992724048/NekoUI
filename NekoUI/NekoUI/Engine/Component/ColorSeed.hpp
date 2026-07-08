@@ -725,5 +725,49 @@ public:
 private:
     Hct(double h, double c, double t, std::int32_t a) : hue_(h), chroma_(c), tone_(t), argb_(a) {}
 };
+
+// === TonalPalette ===
+// Maps a (hue, chroma) pair to a set of colors at varying tones (0-100).
+// Ported from material_color_utilities palette_ts.dart.
+class TonalPalette {
+    double hue_ = 0, chroma_ = 0;
+public:
+    TonalPalette() = default;
+
+    static auto fromHueAndChroma(double hue, double chroma) -> TonalPalette {
+        return TonalPalette{hue, chroma};
+    }
+
+    auto tone(double t) const -> type::Color {
+        double adjustedHue = hue_;
+        // Yellow T99 fix: yellow hues (70-120°) at T99 use average of T98+T100
+        if (std::abs(t - 99.0) < 0.5 && adjustedHue >= 70.0 && adjustedHue <= 120.0) {
+            auto c98  = HctSolver::solveToInt(adjustedHue, chroma_, 98.0);
+            auto c100 = HctSolver::solveToInt(adjustedHue, chroma_, 100.0);
+            auto avg  = argbFromRgb(
+                (redFromArgb(c98)   + redFromArgb(c100))   / 2,
+                (greenFromArgb(c98) + greenFromArgb(c100)) / 2,
+                (blueFromArgb(c98)  + blueFromArgb(c100))  / 2
+            );
+            return toColor(avg);
+        }
+        auto argb = HctSolver::solveToInt(adjustedHue, chroma_, t);
+        return toColor(argb);
+    }
+
+    auto hue()    const -> double { return hue_; }
+    auto chroma() const -> double { return chroma_; }
+
+private:
+    TonalPalette(double h, double c) : hue_(h), chroma_(c) {}
+
+    static auto toColor(std::int32_t argb) -> type::Color {
+        return type::Color(
+            redFromArgb(argb), greenFromArgb(argb),
+            blueFromArgb(argb), alphaFromArgb(argb)
+        );
+    }
+};
+
 } // namespace detail
 } // namespace neko::seed
