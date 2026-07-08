@@ -705,5 +705,25 @@ private:
         return 0;
     }
 };
+
+// === HCT (Hue-Chroma-Tone) Color Space Wrapper ===
+// Thin wrapper over CAM16 for convenient HCT color representation.
+class Hct {
+    double hue_ = 0, chroma_ = 0, tone_ = 0;
+    std::int32_t argb_ = 0;
+public:
+    Hct() = default;
+    static auto fromInt(std::int32_t argb) -> Hct {
+        auto cam = Cam16::fromArgb(argb);
+        return Hct{cam.hue, cam.chroma, lstarFromArgb(argb), argb};
+    }
+    auto toInt()   const -> std::int32_t { return argb_; }
+    auto hue()     const -> double { return hue_; }
+    auto chroma()  const -> double { return chroma_; }
+    auto tone()    const -> double { return tone_; }
+
+private:
+    Hct(double h, double c, double t, std::int32_t a) : hue_(h), chroma_(c), tone_(t), argb_(a) {}
+};
 } // namespace detail
 } // namespace neko::seed
