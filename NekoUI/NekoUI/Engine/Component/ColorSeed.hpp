@@ -1170,4 +1170,115 @@ struct MaterialDynamicColors {
 };
 
 } // namespace detail
+
+struct ColorScheme {
+    type::Color primary;
+    type::Color onPrimary;
+    type::Color primaryContainer;
+    type::Color onPrimaryContainer;
+    type::Color primaryFixed;
+    type::Color primaryFixedDim;
+    type::Color onPrimaryFixed;
+    type::Color onPrimaryFixedVariant;
+    type::Color secondary;
+    type::Color onSecondary;
+    type::Color secondaryContainer;
+    type::Color onSecondaryContainer;
+    type::Color secondaryFixed;
+    type::Color secondaryFixedDim;
+    type::Color onSecondaryFixed;
+    type::Color onSecondaryFixedVariant;
+    type::Color tertiary;
+    type::Color onTertiary;
+    type::Color tertiaryContainer;
+    type::Color onTertiaryContainer;
+    type::Color tertiaryFixed;
+    type::Color tertiaryFixedDim;
+    type::Color onTertiaryFixed;
+    type::Color onTertiaryFixedVariant;
+    type::Color error;
+    type::Color onError;
+    type::Color errorContainer;
+    type::Color onErrorContainer;
+    type::Color surface;
+    type::Color surfaceDim;
+    type::Color surfaceBright;
+    type::Color surfaceContainerLowest;
+    type::Color surfaceContainerLow;
+    type::Color surfaceContainer;
+    type::Color surfaceContainerHigh;
+    type::Color surfaceContainerHighest;
+    type::Color onSurface;
+    type::Color surfaceVariant;
+    type::Color onSurfaceVariant;
+    type::Color outline;
+    type::Color outlineVariant;
+    type::Color inverseSurface;
+    type::Color inverseOnSurface;
+    type::Color inversePrimary;
+    type::Color shadow;
+    type::Color scrim;
+
+    static auto fromSeed(type::Color seedColor, bool isDark = false, float contrastLevel = 0.0f) -> ColorScheme {
+        auto argb = detail::argbFromRgb(seedColor.r, seedColor.g, seedColor.b);
+        auto hct = detail::Hct::fromInt(argb);
+        detail::DynamicScheme scheme(hct, isDark, contrastLevel);
+
+        auto resolve = [&](const detail::DynamicColor& role) -> type::Color {
+            auto a = role.getArgb(scheme);
+            return type::Color(detail::redFromArgb(a), detail::greenFromArgb(a),
+                               detail::blueFromArgb(a), detail::alphaFromArgb(a));
+        };
+
+        return {
+            .primary        = resolve(detail::MaterialDynamicColors::primary()),
+            .onPrimary      = resolve(detail::MaterialDynamicColors::onPrimary()),
+            .primaryContainer  = resolve(detail::MaterialDynamicColors::primaryContainer()),
+            .onPrimaryContainer = resolve(detail::MaterialDynamicColors::onPrimaryContainer()),
+            .primaryFixed   = resolve(detail::MaterialDynamicColors::primaryFixed()),
+            .primaryFixedDim = resolve(detail::MaterialDynamicColors::primaryFixedDim()),
+            .onPrimaryFixed = resolve(detail::MaterialDynamicColors::onPrimaryFixed()),
+            .onPrimaryFixedVariant = resolve(detail::MaterialDynamicColors::onPrimaryFixedVariant()),
+            .secondary      = resolve(detail::MaterialDynamicColors::secondary()),
+            .onSecondary    = resolve(detail::MaterialDynamicColors::onSecondary()),
+            .secondaryContainer = resolve(detail::MaterialDynamicColors::secondaryContainer()),
+            .onSecondaryContainer = resolve(detail::MaterialDynamicColors::onSecondaryContainer()),
+            .secondaryFixed = resolve(detail::MaterialDynamicColors::secondaryFixed()),
+            .secondaryFixedDim = resolve(detail::MaterialDynamicColors::secondaryFixedDim()),
+            .onSecondaryFixed = resolve(detail::MaterialDynamicColors::onSecondaryFixed()),
+            .onSecondaryFixedVariant = resolve(detail::MaterialDynamicColors::onSecondaryFixedVariant()),
+            .tertiary       = resolve(detail::MaterialDynamicColors::tertiary()),
+            .onTertiary     = resolve(detail::MaterialDynamicColors::onTertiary()),
+            .tertiaryContainer = resolve(detail::MaterialDynamicColors::tertiaryContainer()),
+            .onTertiaryContainer = resolve(detail::MaterialDynamicColors::onTertiaryContainer()),
+            .tertiaryFixed  = resolve(detail::MaterialDynamicColors::tertiaryFixed()),
+            .tertiaryFixedDim = resolve(detail::MaterialDynamicColors::tertiaryFixedDim()),
+            .onTertiaryFixed = resolve(detail::MaterialDynamicColors::onTertiaryFixed()),
+            .onTertiaryFixedVariant = resolve(detail::MaterialDynamicColors::onTertiaryFixedVariant()),
+            .error          = resolve(detail::MaterialDynamicColors::error()),
+            .onError        = resolve(detail::MaterialDynamicColors::onError()),
+            .errorContainer = resolve(detail::MaterialDynamicColors::errorContainer()),
+            .onErrorContainer = resolve(detail::MaterialDynamicColors::onErrorContainer()),
+            .surface        = resolve(detail::MaterialDynamicColors::surface()),
+            .surfaceDim     = resolve(detail::MaterialDynamicColors::surfaceDim()),
+            .surfaceBright  = resolve(detail::MaterialDynamicColors::surfaceBright()),
+            .surfaceContainerLowest  = resolve(detail::MaterialDynamicColors::surfaceContainerLowest()),
+            .surfaceContainerLow     = resolve(detail::MaterialDynamicColors::surfaceContainerLow()),
+            .surfaceContainer        = resolve(detail::MaterialDynamicColors::surfaceContainer()),
+            .surfaceContainerHigh    = resolve(detail::MaterialDynamicColors::surfaceContainerHigh()),
+            .surfaceContainerHighest = resolve(detail::MaterialDynamicColors::surfaceContainerHighest()),
+            .onSurface      = resolve(detail::MaterialDynamicColors::onSurface()),
+            .surfaceVariant = resolve(detail::MaterialDynamicColors::surfaceVariant()),
+            .onSurfaceVariant = resolve(detail::MaterialDynamicColors::onSurfaceVariant()),
+            .outline        = resolve(detail::MaterialDynamicColors::outline()),
+            .outlineVariant = resolve(detail::MaterialDynamicColors::outlineVariant()),
+            .inverseSurface  = resolve(detail::MaterialDynamicColors::inverseSurface()),
+            .inverseOnSurface = resolve(detail::MaterialDynamicColors::inverseOnSurface()),
+            .inversePrimary  = resolve(detail::MaterialDynamicColors::inversePrimary()),
+            .shadow         = resolve(detail::MaterialDynamicColors::shadow()),
+            .scrim          = resolve(detail::MaterialDynamicColors::scrim()),
+        };
+    }
+};
+
 } // namespace neko::seed
