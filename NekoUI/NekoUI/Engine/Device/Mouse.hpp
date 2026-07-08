@@ -16,6 +16,11 @@ namespace neko::mouse {
         bool prev_right = false;
         bool prev_middle = false;
         int wheel_delta = 0;
+        float dpi_scale_ = 1.0F;
+
+        auto set_dpi(const UINT dpi) -> void {
+            dpi_scale_ = dpi / 96.0F;
+        }
 
         [[nodiscard]] auto left_clicked() const -> bool {
             return left_down && !prev_left;
@@ -37,23 +42,26 @@ namespace neko::mouse {
             return pos != prev_pos;
         }
 
-        [[nodiscard]] auto is_inside(const glm::ivec4 r, const float scale = 1.0F) const -> bool {
-            return pos.x >= r.x * scale && pos.x <= (r.x + r.z) * scale && pos.y >= r.y * scale && pos.y <= (r.y + r.w) * scale;
+        [[nodiscard]] auto is_inside(const glm::ivec4 r) const -> bool {
+            const float s = dpi_scale_;
+            return pos.x >= r.x * s && pos.x <= (r.x + r.z) * s && pos.y >= r.y * s && pos.y <= (r.y + r.w) * s;
         }
 
-        [[nodiscard]] auto is_inside_circle(const glm::ivec2 center, const int radius, const float scale = 1.0F) const -> bool {
-            const float dx = static_cast<float>(pos.x) - (static_cast<float>(center.x) * scale);
-            const float dy = static_cast<float>(pos.y) - (static_cast<float>(center.y) * scale);
-            const float r = static_cast<float>(radius) * scale;
+        [[nodiscard]] auto is_inside_circle(const glm::ivec2 center, const int radius) const -> bool {
+            const float s = dpi_scale_;
+            const float dx = static_cast<float>(pos.x) - (static_cast<float>(center.x) * s);
+            const float dy = static_cast<float>(pos.y) - (static_cast<float>(center.y) * s);
+            const float r = static_cast<float>(radius) * s;
             return (dx * dx) + (dy * dy) <= r * r;
         }
 
-        [[nodiscard]] auto is_inside_rounded(const glm::ivec4 r, const int corner_radius, const float scale = 1.0F) const -> bool {
-            const int rx = static_cast<int>(r.x * scale);
-            const int ry = static_cast<int>(r.y * scale);
-            const int rw = static_cast<int>(r.z * scale);
-            const int rh = static_cast<int>(r.w * scale);
-            const int cr = static_cast<int>(corner_radius * scale);
+        [[nodiscard]] auto is_inside_rounded(const glm::ivec4 r, const int corner_radius) const -> bool {
+            const float s = dpi_scale_;
+            const int rx = static_cast<int>(r.x * s);
+            const int ry = static_cast<int>(r.y * s);
+            const int rw = static_cast<int>(r.z * s);
+            const int rh = static_cast<int>(r.w * s);
+            const int cr = static_cast<int>(static_cast<float>(corner_radius) * s);
 
             if (pos.x < rx || pos.x > rx + rw || pos.y < ry || pos.y > ry + rh) {
                 return false;
@@ -72,16 +80,17 @@ namespace neko::mouse {
                                        });
         }
 
-        [[nodiscard]] auto is_inside_polygon(const std::span<const glm::ivec2> pts, const float scale = 1.0F) const -> bool {
+        [[nodiscard]] auto is_inside_polygon(const std::span<const glm::ivec2> pts) const -> bool {
             if (pts.size() < 3) {
                 return false;
             }
+            const float s = dpi_scale_;
             bool inside = false;
             for (size_t i = 0, j = pts.size() - 1; i < pts.size(); j = i++) {
-                const int xi = static_cast<int>(pts[i].x * scale);
-                const int yi = static_cast<int>(pts[i].y * scale);
-                const int xj = static_cast<int>(pts[j].x * scale);
-                const int yj = static_cast<int>(pts[j].y * scale);
+                const int xi = static_cast<int>(static_cast<float>(pts[i].x) * s);
+                const int yi = static_cast<int>(static_cast<float>(pts[i].y) * s);
+                const int xj = static_cast<int>(static_cast<float>(pts[j].x) * s);
+                const int yj = static_cast<int>(static_cast<float>(pts[j].y) * s);
 
                 if (yi > pos.y != yj > pos.y && pos.x < (static_cast<float>(xj - xi) * static_cast<float>(pos.y - yi) / static_cast<float>(yj - yi)) + xi) {
                     inside = !inside;

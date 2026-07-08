@@ -2,6 +2,8 @@
 
 #include "Engine.hpp"
 
+#include <cmath>
+
 #include "Component/Animation.hpp"
 
 namespace neko::engine {
@@ -11,6 +13,11 @@ namespace neko::engine {
 
         mouse = std::make_shared<mouse::Mouse>();
         keyboard = std::make_shared<keyboard::Keyboard>();
+
+        // Initialize DPI from initial backend state
+        const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
+        mouse->set_dpi(initial_dpi);
+        keyboard->set_dpi(initial_dpi);
 
         context->present = std::bind(&Engine::present, this);
         context->mark_dirty = std::bind(&Engine::mark_dirty, this);
@@ -145,6 +152,9 @@ namespace neko::engine {
             case WM_DPICHANGED: {
                 const UINT dpi = LOWORD(wparam);
                 backend->set_dpi(dpi);
+                mouse->set_dpi(dpi);
+                keyboard->set_dpi(dpi);
+                context->dpi_scale = dpi / 96.0F; // sync context for widgets
                 dirty = true;
                 break;
             }

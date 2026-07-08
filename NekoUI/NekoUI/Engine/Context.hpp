@@ -19,6 +19,8 @@ namespace neko::engine {
         std::function<void()> present;
         std::function<void()> mark_dirty;
 
+        float dpi_scale = 1.0F;
+
         std::weak_ptr<mouse::Mouse> mouse;
         std::weak_ptr<keyboard::Keyboard> keyboard;
     };

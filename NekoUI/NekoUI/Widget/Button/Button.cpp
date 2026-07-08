@@ -6,8 +6,7 @@ neko::widget::Button::Button(const glm::ivec4 rect, std::string label) : label_(
 
 auto neko::widget::Button::on_update(engine::Context& context) -> void {
     fill_color_.set_context(context);
-    const float s = context.dpi_scale;
-    const bool hover = context.mouse.is_inside(bounds(), s);
+    const bool hover = context.mouse.is_inside(bounds());
     const bool down = hover && context.mouse.left_down;
 
     if (context.mouse.left_released() && hover && on_click) {
