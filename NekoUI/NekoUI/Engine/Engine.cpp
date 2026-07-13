@@ -1,4 +1,4 @@
-// 2026-07-02 00:23:43 (updated for retained mode)
+﻿// 2026-07-02 00:23:43 (updated for retained mode)
 
 #include "Engine.hpp"
 
@@ -14,7 +14,7 @@ namespace neko::engine {
         mouse = std::make_shared<mouse::Mouse>();
         keyboard = std::make_shared<keyboard::Keyboard>();
         scheme = std::make_shared<color::ColorScheme>();
-        *scheme = scheme->from_seed({19, 161, 14, 255});
+        *scheme = scheme->from_seed({19 / 255, 161 / 255, 14 / 255, 1});
 
         const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
@@ -85,6 +85,7 @@ namespace neko::engine {
 
     auto Engine::render_wait() -> void {
         if (animation != 0) {
+            std::this_thread::yield();
             return;
         }
         std::unique_lock lock(render_lock);
@@ -100,7 +101,7 @@ namespace neko::engine {
             backend->resize(resize_size);
         }
 
-        backend->begin(scheme->surface / 255.F);
+        backend->begin(scheme->primary);
         const auto widget = root.load();
         if (widget) {
             widget->layout({.x = 0, .y = 0, .width = resize_size.x, .height = resize_size.y});
@@ -149,16 +150,16 @@ namespace neko::engine {
 
     auto Engine::msg_dispatch(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
         switch (msg) {
-            case WM_SIZE:
+            case WM_SIZE: {
                 resize_size = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
                 resize_pending.store(true, std::memory_order_release);
                 dirty = true;
                 break;
+            }
             case WM_DPICHANGED: {
                 const UINT dpi = LOWORD(wparam);
                 backend->set_dpi(dpi);
                 mouse->set_dpi(dpi);
-                context->dpi_scale = dpi / 96.0F;
                 dirty = true;
                 break;
             }
@@ -194,14 +195,13 @@ namespace neko::engine {
     }
 
     auto Engine::anim_inc() -> void {
-        ++animation;
+        animation.fetch_add(1, std::memory_order_relaxed);
     }
 
     auto Engine::anim_dec() -> void {
-        if (animation == 0) {
-            return;
+        if (animation.fetch_sub(1, std::memory_order_relaxed) == 0) {
+            animation.store(0, std::memory_order_relaxed);
         }
-        --animation;
     }
 
     auto Engine::mark_dirty() -> void {

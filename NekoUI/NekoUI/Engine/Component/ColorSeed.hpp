@@ -35,6 +35,12 @@ namespace neko::color {
             return a & 0xFF;
         }
 
+        using Argb = std::int32_t;
+
+        constexpr auto argb_to_color(const Argb argb) -> type::Color {
+            return {red_from_argb(argb) / 255.0F, green_from_argb(argb) / 255.0F, blue_from_argb(argb) / 255.0F, alpha_from_argb(argb) / 255.0F};
+        }
+
         // sRGB Gamma
         inline auto linearized(const int rgb_component) -> double {
             const double n = rgb_component / 255.0;
@@ -85,6 +91,12 @@ namespace neko::color {
             return x < 0.0 ? -1.0 : x > 0.0 ? 1.0 : 0.0;
         }
 
+        // Chromatic adaptation: non-linear compression of cone responses
+        inline auto chromatic_adaptation(const double component) -> double {
+            const double af = std::pow(std::abs(component), 0.42);
+            return signum(component) * 400.0 * af / (af + 27.13);
+        }
+
         // ViewingConditions (CAM16 viewing conditions for D65)
         // Ported from material_color_utilities viewing_conditions.ts / viewing_conditions.dart
         struct ViewingConditions {
@@ -111,10 +123,7 @@ namespace neko::color {
                 constexpr double f = 0.8 + surround / 10.0;
 
                 // CAM16 exponential non-linearity c
-                double c;
-                if constexpr (f >= 0.9) {
-                    c = 0.59 + (0.69 - 0.59) * ((f - 0.9) * 10.0);
-                }
+                constexpr double c = f >= 0.9 ? 0.59 + (0.69 - 0.59) * ((f - 0.9) * 10.0) : 0.59;
 
                 // Degree of adaptation d
                 double d = f * (1.0 - 1.0 / 3.6 * std::exp((-adaptingLuminance - 42.0) / 92.0));
@@ -164,14 +173,7 @@ namespace neko::color {
 
         // CAM16 forward transform
         struct Cam16 {
-            double hue = 0.0, chroma = 0.0, j = 0.0, q = 0.0, m = 0.0, s = 0.0, jstar = 0.0;
-
-            // Chromatic adaptation: non-linear compression of cone responses
-            // Uses the CAM16 0.42 power + 400/(x+27.13) sigmoid
-            static auto chromatic_adaptation(const double component) -> double {
-                const double af = std::pow(std::abs(component), 0.42);
-                return signum(component) * 400.0 * af / (af + 27.13);
-            }
+            double hue = 0.0, chroma = 0.0, j = 0.0;
 
             static auto from_argb(const std::int32_t argb) -> Cam16 {
                 const auto rL = linearized(red_from_argb(argb));
@@ -220,7 +222,7 @@ namespace neko::color {
                 const double alpha = std::pow(t, 0.9) * std::pow(1.64 - std::pow(0.29, vc.n), 0.73);
                 const double chroma = alpha * std::sqrt(j / 100.0);
 
-                return {.hue = hDeg, .chroma = chroma, .j = j, .q = 0.0, .m = 0.0, .s = 0.0, .jstar = 0.0};
+                return {.hue = hDeg, .chroma = chroma, .j = j};
             }
         };
 
@@ -548,11 +550,6 @@ namespace neko::color {
                 return std::fmod(angle + 8.0 * std::numbers::pi, 2.0 * std::numbers::pi);
             }
 
-            // Signum function: -1 for negative, 0 for zero, 1 for positive
-            static auto signum(const double x) -> double {
-                return x < 0.0 ? -1.0 : x > 0.0 ? 1.0 : 0.0;
-            }
-
             // Matrix multiply: 1x3 row vector x 3x3 matrix -> 3-element vector
             static auto matrix_multiply(const std::array<double, 3>& row, const std::array<std::array<double, 3>, 3>& matrix) -> std::array<double, 3> {
                 return std::array{
@@ -566,11 +563,6 @@ namespace neko::color {
             // These implement the nonlinear chromatic adaptation from CAM16.
             // Forward: linear cone response -> adapted response (using 0.42 power)
             // Inverse: adapted response -> linear cone response
-
-            static auto chromatic_adaptation(const double component) -> double {
-                const double af = std::pow(std::abs(component), 0.42);
-                return signum(component) * 400.0 * af / (af + 27.13);
-            }
 
             static auto inverse_chromatic_adaptation(const double adapted) -> double {
                 const double adaptedAbs = std::abs(adapted);
@@ -949,7 +941,7 @@ namespace neko::color {
                                                            chroma_(c) {}
 
             static auto to_color(const std::int32_t argb) -> type::Color {
-                return {red_from_argb(argb), green_from_argb(argb), blue_from_argb(argb), alpha_from_argb(argb)};
+                return argb_to_color(argb);
             }
         };
 
@@ -1084,9 +1076,9 @@ namespace neko::color {
         }
 
         // ARGB resolution
-        inline auto DynamicColor::get_argb(const DynamicScheme& s) const -> std::int32_t {
+        inline auto DynamicColor::get_argb(const DynamicScheme& s) const -> Argb {
             const auto color = get_palette(s).tone(get_tone(s));
-            return argb_from_rgb(color.r, color.g, color.b);
+            return argb_from_rgb(static_cast<int>(std::round(color.r * 255.0)), static_cast<int>(std::round(color.g * 255.0)), static_cast<int>(std::round(color.b * 255.0)));
         }
 
         // Full tone resolution pipeline
@@ -1154,343 +1146,672 @@ namespace neko::color {
                 return s.error_palette_;
             }
 
-            // Tone accessors
-            static auto tone40_80(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 80.0 : 40.0;
+            // --- Tone infrastructure ---
+            struct TonePair {
+                double dark;
+                double light;
+            };
+
+            enum Tone : int {
+                Tone40_80,
+                Tone100_20,
+                Tone90_30,
+                Tone10_90,
+                Tone90_90,
+                Tone80_80,
+                Tone80_40,
+                Tone10_10,
+                Tone30_30,
+                Tone30_80,
+                Tone98_6,
+                Tone87_6,
+                Tone98_24,
+                Tone100_4,
+                Tone96_10,
+                Tone94_12,
+                Tone92_22,
+                Tone90_24,
+                Tone50_60,
+                Tone80_30,
+                Tone20_90,
+                Tone95_20,
+                Tone0_0,
+                ToneCount
+            };
+
+            static constexpr std::array<TonePair, ToneCount> kTones{
+                {
+                    {.dark = 80, .light = 40},
+                    {.dark = 20, .light = 100},
+                    {.dark = 30, .light = 90},
+                    {.dark = 90, .light = 10},
+                    {.dark = 90, .light = 90},
+                    {.dark = 80, .light = 80},
+                    {.dark = 40, .light = 80},
+                    {.dark = 10, .light = 10},
+                    {.dark = 30, .light = 30},
+                    {.dark = 80, .light = 30},
+                    {.dark = 6, .light = 98},
+                    {.dark = 6, .light = 87},
+                    {.dark = 24, .light = 98},
+                    {.dark = 4, .light = 100},
+                    {.dark = 10, .light = 96},
+                    {.dark = 12, .light = 94},
+                    {.dark = 22, .light = 92},
+                    {.dark = 24, .light = 90},
+                    {.dark = 60, .light = 50},
+                    {.dark = 30, .light = 80},
+                    {.dark = 90, .light = 20},
+                    {.dark = 20, .light = 95},
+                    {.dark = 0, .light = 0},
+                }
+            };
+
+            static auto tone(const Tone idx, const DynamicScheme& s) -> double {
+                const auto& t = kTones[idx];
+                return s.is_dark_ ? t.dark : t.light;
             }
 
-            static auto tone100_20(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 20.0 : 100.0;
-            }
+            // --- Role definitions (compact, using captureless lambda for ToneFn) ---
 
-            static auto tone90_30(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 30.0 : 90.0;
-            }
-
-            static auto tone10_90(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 90.0 : 10.0;
-            }
-
-            static auto tone90_90(const DynamicScheme& /*unused*/) -> double {
-                return 90.0;
-            }
-
-            static auto tone80_80(const DynamicScheme& /*unused*/) -> double {
-                return 80.0;
-            }
-
-            static auto tone80_40(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 40.0 : 80.0;
-            }
-
-            static auto tone10_10(const DynamicScheme& /*unused*/) -> double {
-                return 10.0;
-            }
-
-            static auto tone30_30(const DynamicScheme& /*unused*/) -> double {
-                return 30.0;
-            }
-
-            static auto tone30_80(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 80.0 : 30.0;
-            }
-
-            static auto tone98_6(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 6.0 : 98.0;
-            }
-
-            static auto tone87_6(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 6.0 : 87.0;
-            }
-
-            static auto tone98_24(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 24.0 : 98.0;
-            }
-
-            static auto tone100_4(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 4.0 : 100.0;
-            }
-
-            static auto tone96_10(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 10.0 : 96.0;
-            }
-
-            static auto tone94_12(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 12.0 : 94.0;
-            }
-
-            static auto tone92_22(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 22.0 : 92.0;
-            }
-
-            static auto tone90_24(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 24.0 : 90.0;
-            }
-
-            static auto tone50_60(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 60.0 : 50.0;
-            }
-
-            static auto tone80_30(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 30.0 : 80.0;
-            }
-
-            static auto tone20_90(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 90.0 : 20.0;
-            }
-
-            static auto tone95_20(const DynamicScheme& s) -> double {
-                return s.is_dark_ ? 20.0 : 95.0;
-            }
-
-            static auto tone0_0(const DynamicScheme& /*unused*/) -> double {
-                return 0.0;
-            }
-
-            // Background resolver for contrast: highest surface
-            // Defined as standalone static to avoid circular dependency
-            // (enableLightForeground=false since it IS a surface, not a foreground on it)
+            // Background: highest surface
             static auto highest_surface(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone90_24, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_24, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             // Primary group
             static auto primary(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone40_80, highest_surface, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 7});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone40_80, s);
+                    },
+                    highest_surface,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 7}
+                };
+                return k;
             }
 
             static auto on_primary(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone100_20, primary, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone100_20, s);
+                    },
+                    primary,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto primary_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone90_30, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_30, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto on_primary_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone10_90, primary_container, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_90, s);
+                    },
+                    primary_container,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto primary_fixed(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone90_90, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_90, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto primary_fixed_dim(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone80_80, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone80_80, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto on_primary_fixed(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone10_10, primary_fixed_dim, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_10, s);
+                    },
+                    primary_fixed_dim,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto on_primary_fixed_variant(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone30_30, primary_fixed_dim, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 11});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone30_30, s);
+                    },
+                    primary_fixed_dim,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 11}
+                };
+                return k;
             }
 
             // Secondary group
             static auto secondary(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone40_80, highest_surface, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 7});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone40_80, s);
+                    },
+                    highest_surface,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 7}
+                };
+                return k;
             }
 
             static auto on_secondary(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone100_20, secondary, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone100_20, s);
+                    },
+                    secondary,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto secondary_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone90_30, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_30, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto on_secondary_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone10_90, secondary_container, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_90, s);
+                    },
+                    secondary_container,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto secondary_fixed(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone90_90, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_90, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto secondary_fixed_dim(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone80_80, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone80_80, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto on_secondary_fixed(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone10_10, secondary_fixed_dim, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_10, s);
+                    },
+                    secondary_fixed_dim,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto on_secondary_fixed_variant(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(sec_pal, tone30_30, secondary_fixed_dim, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 11});
-                return inst;
+                static DynamicColor k{
+                    sec_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone30_30, s);
+                    },
+                    secondary_fixed_dim,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 11}
+                };
+                return k;
             }
 
             // Tertiary group
             static auto tertiary(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone40_80, highest_surface, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 7});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone40_80, s);
+                    },
+                    highest_surface,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 7}
+                };
+                return k;
             }
 
             static auto on_tertiary(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone100_20, tertiary, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone100_20, s);
+                    },
+                    tertiary,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto tertiary_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone90_30, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_30, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto on_tertiary_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone10_90, tertiary_container, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_90, s);
+                    },
+                    tertiary_container,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto tertiary_fixed(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone90_90, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_90, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto tertiary_fixed_dim(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone80_80, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone80_80, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto on_tertiary_fixed(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone10_10, tertiary_fixed_dim, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_10, s);
+                    },
+                    tertiary_fixed_dim,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto on_tertiary_fixed_variant(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(ter_pal, tone30_30, tertiary_fixed_dim, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 11});
-                return inst;
+                static DynamicColor k{
+                    ter_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone30_30, s);
+                    },
+                    tertiary_fixed_dim,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 11}
+                };
+                return k;
             }
 
             // Error group
             static auto error(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(err_pal, tone40_80, highest_surface, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 7});
-                return inst;
+                static DynamicColor k{
+                    err_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone40_80, s);
+                    },
+                    highest_surface,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 7}
+                };
+                return k;
             }
 
             static auto on_error(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(err_pal, tone100_20, error, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    err_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone100_20, s);
+                    },
+                    error,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto error_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(err_pal, tone90_30, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    err_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_30, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             static auto on_error_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(err_pal, tone10_90, error_container, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    err_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_90, s);
+                    },
+                    error_container,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             // Surface group (all enableLightForeground=false — they ARE surfaces)
             static auto surface(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone98_6, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone98_6, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto surface_dim(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone87_6, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone87_6, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto surface_bright(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone98_24, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone98_24, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto surface_container_lowest(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone100_4, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone100_4, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto surface_container_low(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone96_10, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone96_10, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto surface_container(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone94_12, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone94_12, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto surface_container_high(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone92_22, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone92_22, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto surface_container_highest(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone90_24, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_24, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
+            // On-surface
             static auto on_surface(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone10_90, highest_surface, ContrastCurve{.low = 4.5, .normal = 7, .high = 11, .highest = 21});
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone10_90, s);
+                    },
+                    highest_surface,
+                    {.low = 4.5, .normal = 7, .high = 11, .highest = 21}
+                };
+                return k;
             }
 
             static auto surface_variant(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(nvp_pal, tone90_30, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    nvp_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone90_30, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto on_surface_variant(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(nvp_pal, tone30_80, highest_surface, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 11});
-                return inst;
+                static DynamicColor k{
+                    nvp_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone30_80, s);
+                    },
+                    highest_surface,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 11}
+                };
+                return k;
             }
 
             // Outline
             static auto outline(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(nvp_pal, tone50_60, highest_surface, ContrastCurve{.low = 1.5, .normal = 3, .high = 4.5, .highest = 7});
-                return inst;
+                static DynamicColor k{
+                    nvp_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone50_60, s);
+                    },
+                    highest_surface,
+                    {.low = 1.5, .normal = 3, .high = 4.5, .highest = 7}
+                };
+                return k;
             }
 
             static auto outline_variant(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(nvp_pal, tone80_30, highest_surface, ContrastCurve{.low = 1, .normal = 1, .high = 3, .highest = 4.5});
-                return inst;
+                static DynamicColor k{
+                    nvp_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone80_30, s);
+                    },
+                    highest_surface,
+                    {.low = 1, .normal = 1, .high = 3, .highest = 4.5}
+                };
+                return k;
             }
 
             // Inverse
             static auto inverse_surface(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone20_90, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone20_90, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto inverse_on_surface(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone95_20, inverse_surface, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 11});
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone95_20, s);
+                    },
+                    inverse_surface,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 11}
+                };
+                return k;
             }
 
             static auto inverse_primary(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(pri_pal, tone80_40, inverse_surface, ContrastCurve{.low = 3, .normal = 4.5, .high = 7, .highest = 7});
-                return inst;
+                static DynamicColor k{
+                    pri_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone80_40, s);
+                    },
+                    inverse_surface,
+                    {.low = 3, .normal = 4.5, .high = 7, .highest = 7}
+                };
+                return k;
             }
 
             // Other
             static auto shadow(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone0_0, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone0_0, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
 
             static auto scrim(const DynamicScheme& /*unused*/) -> const DynamicColor& {
-                static DynamicColor inst(neu_pal, tone0_0, no_bg, ContrastCurve{.low = 0, .normal = 0, .high = 0, .highest = 0}, std::nullopt, false);
-                return inst;
+                static DynamicColor k{
+                    neu_pal,
+                    [](const DynamicScheme& s) -> double {
+                        return tone(Tone0_0, s);
+                    },
+                    no_bg,
+                    {.low = 0, .normal = 0, .high = 0, .highest = 0},
+                    std::nullopt,
+                    false
+                };
+                return k;
             }
         };
     } // namespace detail
@@ -1544,13 +1865,19 @@ namespace neko::color {
         type::Color scrim;
 
         static auto from_seed(const type::Color seed_color, const bool isDark = false, const float contrast_level = 0.0F) -> ColorScheme {
-            const auto argb = detail::argb_from_rgb(seed_color.r, seed_color.g, seed_color.b);
+            const auto argb = detail::argb_from_rgb(static_cast<int>(std::round(seed_color.r * 255.0)),
+                                                    static_cast<int>(std::round(seed_color.g * 255.0)),
+                                                    static_cast<int>(std::round(seed_color.b * 255.0)));
             const auto hct = detail::Hct::from_int(argb);
             const detail::DynamicScheme scheme(hct, isDark, contrast_level);
 
+            // DEBUG: force surface to verify HCT solver
+            const auto test_args = detail::HctSolver::solve_to_int(120.0, 6.0, 98.0);
+            const auto test_color = detail::argb_to_color(test_args);
+            __debugbreak(); // set breakpoint here, check test_args and test_color
+
             auto resolve = [&](const detail::DynamicColor& role) -> type::Color {
-                const auto a = role.get_argb(scheme);
-                return {detail::red_from_argb(a), detail::green_from_argb(a), detail::blue_from_argb(a), detail::alpha_from_argb(a)};
+                return detail::argb_to_color(role.get_argb(scheme));
             };
 
             return {

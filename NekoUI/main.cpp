@@ -9,6 +9,9 @@
 namespace {
     auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> LRESULT {
         switch (msg) {
+            case WM_DESTROY:
+                PostQuitMessage(0);
+                break;
             case WM_GETMINMAXINFO: {
                 auto* mmi = reinterpret_cast<MINMAXINFO*>(lparam);
                 mmi->ptMinTrackSize = {.x = 200, .y = 150};
@@ -71,7 +74,7 @@ auto main(int argc, char* argv[]) -> int try {
     UpdateWindow(hwnd);
 
     neko::engine::Engine engine(hwnd);
-    [[maybe_unused]] auto btn = engine.set<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
+    [[maybe_unused]] auto btn = engine.set_root_widget<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
 
     class_name += L"2";
     win_class.lpszClassName = class_name.data();

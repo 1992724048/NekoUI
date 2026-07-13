@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
 #include "../Widget.hpp"
 
 #include <functional>
 #include <string>
 #include <string_view>
 
-#include "../../Engine/Component/Animation.hpp"
 #include "../../Engine/Engine.hpp"
+#include "../../Engine/Component/Animation.hpp"
 
 namespace neko::widget {
     class Button final : public Widget {
@@ -14,6 +14,6 @@ namespace neko::widget {
         explicit Button(Widget* parent);
         explicit Button(engine::Engine* engine, glm::ivec4 bounds, std::string_view label);
     private:
-        animation::LinearAnimation<int> color{0, 200};
+        animation::Animation<int> color{0, 200};
     };
 } // namespace neko::widget

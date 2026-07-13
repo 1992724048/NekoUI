@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -27,7 +27,7 @@ namespace neko::engine {
         auto operator=(const Engine&) -> Engine& = delete;
 
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
-        auto set(Args&&... args) -> std::weak_ptr<T> {
+        auto set_root_widget(Args&&... args) -> std::weak_ptr<T> {
             const std::shared_ptr<widget::Widget> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
             root = widget;
             present();
@@ -35,7 +35,7 @@ namespace neko::engine {
         }
 
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
-        auto get(Args&&... args) -> std::weak_ptr<T> {
+        auto create_widget(Args&&... args) -> std::weak_ptr<T> {
             const std::shared_ptr<widget::Widget> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
             root = widget;
             present();

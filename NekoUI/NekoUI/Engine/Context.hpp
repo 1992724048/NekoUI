@@ -23,8 +23,6 @@ namespace neko::engine {
         std::function<void()> anim_inc;
         std::function<void()> anim_dec;
 
-        float dpi_scale = 1.0F;
-
         std::weak_ptr<mouse::Mouse> mouse;
         std::weak_ptr<keyboard::Keyboard> keyboard;
         std::weak_ptr<color::ColorScheme> color_scheme;
