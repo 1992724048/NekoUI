@@ -30,6 +30,9 @@
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NekoUI\Engine\Component\ColorSeed\ColorSeed.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
@@ -68,7 +71,7 @@
     <ClInclude Include="NekoUI\Widget\Style\CSS.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Engine\Component\ColorSeed.hpp">
+    <ClInclude Include="NekoUI\Engine\Component\ColorSeed\ColorSeed.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

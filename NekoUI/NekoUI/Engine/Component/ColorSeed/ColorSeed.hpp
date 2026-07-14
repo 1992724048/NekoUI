@@ -8,10 +8,9 @@
 #include <numbers>
 #include <optional>
 #include <glm/glm.hpp>
-#include "../../Type.hpp"
+#include "../../../Type.hpp"
 
 namespace neko::color {
-    struct ColorScheme; // forward decl
 
     namespace detail {
         // ARGB Utility
@@ -1816,7 +1815,10 @@ namespace neko::color {
         };
     } // namespace detail
 
+    // ColorScheme — pure data value type matching Material 3 color roles.
+    // Generated from a single seed color via HCT tonal palette -> from_seed().
     struct ColorScheme {
+        // -- Primary group --
         type::Color primary;
         type::Color on_primary;
         type::Color primary_container;
@@ -1825,6 +1827,8 @@ namespace neko::color {
         type::Color primary_fixed_dim;
         type::Color on_primary_fixed;
         type::Color on_primary_fixed_variant;
+
+        // -- Secondary group --
         type::Color secondary;
         type::Color on_secondary;
         type::Color secondary_container;
@@ -1833,6 +1837,8 @@ namespace neko::color {
         type::Color secondary_fixed_dim;
         type::Color on_secondary_fixed;
         type::Color on_secondary_fixed_variant;
+
+        // -- Tertiary group --
         type::Color tertiary;
         type::Color on_tertiary;
         type::Color tertiary_container;
@@ -1841,10 +1847,14 @@ namespace neko::color {
         type::Color tertiary_fixed_dim;
         type::Color on_tertiary_fixed;
         type::Color on_tertiary_fixed_variant;
+
+        // -- Error group --
         type::Color error;
         type::Color on_error;
         type::Color error_container;
         type::Color on_error_container;
+
+        // -- Surface group --
         type::Color surface;
         type::Color surface_dim;
         type::Color surface_bright;
@@ -1854,80 +1864,26 @@ namespace neko::color {
         type::Color surface_container_high;
         type::Color surface_container_highest;
         type::Color on_surface;
-        type::Color surface_variant;
         type::Color on_surface_variant;
+
+        // -- Outline group --
         type::Color outline;
         type::Color outline_variant;
+
+        // -- Inverse group --
         type::Color inverse_surface;
         type::Color inverse_on_surface;
         type::Color inverse_primary;
+
+        // -- Misc --
         type::Color shadow;
         type::Color scrim;
+        type::Color surface_tint; // elevation overlay, typically equals primary
 
-        static auto from_seed(const type::Color seed_color, const bool isDark = false, const float contrast_level = 0.0F) -> ColorScheme {
-            const auto argb = detail::argb_from_rgb(static_cast<int>(std::round(seed_color.r * 255.0)),
-                                                    static_cast<int>(std::round(seed_color.g * 255.0)),
-                                                    static_cast<int>(std::round(seed_color.b * 255.0)));
-            const auto hct = detail::Hct::from_int(argb);
-            const detail::DynamicScheme scheme(hct, isDark, contrast_level);
+        bool is_dark{}; // theme brightness flag
 
-            // DEBUG: force surface to verify HCT solver
-            const auto test_args = detail::HctSolver::solve_to_int(120.0, 6.0, 98.0);
-            const auto test_color = detail::argb_to_color(test_args);
-            __debugbreak(); // set breakpoint here, check test_args and test_color
-
-            auto resolve = [&](const detail::DynamicColor& role) -> type::Color {
-                return detail::argb_to_color(role.get_argb(scheme));
-            };
-
-            return {
-                .primary = resolve(detail::MaterialDynamicColors::primary(scheme)),
-                .on_primary = resolve(detail::MaterialDynamicColors::on_primary(scheme)),
-                .primary_container = resolve(detail::MaterialDynamicColors::primary_container(scheme)),
-                .on_primary_container = resolve(detail::MaterialDynamicColors::on_primary_container(scheme)),
-                .primary_fixed = resolve(detail::MaterialDynamicColors::primary_fixed(scheme)),
-                .primary_fixed_dim = resolve(detail::MaterialDynamicColors::primary_fixed_dim(scheme)),
-                .on_primary_fixed = resolve(detail::MaterialDynamicColors::on_primary_fixed(scheme)),
-                .on_primary_fixed_variant = resolve(detail::MaterialDynamicColors::on_primary_fixed_variant(scheme)),
-                .secondary = resolve(detail::MaterialDynamicColors::secondary(scheme)),
-                .on_secondary = resolve(detail::MaterialDynamicColors::on_secondary(scheme)),
-                .secondary_container = resolve(detail::MaterialDynamicColors::secondary_container(scheme)),
-                .on_secondary_container = resolve(detail::MaterialDynamicColors::on_secondary_container(scheme)),
-                .secondary_fixed = resolve(detail::MaterialDynamicColors::secondary_fixed(scheme)),
-                .secondary_fixed_dim = resolve(detail::MaterialDynamicColors::secondary_fixed_dim(scheme)),
-                .on_secondary_fixed = resolve(detail::MaterialDynamicColors::on_secondary_fixed(scheme)),
-                .on_secondary_fixed_variant = resolve(detail::MaterialDynamicColors::on_secondary_fixed_variant(scheme)),
-                .tertiary = resolve(detail::MaterialDynamicColors::tertiary(scheme)),
-                .on_tertiary = resolve(detail::MaterialDynamicColors::on_tertiary(scheme)),
-                .tertiary_container = resolve(detail::MaterialDynamicColors::tertiary_container(scheme)),
-                .on_tertiary_container = resolve(detail::MaterialDynamicColors::on_tertiary_container(scheme)),
-                .tertiary_fixed = resolve(detail::MaterialDynamicColors::tertiary_fixed(scheme)),
-                .tertiary_fixed_dim = resolve(detail::MaterialDynamicColors::tertiary_fixed_dim(scheme)),
-                .on_tertiary_fixed = resolve(detail::MaterialDynamicColors::on_tertiary_fixed(scheme)),
-                .on_tertiary_fixed_variant = resolve(detail::MaterialDynamicColors::on_tertiary_fixed_variant(scheme)),
-                .error = resolve(detail::MaterialDynamicColors::error(scheme)),
-                .on_error = resolve(detail::MaterialDynamicColors::on_error(scheme)),
-                .error_container = resolve(detail::MaterialDynamicColors::error_container(scheme)),
-                .on_error_container = resolve(detail::MaterialDynamicColors::on_error_container(scheme)),
-                .surface = resolve(detail::MaterialDynamicColors::surface(scheme)),
-                .surface_dim = resolve(detail::MaterialDynamicColors::surface_dim(scheme)),
-                .surface_bright = resolve(detail::MaterialDynamicColors::surface_bright(scheme)),
-                .surface_container_lowest = resolve(detail::MaterialDynamicColors::surface_container_lowest(scheme)),
-                .surface_container_low = resolve(detail::MaterialDynamicColors::surface_container_low(scheme)),
-                .surface_container = resolve(detail::MaterialDynamicColors::surface_container(scheme)),
-                .surface_container_high = resolve(detail::MaterialDynamicColors::surface_container_high(scheme)),
-                .surface_container_highest = resolve(detail::MaterialDynamicColors::surface_container_highest(scheme)),
-                .on_surface = resolve(detail::MaterialDynamicColors::on_surface(scheme)),
-                .surface_variant = resolve(detail::MaterialDynamicColors::surface_variant(scheme)),
-                .on_surface_variant = resolve(detail::MaterialDynamicColors::on_surface_variant(scheme)),
-                .outline = resolve(detail::MaterialDynamicColors::outline(scheme)),
-                .outline_variant = resolve(detail::MaterialDynamicColors::outline_variant(scheme)),
-                .inverse_surface = resolve(detail::MaterialDynamicColors::inverse_surface(scheme)),
-                .inverse_on_surface = resolve(detail::MaterialDynamicColors::inverse_on_surface(scheme)),
-                .inverse_primary = resolve(detail::MaterialDynamicColors::inverse_primary(scheme)),
-                .shadow = resolve(detail::MaterialDynamicColors::shadow(scheme)),
-                .scrim = resolve(detail::MaterialDynamicColors::scrim(scheme)),
-            };
-        }
+        // Generate a full ColorScheme from a single seed color,
+        // using HCT tonal palettes from material_color_utilities.
+        static auto from_seed(type::Color seed, bool is_dark = false, float contrast_level = 0.0F) -> ColorScheme;
     };
 } // namespace neko::color

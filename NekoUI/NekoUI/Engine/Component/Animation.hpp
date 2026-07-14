@@ -280,8 +280,8 @@ namespace neko::animation {
 
         AnimationBase(const AnimationBase&) = delete;
         AnimationBase(AnimationBase&&) noexcept = delete;
-        virtual auto operator=(const AnimationBase&) -> AnimationBase& = delete;
-        virtual auto operator=(AnimationBase&&) noexcept -> AnimationBase& = delete;
+        auto operator=(const AnimationBase&) -> AnimationBase& = delete;
+        auto operator=(AnimationBase&&) noexcept -> AnimationBase& = delete;
 
         auto set_callbacks(const std::function<void()>& on_start, const std::function<void()>& on_end) -> void {
             inc_ = on_start;
@@ -297,11 +297,9 @@ namespace neko::animation {
         }
     };
 
-    template<typename Fn>
-    concept easing_fn = std::is_invocable_r_v<float, Fn, float>;
+    template<typename Fn> concept easing_fn = std::is_invocable_r_v<float, Fn, float>;
 
-    template<typename T, auto EasingFn = ease::linear::in, typename TimeType = std::chrono::milliseconds>
-        requires std::is_arithmetic_v<T> && easing_fn<decltype(EasingFn)>
+    template<typename T, auto EasingFn = ease::linear::in, typename TimeType = std::chrono::milliseconds> requires std::is_arithmetic_v<T> && easing_fn<decltype(EasingFn)>
     class Animation final : public AnimationBase {
     public:
         explicit Animation(T initial_value, const int duration_ms = 0) : now_value_{initial_value},
@@ -360,7 +358,7 @@ namespace neko::animation {
             return tick();
         }
 
-        auto operator=(T target) -> Animation& override {
+        auto operator=(T target) -> Animation& {
             to_value(target);
             return *this;
         }
