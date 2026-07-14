@@ -30,7 +30,7 @@ namespace neko::engine {
         auto set_root_widget(Args&&... args) -> std::weak_ptr<T> {
             const std::shared_ptr<widget::Widget> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
             root = widget;
-            present();
+            frame();
             return std::static_pointer_cast<T>(widget);
         }
 
@@ -38,12 +38,12 @@ namespace neko::engine {
         auto create_widget(Args&&... args) -> std::weak_ptr<T> {
             const std::shared_ptr<widget::Widget> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
             root = widget;
-            present();
+            frame();
             return std::static_pointer_cast<T>(widget);
         }
 
         auto clear() -> void;
-        auto present() -> void;
+        auto frame() -> void;
         auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
     protected:
         friend widget::Widget;
