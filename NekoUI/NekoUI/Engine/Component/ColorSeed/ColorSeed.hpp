@@ -4,7 +4,7 @@
 namespace neko::color {
     // Generated from a single seed color via HCT tonal palette -> from_seed().
     struct ColorScheme {
-        // -- Primary group --
+        // Primary
         type::Color primary;
         type::Color on_primary;
         type::Color primary_container;
@@ -14,7 +14,7 @@ namespace neko::color {
         type::Color on_primary_fixed;
         type::Color on_primary_fixed_variant;
 
-        // -- Secondary group --
+        // Secondary
         type::Color secondary;
         type::Color on_secondary;
         type::Color secondary_container;
@@ -24,7 +24,7 @@ namespace neko::color {
         type::Color on_secondary_fixed;
         type::Color on_secondary_fixed_variant;
 
-        // -- Tertiary group --
+        // Tertiary
         type::Color tertiary;
         type::Color on_tertiary;
         type::Color tertiary_container;
@@ -34,13 +34,13 @@ namespace neko::color {
         type::Color on_tertiary_fixed;
         type::Color on_tertiary_fixed_variant;
 
-        // -- Error group --
+        // Error
         type::Color error;
         type::Color on_error;
         type::Color error_container;
         type::Color on_error_container;
 
-        // -- Surface group --
+        // Surface
         type::Color surface;
         type::Color surface_dim;
         type::Color surface_bright;
@@ -52,16 +52,16 @@ namespace neko::color {
         type::Color on_surface;
         type::Color on_surface_variant;
 
-        // -- Outline group --
+        // Outline
         type::Color outline;
         type::Color outline_variant;
 
-        // -- Inverse group --
+        // Inverse
         type::Color inverse_surface;
         type::Color inverse_on_surface;
         type::Color inverse_primary;
 
-        // -- Misc --
+        // Misc
         type::Color shadow;
         type::Color scrim;
         type::Color surface_tint; // elevation overlay, typically equals primary
