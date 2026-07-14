@@ -3,7 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "Component/ColorSeed.hpp"
+#include "Component/ColorSeed/ColorSeed.hpp"
+
 #include "Device/Keyboard.hpp"
 #include "Device/Mouse.hpp"
 

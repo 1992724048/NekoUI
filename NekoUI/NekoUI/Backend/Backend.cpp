@@ -195,6 +195,9 @@ auto Backend::set_dpi(const UINT dpi) -> void {
 }
 
 auto Backend::begin(const glm::vec4 color) const -> void {
+    if (ctx == nullptr || rtv == nullptr) {
+        return;
+    }
     ctx->OMSetRenderTargets(1, &rtv, nullptr);
     D3D11_VIEWPORT vp{};
     vp.Width = static_cast<float>(size.x);
@@ -214,11 +217,14 @@ auto Backend::begin(const glm::vec4 color) const -> void {
 }
 
 auto Backend::end() const -> void {
+    if (swap_chain == nullptr) {
+        return;
+    }
     swap_chain->Present(1, 0);
 }
 
 auto Backend::draw_rect_fill(const glm::ivec4 rect, const Color color) const -> void {
-    if (cbuffer == nullptr) {
+    if (ctx == nullptr || cbuffer == nullptr) {
         return;
     }
     struct RectData {
@@ -269,7 +275,7 @@ auto Backend::draw_circle_fill(const glm::ivec2 center, const int radius, const 
 }
 
 auto Backend::draw_text(const std::string_view text, const glm::ivec2 pos, const Color color, const float font_size) -> void {
-    if (text.empty() || text_cb == nullptr || font_srv == nullptr) {
+    if (ctx == nullptr || text_cb == nullptr || font_srv == nullptr) {
         return;
     }
 
@@ -376,9 +382,19 @@ auto Backend::init_device(const HWND hwnd) -> bool {
     constexpr std::array levels{D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0,};
     ID3D11Device* device_raw{};
     ID3D11DeviceContext* ctx_raw{};
-    if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels.data(), levels.size(), D3D11_SDK_VERSION, &device_raw, nullptr, &ctx_raw))) {
-        std::println(stderr, "[NekoUI] DX11 device init failed");
-        return false;
+    HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels.data(), levels.size(), D3D11_SDK_VERSION, &device_raw, nullptr, &ctx_raw);
+    if (FAILED(hr)) {
+        #ifdef _DEBUG
+        if ((hr == DXGI_ERROR_SDK_COMPONENT_MISSING) || (hr == E_INVALIDARG)) {
+            std::println(stderr, "[NekoUI] DX11 debug layer not available, retrying without debug flag");
+            flags &= ~D3D11_CREATE_DEVICE_DEBUG;
+            hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels.data(), levels.size(), D3D11_SDK_VERSION, &device_raw, nullptr, &ctx_raw);
+        }
+        #endif
+        if (FAILED(hr)) {
+            std::println(stderr, "[NekoUI] DX11 device init failed");
+            return false;
+        }
     }
     device_raw->QueryInterface(&device);
     ctx_raw->QueryInterface(&ctx);
