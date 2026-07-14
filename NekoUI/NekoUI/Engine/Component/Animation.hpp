@@ -298,7 +298,7 @@ namespace neko::animation {
     };
 
     template<typename Fn>
-    concept easing_fn = std::invocable_r<float, Fn, float>;
+    concept easing_fn = std::is_invocable_r_v<float, Fn, float>;
 
     template<typename T, auto EasingFn = ease::linear::in, typename TimeType = std::chrono::milliseconds>
         requires std::is_arithmetic_v<T> && easing_fn<decltype(EasingFn)>
