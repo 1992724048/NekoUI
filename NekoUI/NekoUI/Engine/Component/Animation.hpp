@@ -2,6 +2,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <concepts>
 #include <functional>
 #include <numbers>
 #include <optional>
@@ -296,28 +297,18 @@ namespace neko::animation {
         }
     };
 
-    using Easing = std::function<float(float)>;
-
-    template<typename T, typename TimeType = std::chrono::milliseconds> requires std::is_arithmetic_v<T>
+    template<typename T, auto EasingFn = ease::linear::in, typename TimeType = std::chrono::milliseconds> requires std::is_arithmetic_v<T>
     class Animation final : public AnimationBase {
     public:
-        explicit Animation(T initial_value, const int duration_ms = 0, const Easing& easing = ease::linear::in) : now_value_{initial_value},
-                                                                                                                  new_value_{initial_value},
-                                                                                                                  start_value_{initial_value},
-                                                                                                                  easing_{easing},
-                                                                                                                  duration_time_{
-                                                                                                                      std::chrono::duration_cast<TimeType>(std::chrono::milliseconds(duration_ms))
-                                                                                                                  } {}
+        explicit Animation(T initial_value, const int duration_ms = 0) : now_value_{initial_value},
+                                                                         new_value_{initial_value},
+                                                                         start_value_{initial_value},
+                                                                         duration_time_{std::chrono::duration_cast<TimeType>(std::chrono::milliseconds(duration_ms))} {}
 
         Animation(const Animation&) = delete;
         Animation(Animation&&) noexcept = delete;
         auto operator=(const Animation&) -> Animation& = delete;
         auto operator=(Animation&&) noexcept -> Animation& = delete;
-
-        auto set_easing(Easing fn) -> Animation& {
-            easing_ = fn ? fn : ease::linear::in;
-            return *this;
-        }
 
         auto to_value(T target, std::optional<TimeType> custom_duration = std::nullopt) -> void {
             start_ = std::chrono::steady_clock::now();
@@ -347,7 +338,7 @@ namespace neko::animation {
             }
 
             const float process = static_cast<float>(elapsed.count()) / static_cast<float>(duration_time_.count());
-            const float eased = easing_(process);
+            const float eased = EasingFn(process);
             const T interpolated = static_cast<T>(static_cast<float>(start_value_) + (static_cast<float>(new_value_) - static_cast<float>(start_value_)) * eased);
             now_value_.store(interpolated);
             return now_value_.load();
@@ -373,7 +364,6 @@ namespace neko::animation {
         std::atomic<T> now_value_;
         T new_value_;
         T start_value_;
-        Easing easing_{ease::linear::in};
         TimeType duration_time_{};
     };
 } // namespace neko::animation

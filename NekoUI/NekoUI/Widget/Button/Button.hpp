@@ -14,6 +14,6 @@ namespace neko::widget {
         explicit Button(Widget* parent);
         explicit Button(engine::Engine* engine, glm::ivec4 bounds, std::string_view label);
     private:
-        animation::Animation<int> color{0, 200};
+        animation::Animation<int, animation::ease::quad::in_out> color{0, 200};
     };
 } // namespace neko::widget
