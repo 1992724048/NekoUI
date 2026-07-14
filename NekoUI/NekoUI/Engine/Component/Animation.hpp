@@ -297,7 +297,11 @@ namespace neko::animation {
         }
     };
 
-    template<typename T, auto EasingFn = ease::linear::in, typename TimeType = std::chrono::milliseconds> requires std::is_arithmetic_v<T>
+    template<typename Fn>
+    concept easing_fn = std::invocable_r<float, Fn, float>;
+
+    template<typename T, auto EasingFn = ease::linear::in, typename TimeType = std::chrono::milliseconds>
+        requires std::is_arithmetic_v<T> && easing_fn<decltype(EasingFn)>
     class Animation final : public AnimationBase {
     public:
         explicit Animation(T initial_value, const int duration_ms = 0) : now_value_{initial_value},

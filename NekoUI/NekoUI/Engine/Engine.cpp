@@ -19,7 +19,7 @@ namespace neko::engine {
         const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
 
-        context->present = std::bind(&Engine::present, this);
+        context->present = std::bind(&Engine::frame, this);
         context->mark_dirty = std::bind(&Engine::mark_dirty, this);
         context->anim_inc = std::bind(&Engine::anim_inc, this);
         context->anim_dec = std::bind(&Engine::anim_dec, this);
@@ -49,7 +49,7 @@ namespace neko::engine {
         focused.load().reset();
     }
 
-    auto Engine::present() -> void {
+    auto Engine::frame() -> void {
         pending = true;
         render_notify.notify_one();
     }
@@ -69,7 +69,7 @@ namespace neko::engine {
     }
 
     auto Engine::del(widget::Widget* widget) -> bool {
-        present();
+        frame();
         return true;
     }
 
@@ -125,7 +125,7 @@ namespace neko::engine {
 
             root.load()->update(*context);
             if (dirty) {
-                present();
+                frame();
             }
         }
     }
