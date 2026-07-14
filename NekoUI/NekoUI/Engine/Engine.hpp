@@ -15,7 +15,7 @@
 #include "../Backend/Backend.hpp"
 #include "../Widget/Widget.hpp"
 
-#include "Component/ColorSeed.hpp"
+#include "Component/ColorSeed/ColorSeed.hpp"
 
 namespace neko::engine {
     class Engine final {
