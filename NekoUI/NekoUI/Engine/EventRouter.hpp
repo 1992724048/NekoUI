@@ -9,19 +9,24 @@ namespace neko::engine {
     struct Context;
 } // namespace neko::engine
 
-namespace neko::mouse { struct Mouse; }
-namespace neko::keyboard { struct Keyboard; }
-namespace neko::backend { class Backend; }
+namespace neko::mouse {
+    struct Mouse;
+}
+
+namespace neko::keyboard {
+    struct Keyboard;
+}
+
+namespace neko::backend {
+    class Backend;
+}
 
 namespace neko::engine {
     class EventRouter {
     public:
-        EventRouter(WidgetTree& tree, mouse::Mouse& mouse, keyboard::Keyboard& keyboard,
-                    Context& context, backend::Backend& backend, RenderScheduler& scheduler,
-                    InvalidationTracker& invalidation);
+        EventRouter(WidgetTree& tree, mouse::Mouse& mouse, keyboard::Keyboard& keyboard, Context& context, backend::Backend& backend, RenderScheduler& scheduler, InvalidationTracker& invalidation);
 
         auto dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
-
     private:
         auto handle_mouse(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
         auto handle_keyboard(UINT msg, WPARAM wparam, LPARAM lparam) -> void;

@@ -9,11 +9,14 @@
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {
-    EventRouter::EventRouter(WidgetTree& tree, mouse::Mouse& mouse, keyboard::Keyboard& keyboard,
-                             Context& context, backend::Backend& backend, RenderScheduler& scheduler,
-                             InvalidationTracker& invalidation)
-        : tree_(tree), mouse_(mouse), keyboard_(keyboard), context_(context),
-          backend_(backend), scheduler_(scheduler), invalidation_(invalidation) {}
+    EventRouter::EventRouter(WidgetTree& tree, mouse::Mouse& mouse, keyboard::Keyboard& keyboard, Context& context, backend::Backend& backend, RenderScheduler& scheduler, InvalidationTracker& invalidation) :
+        tree_(tree),
+        mouse_(mouse),
+        keyboard_(keyboard),
+        context_(context),
+        backend_(backend),
+        scheduler_(scheduler),
+        invalidation_(invalidation) {}
 
     auto EventRouter::dispatch(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
         mouse_.handle(msg, wparam, lparam);
@@ -41,8 +44,7 @@ namespace neko::engine {
             case WM_CHAR:
                 handle_keyboard(msg, wparam, lparam);
                 break;
-            case WM_TIMER:
-            default:
+            case WM_TIMER: default:
                 break;
         }
 
@@ -79,7 +81,7 @@ namespace neko::engine {
     }
 
     auto EventRouter::handle_resize(const LPARAM lparam) -> void {
-        scheduler_.set_pending_size(static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam)));
+        scheduler_.set_pending_size(LOWORD(lparam), HIWORD(lparam));
         invalidation_.mark_dirty();
     }
 } // namespace neko::engine

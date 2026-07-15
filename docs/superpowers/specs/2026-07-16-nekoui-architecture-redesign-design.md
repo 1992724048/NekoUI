@@ -151,3 +151,36 @@ auto label = ui->add<Label>().set_text("Hello NekoUI");
 | Context 解耦层 | 打破 Engine↔Widget 循环依赖；Widget 零 Engine* 依赖 | 直接传 Engine*（循环依赖）/ 全局单例（测试困难） |
 | 脏驱动按需渲染 | 空闲不空转，省 CPU/GPU；动画时持续渲染 | 固定帧率（浪费资源）/ 纯 immediate mode（每帧重建状态） |
 | Engine final 无继承 | 避免 God Class 继承膨胀；组合替代继承 | Engine 继承 MsgLoop（已删除） |
+
+## 9. 已知开放问题（待实现阶段细化）
+
+以下问题在架构层面已确定方向，但具体实现细节留待 `writing-plans` 阶段细化：
+
+### 9.1 跨线程 Widget 属性安全
+
+当前模型：消息线程处理输入 → 可能修改 Widget 属性（如 `set_text` → `reg_widget` → `frame` → `request_frame`）；渲染线程读 Widget 属性（`layout` + `draw`）。
+
+**开放问题**：Widget 的普通属性（text/color/children）不是线程安全的。若消息线程正在修改 `children` 容器，渲染线程同时遍历会崩溃。
+
+**候选方案**：
+- A. 单写者假设：所有 Widget 属性修改只在消息线程发生，渲染线程只读；Widget 树结构变更（add/remove）通过 `widget_tree_` 的 `shared_mutex` 保护
+- B. Widget 属性加细粒度锁（每个 Widget 一个 mutex）——开销大，且 layout/draw 期间持锁会导致死锁
+- C. 渲染线程拷贝快照：每帧开始时深拷贝 Widget 树状态到渲染线程本地——内存开销大
+
+倾向方案 A（单写者 + 树结构锁），需在 `writing-plans` 中明确约束。
+
+### 9.2 渲染命令批处理
+
+Backend 的 `draw_rect` / `draw_text` 当前是即时提交还是批处理？字体图集（stb_truetype 打包 ASCII + CJK 到 4096×4096 纹理）如何管理生命周期？需明确 Backend 的渲染命令接口与批处理策略。
+
+### 9.3 Layout 算法
+
+当前 `Widget::layout()` 是单阶段（直接设置 `Constraints` 的 x/y/width/height）。复杂布局（垂直/水平/网格）是否需要两阶段（measure → arrange）？`Widget/Layout/` 目录当前为空，需明确布局算法。
+
+### 9.4 CSS 映射
+
+`Widget/Style/CSS.hpp` 当前仅声明，未接入。CSS 样式如何映射到 Widget 属性？编译期（模板/constexpr）还是运行期（运行时解析）？需明确接入方式。
+
+### 9.5 Animation → Widget 驱动
+
+`Animation<T>` 已通过 Context 自绑定（`anim_inc`/`anim_dec`），但其 `on_update` 回调如何更新 Widget 的 color/position？是否需要 Widget 暴露"可动画属性"抽象（如 `Animatable<Color>`）？需明确动画与 Widget 属性的绑定机制。
