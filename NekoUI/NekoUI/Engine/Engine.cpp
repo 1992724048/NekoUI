@@ -1,6 +1,4 @@
-﻿// 2026-07-02 00:23:43 (updated for retained mode)
-
-#include "Engine.hpp"
+﻿#include "Engine.hpp"
 #include "EventRouter.hpp"
 #include "InvalidationTracker.hpp"
 #include "MsgPump.hpp"
@@ -85,14 +83,6 @@ namespace neko::engine {
 
     auto Engine::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
         msg_pump_->push_msg(msg, wparam, lparam);
-    }
-
-    auto Engine::bind_animation(animation::AnimationBase& anim) -> void {
-        anim.bind([this]{ invalidation_.anim_inc(); }, [this]{ invalidation_.anim_dec(); });
-    }
-
-    auto Engine::bind_value_state(state::ValueStateBase& state) -> void {
-        state.bind([this]{ invalidation_.mark_dirty(); });
     }
 
     auto Engine::render_frame() -> void {

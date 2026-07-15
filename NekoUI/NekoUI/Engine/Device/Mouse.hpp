@@ -2,6 +2,8 @@
 
 #pragma once
 #include <Windows.h>
+#include <algorithm>
+#include <array>
 #include <span>
 #include "../../Type.hpp"
 

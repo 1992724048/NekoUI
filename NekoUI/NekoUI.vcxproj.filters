@@ -45,9 +45,6 @@
     <ClCompile Include="NekoUI\Engine\MsgPump.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Engine\RenderLoop.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
@@ -105,9 +102,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\MsgPump.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Engine\RenderLoop.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
