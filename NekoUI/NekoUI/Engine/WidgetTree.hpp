@@ -9,6 +9,8 @@
 #include <variant>
 #include <vector>
 
+#include "MutableWidget.hpp"
+
 namespace neko::widget {
     class Widget;
 }
@@ -29,9 +31,7 @@ namespace neko::engine {
 
         auto clear() -> void;
     private:
-        using WidgetContainer = std::variant<std::vector<widget::Widget>, std::list<widget::Widget>, widget::Widget>;
-
-        std::list<WidgetContainer> widgets;
+        std::list<MutableWidget> widgets;
 
         std::atomic<std::shared_ptr<widget::Widget>> root_;
         std::atomic<std::weak_ptr<widget::Widget>> focused_;

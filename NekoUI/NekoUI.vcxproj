@@ -223,6 +223,7 @@
     <ClInclude Include="NekoUI\Engine\Context.hpp" />
     <ClInclude Include="NekoUI\Engine\EventRouter.hpp" />
     <ClInclude Include="NekoUI\Engine\InvalidationTracker.hpp" />
+    <ClInclude Include="NekoUI\Engine\MutableWidget.hpp" />
     <ClInclude Include="NekoUI\Engine\WidgetTree.hpp" />
     <ClInclude Include="NekoUI\Engine\RenderScheduler.hpp" />
     <ClInclude Include="NekoUI\Engine\MsgPump.hpp" />
