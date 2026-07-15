@@ -18,7 +18,7 @@ namespace neko::engine {
         scheduler_(scheduler),
         invalidation_(invalidation) {}
 
-    auto EventRouter::dispatch(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
+    auto EventRouter::dispatch(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
         mouse_.handle(msg, wparam, lparam);
         keyboard_.handle(msg, wparam, lparam);
 
@@ -53,7 +53,7 @@ namespace neko::engine {
         }
     }
 
-    auto EventRouter::handle_mouse(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
+    auto EventRouter::handle_mouse(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
         const auto root = tree_.get_root();
         if (!root) {
             return;
@@ -63,7 +63,7 @@ namespace neko::engine {
         }
     }
 
-    auto EventRouter::handle_keyboard(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
+    auto EventRouter::handle_keyboard(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
         if (wparam == VK_TAB) {
             return;
         }
@@ -73,14 +73,14 @@ namespace neko::engine {
         }
     }
 
-    auto EventRouter::handle_dpi_change(const WPARAM wparam) -> void {
+    auto EventRouter::handle_dpi_change(const WPARAM wparam) const -> void {
         const UINT dpi = LOWORD(wparam);
         backend_.set_dpi(dpi);
         mouse_.set_dpi(dpi);
         invalidation_.mark_dirty();
     }
 
-    auto EventRouter::handle_resize(const LPARAM lparam) -> void {
+    auto EventRouter::handle_resize(const LPARAM lparam) const -> void {
         scheduler_.set_pending_size(LOWORD(lparam), HIWORD(lparam));
         invalidation_.mark_dirty();
     }

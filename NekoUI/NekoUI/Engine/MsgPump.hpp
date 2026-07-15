@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Windows.h>
 #include <array>
 #include <atomic>
 #include <condition_variable>
@@ -9,7 +10,6 @@
 #include <semaphore>
 #include <thread>
 #include <tuple>
-#include <Windows.h>
 
 namespace neko::engine {
     class MsgPump {
@@ -21,7 +21,6 @@ namespace neko::engine {
 
         auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
         auto stop() -> void;
-
     private:
         auto msg_loop() -> void;
         auto msg_dequeue() -> std::optional<std::tuple<UINT, WPARAM, LPARAM>>;
@@ -33,7 +32,7 @@ namespace neko::engine {
         };
 
         static constexpr size_t kQueueSize = 32;
-        std::array<Msg, kQueueSize> msg_queue_;
+        std::array<Msg, kQueueSize> msg_queue_{};
         std::mutex msg_mutex_;
         std::condition_variable msg_notify_;
         std::counting_semaphore<kQueueSize> msg_space_{kQueueSize};

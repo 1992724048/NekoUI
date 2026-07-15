@@ -24,7 +24,7 @@ namespace neko::engine {
         return focused_.load();
     }
 
-    auto WidgetTree::register_widget(std::weak_ptr<widget::Widget> w) -> void {
+    auto WidgetTree::register_widget(const std::weak_ptr<widget::Widget>& w) -> void {
         if (w.expired()) {
             return;
         }
@@ -35,7 +35,7 @@ namespace neko::engine {
         id_widgets_[locked->id()] = locked;
     }
 
-    auto WidgetTree::unregister_widget(std::weak_ptr<widget::Widget> w) -> void {
+    auto WidgetTree::unregister_widget(const std::weak_ptr<widget::Widget>& w) -> void {
         if (w.expired()) {
             return;
         }

@@ -1,7 +1,8 @@
 #include "MsgPump.hpp"
 
 namespace neko::engine {
-    MsgPump::MsgPump(MessageHandler handler) : handler_(std::move(handler)) {
+    MsgPump::MsgPump(MessageHandler handler) :
+        handler_(std::move(handler)) {
         msg_thread_ = std::jthread(&MsgPump::msg_loop, this);
     }
 
@@ -12,8 +13,8 @@ namespace neko::engine {
     auto MsgPump::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
         msg_space_.acquire();
         {
-            std::lock_guard lock(msg_mutex_);
-            msg_queue_[tail_] = Msg{msg, wparam, lparam};
+            std::scoped_lock lock(msg_mutex_);
+            msg_queue_[tail_] = Msg{.msg = msg, .wparam = wparam, .lparam = lparam};
             tail_ = (tail_ + 1) % kQueueSize;
             ++count_;
         }
@@ -41,7 +42,10 @@ namespace neko::engine {
 
     auto MsgPump::msg_dequeue() -> std::optional<std::tuple<UINT, WPARAM, LPARAM>> {
         std::unique_lock lock(msg_mutex_);
-        msg_notify_.wait(lock, [this] { return !running_.load() || count_ > 0; });
+        msg_notify_.wait(lock,
+                         [this] -> bool {
+                             return !running_.load() || count_ > 0;
+                         });
         if (!running_.load()) {
             return std::nullopt;
         }

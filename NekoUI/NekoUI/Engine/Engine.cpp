@@ -25,39 +25,38 @@ namespace neko::engine {
         const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
 
-        context->anim_inc = [this]{ invalidation_.anim_inc(); };
-        context->anim_dec = [this]{ invalidation_.anim_dec(); };
+        context->anim_inc = std::bind(InvalidationTracker::anim_inc, &invalidation_);
+        context->anim_dec = std::bind(InvalidationTracker::anim_dec, &invalidation_);
 
-        context->reg_widget = [this](std::weak_ptr<widget::Widget> w) {
+        context->reg_widget = [this](const std::weak_ptr<widget::Widget>& w) {
             widget_tree_.register_widget(w);
             frame();
         };
-        context->del_widget = [this](std::weak_ptr<widget::Widget> w) {
+        context->del_widget = [this](const std::weak_ptr<widget::Widget>& w) {
             widget_tree_.unregister_widget(w);
             frame();
         };
 
-        context->mark_dirty = [this]{ invalidation_.mark_dirty(); };
-        context->widget_dirty = [this](const std::weak_ptr<widget::Widget>& w){ invalidation_.mark_widget_dirty(w); };
+        context->mark_dirty = [this] {
+            invalidation_.mark_dirty();
+        };
+        context->widget_dirty = [this](const std::weak_ptr<widget::Widget>& w) {
+            invalidation_.mark_widget_dirty(w);
+        };
 
         context->mouse = mouse;
         context->keyboard = keyboard;
 
-        render_scheduler_ = std::make_unique<RenderScheduler>(
-            [this] { render_frame(); },
-            invalidation_
-        );
+        render_scheduler_ = std::make_unique<RenderScheduler>([this] {
+                                                                  render_frame();
+                                                              },
+                                                              invalidation_);
 
-        event_router_ = std::make_unique<EventRouter>(
-            widget_tree_, *mouse, *keyboard, *context, *backend,
-            *render_scheduler_, invalidation_
-        );
+        event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, *render_scheduler_, invalidation_);
 
-        msg_pump_ = std::make_unique<MsgPump>(
-            [this](const UINT msg, const WPARAM wparam, const LPARAM lparam) {
-                event_router_->dispatch(msg, wparam, lparam);
-            }
-        );
+        msg_pump_ = std::make_unique<MsgPump>([this](const UINT msg, const WPARAM wparam, const LPARAM lparam) {
+            event_router_->dispatch(msg, wparam, lparam);
+        });
     }
 
     Engine::~Engine() {
@@ -77,11 +76,11 @@ namespace neko::engine {
         invalidation_.clear();
     }
 
-    auto Engine::frame() -> void {
+    auto Engine::frame() const -> void {
         render_scheduler_->request_frame();
     }
 
-    auto Engine::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
+    auto Engine::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
         msg_pump_->push_msg(msg, wparam, lparam);
     }
 
@@ -93,8 +92,8 @@ namespace neko::engine {
         backend->begin();
         const auto widget = widget_tree_.get_root();
         if (widget) {
-            const auto size = render_scheduler_->pending_size();
-            widget->layout({.x = 0, .y = 0, .width = size.x, .height = size.y});
+            const auto [x, y] = render_scheduler_->pending_size();
+            widget->layout({.x = 0, .y = 0, .width = x, .height = y});
             widget->draw(*context, *backend);
         }
         backend->end();

@@ -6,7 +6,9 @@
 #include <shared_mutex>
 #include <string>
 
-namespace neko::widget { class Widget; }
+namespace neko::widget {
+    class Widget;
+}
 
 namespace neko::engine {
     class WidgetTree {
@@ -19,11 +21,10 @@ namespace neko::engine {
         auto set_focus(std::weak_ptr<widget::Widget> w) -> void;
         auto get_focus() const -> std::weak_ptr<widget::Widget>;
 
-        auto register_widget(std::weak_ptr<widget::Widget> w) -> void;
-        auto unregister_widget(std::weak_ptr<widget::Widget> w) -> void;
+        auto register_widget(const std::weak_ptr<widget::Widget>& w) -> void;
+        auto unregister_widget(const std::weak_ptr<widget::Widget>& w) -> void;
 
         auto clear() -> void;
-
     private:
         std::atomic<std::shared_ptr<widget::Widget>> root_;
         std::atomic<std::weak_ptr<widget::Widget>> focused_;

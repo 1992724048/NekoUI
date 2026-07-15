@@ -4,7 +4,9 @@
 #include <shared_mutex>
 #include <vector>
 
-namespace neko::widget { class Widget; }
+namespace neko::widget {
+    class Widget;
+}
 
 namespace neko::engine {
     class InvalidationTracker {
@@ -19,7 +21,6 @@ namespace neko::engine {
         auto needs_frame() const -> bool;
         auto consume_dirty_list() -> std::vector<std::weak_ptr<widget::Widget>>;
         auto clear() -> void;
-
     private:
         std::atomic_bool dirty_{true};
         std::atomic_int animation_{0};

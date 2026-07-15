@@ -26,12 +26,12 @@ namespace neko::engine {
     public:
         EventRouter(WidgetTree& tree, mouse::Mouse& mouse, keyboard::Keyboard& keyboard, Context& context, backend::Backend& backend, RenderScheduler& scheduler, InvalidationTracker& invalidation);
 
-        auto dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+        auto dispatch(UINT msg, WPARAM wparam, LPARAM lparam) const -> void;
     private:
-        auto handle_mouse(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
-        auto handle_keyboard(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
-        auto handle_dpi_change(WPARAM wparam) -> void;
-        auto handle_resize(LPARAM lparam) -> void;
+        auto handle_mouse(UINT msg, WPARAM wparam, LPARAM lparam) const -> void;
+        auto handle_keyboard(UINT msg, WPARAM wparam, LPARAM lparam) const -> void;
+        auto handle_dpi_change(WPARAM wparam) const -> void;
+        auto handle_resize(LPARAM lparam) const -> void;
 
         WidgetTree& tree_;
         mouse::Mouse& mouse_;

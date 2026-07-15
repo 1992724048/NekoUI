@@ -30,7 +30,6 @@ namespace neko::engine {
 
         auto consume_resize() -> std::optional<type::Vec2I>;
         auto pending_size() const -> type::Vec2I;
-
     private:
         auto render_loop() -> void;
         auto render_wait() -> bool;

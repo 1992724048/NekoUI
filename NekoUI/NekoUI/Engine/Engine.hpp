@@ -38,9 +38,9 @@ namespace neko::engine {
 
         auto clear() -> void;
 
-        auto frame() -> void;
+        auto frame() const -> void;
 
-        auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+        auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) const -> void;
     private:
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};
@@ -51,8 +51,8 @@ namespace neko::engine {
 
         InvalidationTracker invalidation_;
         WidgetTree widget_tree_;
-        std::unique_ptr<RenderScheduler> render_scheduler_;
-        std::unique_ptr<MsgPump> msg_pump_;
-        std::unique_ptr<EventRouter> event_router_;
+        std::unique_ptr<RenderScheduler> render_scheduler_{};
+        std::unique_ptr<MsgPump> msg_pump_{};
+        std::unique_ptr<EventRouter> event_router_{};
     };
 }
