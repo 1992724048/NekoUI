@@ -32,27 +32,25 @@ namespace neko::engine {
             const std::shared_ptr<T> widget = std::make_shared<T>(*context, std::forward<Args>(args)...);
             widget_tree_.set_root(widget);
             context->root = widget;
-            frame();
+            render_scheduler_->request_frame();
             return widget;
         }
 
         auto clear() -> void;
-
-        auto frame() const -> void;
-
-        auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) const -> void;
+        auto get_msg_pump() -> std::weak_ptr<MsgPump>;
+        auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
     private:
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};
-        std::shared_ptr<mouse::Mouse> mouse;
-        std::shared_ptr<keyboard::Keyboard> keyboard;
+        std::shared_ptr<device::Mouse> mouse;
+        std::shared_ptr<device::Keyboard> keyboard;
 
         auto render_frame() -> void;
 
         InvalidationTracker invalidation_;
         WidgetTree widget_tree_;
-        std::unique_ptr<RenderScheduler> render_scheduler_{};
-        std::unique_ptr<MsgPump> msg_pump_{};
+        std::shared_ptr<RenderScheduler> render_scheduler_{};
+        std::shared_ptr<MsgPump> msg_pump_{};
         std::unique_ptr<EventRouter> event_router_{};
     };
 }

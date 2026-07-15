@@ -30,10 +30,9 @@ namespace neko::widget {
         auto layout(Constraints constraints) -> void;
         virtual auto raw_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool;
 
-        [[nodiscard]] virtual auto hit_test(const mouse::Mouse& mouse) const -> bool;
+        [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool;
 
-        template<typename T, typename... Args>
-        requires std::is_base_of_v<Widget, T>
+        template<typename T, typename... Args> requires std::is_base_of_v<Widget, T>
         auto add(Args&&... args) -> std::shared_ptr<T> {
             auto child = std::make_shared<T>(this, std::forward<Args>(args)...);
             {

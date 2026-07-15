@@ -35,6 +35,7 @@ namespace neko::engine {
 
         std::atomic<std::shared_ptr<widget::Widget>> root_;
         std::atomic<std::weak_ptr<widget::Widget>> focused_;
+
         std::map<std::string, std::weak_ptr<widget::Widget>> id_widgets_;
         mutable std::shared_mutex id_map_mutex_;
     };

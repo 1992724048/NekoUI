@@ -9,13 +9,15 @@
 using namespace neko::type;
 
 namespace neko::widget {
-    Button::Button(Widget* parent, const Vec4I bounds, const std::string_view label)
-        : Widget{parent}, text_{label.data(), label.size()} {
+    Button::Button(Widget* parent, const Vec4I bounds, const std::string_view label) :
+        Widget{parent},
+        text_{label.data(), label.size()} {
         this->bounds = bounds;
     }
 
-    Button::Button(engine::Context& context, const Vec4I bounds, const std::string_view label)
-        : Widget{context}, text_{label.data(), label.size()} {
+    Button::Button(engine::Context& context, const Vec4I bounds, const std::string_view label) :
+        Widget{context},
+        text_{label.data(), label.size()} {
         this->bounds = bounds;
     }
 
@@ -58,11 +60,7 @@ namespace neko::widget {
         if (context) {
             color_anim_.bind(context->anim_inc, context->anim_dec);
         }
-        color_anim_.on_update([this](const int v) {
-            set_color(Color{static_cast<uint32_t>(v)});
-        });
-        color_anim_.to_value(static_cast<int>(target.value),
-                             std::optional{std::chrono::milliseconds{duration_ms}});
+        color_anim_.to_value(static_cast<int>(target.value), std::optional{std::chrono::milliseconds{duration_ms}});
     }
 
     auto Button::draw_self(engine::Context& /*context*/, backend::Backend& backend) -> void {

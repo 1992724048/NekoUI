@@ -1,24 +1,12 @@
 #include "Widget.hpp"
 
 namespace neko::widget {
-    Widget::Widget(engine::Context& context)
-        : context{&context}, root{context.root} {}
-
-    Widget::Widget(Widget* parent)
-        : context{parent ? parent->context : nullptr},
-          parent{parent},
-          root{parent ? parent->root.load() : std::weak_ptr<Widget>{}} {}
-
-    Widget::~Widget() = default;
-
-    auto Widget::set_id(const std::string_view id) -> void {
-        std::unique_lock lock(mutex_);
-        id_ = id;
-    }
-
-    auto Widget::children_count() const -> size_t {
+    auto Widget::draw(engine::Context& context, backend::Backend& backend) -> void {
+        draw_self(context, backend);
         std::shared_lock lock(mutex_);
-        return children_.size();
+        for (const auto& child : children_) {
+            child->draw(context, backend);
+        }
     }
 
     auto Widget::layout(Constraints constraints) -> void {
@@ -28,19 +16,7 @@ namespace neko::widget {
         }
         std::shared_lock lock(mutex_);
         for (const auto& child : children_) {
-            child->layout(Constraints{
-                .x = constraints.x,
-                .y = constraints.y,
-                .width = constraints.width,
-                .height = constraints.height});
-        }
-    }
-
-    auto Widget::draw(engine::Context& context, backend::Backend& backend) -> void {
-        draw_self(context, backend);
-        std::shared_lock lock(mutex_);
-        for (const auto& child : children_) {
-            child->draw(context, backend);
+            child->layout(Constraints{.x = constraints.x, .y = constraints.y, .width = constraints.width, .height = constraints.height});
         }
     }
 
@@ -54,7 +30,7 @@ namespace neko::widget {
         return false;
     }
 
-    auto Widget::hit_test(const mouse::Mouse& mouse) const -> bool {
+    auto Widget::hit_test(const device::Mouse& mouse) const -> bool {
         std::shared_lock lock(mutex_);
         if (mouse.is_inside(bounds)) {
             return true;
@@ -67,8 +43,29 @@ namespace neko::widget {
         return false;
     }
 
+    auto Widget::set_id(const std::string_view id) -> void {
+        std::unique_lock lock(mutex_);
+        id_ = id;
+    }
+
+    auto Widget::children_count() const -> size_t {
+        std::shared_lock lock(mutex_);
+        return children_.size();
+    }
+
     auto Widget::id() const -> const std::string& {
         std::shared_lock lock(mutex_);
         return id_;
     }
+
+    Widget::Widget(engine::Context& context) :
+        context{&context},
+        root{context.root} {}
+
+    Widget::Widget(Widget* parent) :
+        context{parent ? parent->context : nullptr},
+        parent{parent},
+        root{parent ? parent->root.load() : std::weak_ptr<Widget>{}} {}
+
+    Widget::~Widget() = default;
 }
