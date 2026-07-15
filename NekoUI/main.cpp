@@ -9,7 +9,11 @@
 
 using namespace neko::type;
 
-static std::unique_ptr<neko::engine::Engine> engine;
+namespace {
+    std::unique_ptr<neko::engine::Engine> engine;
+    std::weak_ptr<neko::engine::MsgPump> msg_pump;
+    std::weak_ptr<neko::engine::RenderScheduler> render_scheduler;
+}
 
 namespace {
     auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> LRESULT {
@@ -44,7 +48,9 @@ namespace {
                 case WM_SYSKEYUP:
                 case WM_CHAR:
                 case WM_TIMER:
-                    engine->push_msg(msg, wparam, lparam);
+                    if (!msg_pump.expired()) {
+                        msg_pump.lock()->push_msg(msg, wparam, lparam);
+                    }
                     break;
                 default: ;
             }
@@ -79,7 +85,9 @@ auto main(int argc, char* argv[]) -> int try {
     UpdateWindow(hwnd);
 
     engine = std::make_unique<neko::engine::Engine>(hwnd);
-    [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{100, 100, 200, 50}, "点我");
+    msg_pump = engine->get_msg_pump();
+    render_scheduler = engine->get_render_scheduler();
+    [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");
 
     MSG msg{};
     while (GetMessageW(&msg, nullptr, 0, 0) != 0) {

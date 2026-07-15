@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <array>
 
-namespace neko::keyboard {
+namespace neko::device {
     struct Keyboard {
     private:
         std::array<bool, 256> down{};

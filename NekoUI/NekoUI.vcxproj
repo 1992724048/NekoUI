@@ -232,8 +232,8 @@
     <ClInclude Include="NekoUI\Engine\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />
     <ClInclude Include="NekoUI\Widget\Style\CSS.hpp" />
-    <ClInclude Include="NekoUI\Engine\Device\Keyboard.hpp" />
-    <ClInclude Include="NekoUI\Engine\Device\Mouse.hpp" />
+    <ClInclude Include="NekoUI\Engine\Device\keyboard.hpp" />
+    <ClInclude Include="NekoUI\Engine\Device\mouse.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>

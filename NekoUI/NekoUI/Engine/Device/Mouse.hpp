@@ -7,7 +7,7 @@
 #include <span>
 #include "../../Type.hpp"
 
-namespace neko::mouse {
+namespace neko::device {
     using namespace neko::type;
 
     struct Mouse {
@@ -146,4 +146,4 @@ namespace neko::mouse {
             }
         }
     };
-} // namespace neko::mouse
+} // namespace neko::device

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "Device/Keyboard.hpp"
-#include "Device/Mouse.hpp"
+#include "Device/mouse.hpp"
 
 namespace neko::backend {
     class Backend;
@@ -26,8 +26,8 @@ namespace neko::engine {
         std::function<void(std::weak_ptr<widget::Widget>)> reg_widget;
         std::function<void(std::weak_ptr<widget::Widget>)> del_widget;
 
-        std::weak_ptr<mouse::Mouse> mouse;
-        std::weak_ptr<keyboard::Keyboard> keyboard;
+        std::weak_ptr<device::Mouse> mouse;
+        std::weak_ptr<device::Keyboard> keyboard;
 
         std::weak_ptr<widget::Widget> root;
     };

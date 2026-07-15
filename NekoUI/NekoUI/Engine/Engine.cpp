@@ -14,38 +14,41 @@
 
 #include "../Widget/Widget.hpp"
 
+#include "Device/keyboard.hpp"
+#include "Device/mouse.hpp"
+
 namespace neko::engine {
     Engine::Engine(const HWND hwnd) {
         backend = std::make_unique<backend::Backend>(hwnd);
         context = std::make_unique<Context>();
 
-        mouse = std::make_shared<mouse::Mouse>();
-        keyboard = std::make_shared<keyboard::Keyboard>();
+        mouse = std::make_shared<device::Mouse>();
+        keyboard = std::make_shared<device::Keyboard>();
 
         const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
 
-        context->anim_inc = std::bind(InvalidationTracker::anim_inc, &invalidation_);
-        context->anim_dec = std::bind(InvalidationTracker::anim_dec, &invalidation_);
+        context->anim_inc = std::bind(&InvalidationTracker::anim_inc, &invalidation_);
+        context->anim_dec = std::bind(&InvalidationTracker::anim_dec, &invalidation_);
 
         context->reg_widget = [this](const std::weak_ptr<widget::Widget>& w) {
             widget_tree_.register_widget(w);
-            frame();
+            render_scheduler_->request_frame();
         };
         context->del_widget = [this](const std::weak_ptr<widget::Widget>& w) {
             widget_tree_.unregister_widget(w);
-            frame();
+            render_scheduler_->request_frame();
         };
 
-        context->mark_dirty = std::bind(InvalidationTracker::mark_dirty, &invalidation_);
-        context->widget_dirty = std::bind(InvalidationTracker::mark_widget_dirty, &invalidation_, std::placeholders::_1);
+        context->mark_dirty = std::bind(&InvalidationTracker::mark_dirty, &invalidation_);
+        context->widget_dirty = std::bind(&InvalidationTracker::mark_widget_dirty, &invalidation_, std::placeholders::_1);
 
         context->mouse = mouse;
         context->keyboard = keyboard;
 
-        render_scheduler_ = std::make_unique<RenderScheduler>(std::bind(render_frame, this), invalidation_);
-        event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, *render_scheduler_, invalidation_);
-        msg_pump_ = std::make_unique<MsgPump>(std::bind(EventRouter::dispatch, &event_router_, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
+        event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_, invalidation_);
+        msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     }
 
     Engine::~Engine() {
@@ -65,12 +68,12 @@ namespace neko::engine {
         invalidation_.clear();
     }
 
-    auto Engine::frame() const -> void {
-        render_scheduler_->request_frame();
+    auto Engine::get_msg_pump() -> std::weak_ptr<MsgPump> {
+        return msg_pump_;
     }
 
-    auto Engine::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
-        msg_pump_->push_msg(msg, wparam, lparam);
+    auto Engine::get_render_scheduler() -> std::weak_ptr<RenderScheduler> {
+        return render_scheduler_;
     }
 
     auto Engine::render_frame() -> void {
