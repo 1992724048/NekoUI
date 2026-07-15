@@ -5,6 +5,9 @@
 
 #include "NekoUI/Engine/Engine.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
+#include "NekoUI/Type.hpp"
+
+using namespace neko::type;
 
 namespace {
     auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> LRESULT {
@@ -74,7 +77,7 @@ auto main(int argc, char* argv[]) -> int try {
     UpdateWindow(hwnd);
 
     neko::engine::Engine engine(hwnd);
-    [[maybe_unused]] auto btn = engine.set_root_widget<neko::widget::Button>(glm::ivec4{100, 100, 200, 50}, "点我");
+    [[maybe_unused]] auto btn = engine.set_root_widget<neko::widget::Button>(IVec4{100, 100, 200, 50}, "点我");
 
     class_name += L"2";
     win_class.lpszClassName = class_name.data();

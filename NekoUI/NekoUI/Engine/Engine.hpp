@@ -10,6 +10,7 @@
 #include <type_traits>
 
 #include "Context.hpp"
+#include "../Type.hpp"
 
 #include "../Backend/Backend.hpp"
 #include "../Widget/Widget.hpp"
@@ -17,6 +18,8 @@
 #include "Component/Animation.hpp"
 
 namespace neko::engine {
+    using namespace neko::type;
+
     class Engine final {
     public:
         explicit Engine(HWND hwnd);
@@ -71,7 +74,7 @@ namespace neko::engine {
         auto msg_dequeue() -> std::optional<MsgEvent>;
         auto msg_dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
 
-        glm::ivec2 resize_size{};
+        IVec2 resize_size{};
         std::atomic_bool dirty{true};
         std::atomic_bool pending{};
         std::atomic_bool resize_pending{false};

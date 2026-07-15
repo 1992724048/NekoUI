@@ -29,7 +29,7 @@ namespace neko::backend {
         Backend(const Backend&) = delete;
         auto operator=(const Backend&) -> Backend& = delete;
 
-        auto resize(glm::ivec2 new_size) -> void;
+        auto resize(IVec2 new_size) -> void;
         auto set_dpi(UINT dpi) -> void;
 
         [[nodiscard]] auto get_dpi_scale() const -> float {
@@ -39,11 +39,11 @@ namespace neko::backend {
         auto begin() const -> void;
         auto end() const -> void;
 
-        auto draw_rect_fill(glm::ivec4 rect, Color color) const -> void;
-        auto draw_rect(glm::ivec4 rect, Color color, int thickness) const -> void;
-        auto draw_line(glm::ivec2 from, glm::ivec2 to, Color color, int thickness) const -> void;
-        auto draw_circle_fill(glm::ivec2 center, int radius, Color color) const -> void;
-        auto draw_text(std::string_view text, glm::ivec2 pos, Color color, float font_size = 16.0F) -> void;
+        auto draw_rect_fill(IVec4 rect, Color color) const -> void;
+        auto draw_rect(IVec4 rect, Color color, int thickness) const -> void;
+        auto draw_line(IVec2 from, IVec2 to, Color color, int thickness) const -> void;
+        auto draw_circle_fill(IVec2 center, int radius, Color color) const -> void;
+        auto draw_text(std::string_view text, IVec2 pos, Color color, float font_size = 16.0F) -> void;
     private:
         static constexpr int ATLAS_W = 4096;
         static constexpr int ATLAS_H = 4096;
@@ -77,7 +77,7 @@ namespace neko::backend {
         ID3D11BlendState* bs_alpha{};
         ID3D11BlendState* bs_opaque{};
         ID3D11Buffer* cbuffer{};
-        glm::ivec2 size{};
+        IVec2 size{};
 
         ID3D11ShaderResourceView* font_srv{};
         ID3D11SamplerState* font_sampler{};

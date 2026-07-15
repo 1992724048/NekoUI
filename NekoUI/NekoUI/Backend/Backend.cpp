@@ -170,7 +170,7 @@ Backend::~Backend() {
     }
 }
 
-auto Backend::resize(const glm::ivec2 new_size) -> void {
+auto Backend::resize(const IVec2 new_size) -> void {
     if (size == new_size) {
         return;
     }
@@ -224,7 +224,7 @@ auto Backend::end() const -> void {
     swap_chain->Present(1, 0);
 }
 
-auto Backend::draw_rect_fill(const glm::ivec4 rect, const Color color) const -> void {
+auto Backend::draw_rect_fill(const IVec4 rect, const Color color) const -> void {
     if (ctx == nullptr || cbuffer == nullptr) {
         return;
     }
@@ -255,15 +255,15 @@ auto Backend::draw_rect_fill(const glm::ivec4 rect, const Color color) const -> 
     ctx->Draw(6, 0);
 }
 
-auto Backend::draw_rect(const glm::ivec4 rect, const Color color, const int thickness) const -> void {
+auto Backend::draw_rect(const IVec4 rect, const Color color, const int thickness) const -> void {
     draw_rect_fill({rect.x, rect.y, rect.z, thickness}, color);
     draw_rect_fill({rect.x, rect.y + rect.w - thickness, rect.z, thickness}, color);
     draw_rect_fill({rect.x, rect.y + thickness, thickness, rect.w - (thickness * 2)}, color);
     draw_rect_fill({rect.x + rect.z - thickness, rect.y + thickness, thickness, rect.w - (thickness * 2)}, color);
 }
 
-auto Backend::draw_line(const glm::ivec2 from, const glm::ivec2 to, const Color color, const int thickness) const -> void {
-    const glm::ivec2 d = to - from;
+auto Backend::draw_line(const IVec2 from, const IVec2 to, const Color color, const int thickness) const -> void {
+    const IVec2 d = to - from;
     if (std::abs(d.x) >= std::abs(d.y)) {
         draw_rect_fill({std::min(from.x, to.x), from.y - (thickness / 2), std::abs(d.x) + thickness, thickness}, color);
     } else {
@@ -271,11 +271,11 @@ auto Backend::draw_line(const glm::ivec2 from, const glm::ivec2 to, const Color 
     }
 }
 
-auto Backend::draw_circle_fill(const glm::ivec2 center, const int radius, const Color color) const -> void {
+auto Backend::draw_circle_fill(const IVec2 center, const int radius, const Color color) const -> void {
     draw_rect_fill({center.x - radius, center.y - radius, radius * 2, radius * 2}, color);
 }
 
-auto Backend::draw_text(const std::string_view text, const glm::ivec2 pos, const Color color, const float font_size) -> void {
+auto Backend::draw_text(const std::string_view text, const IVec2 pos, const Color color, const float font_size) -> void {
     if (ctx == nullptr || text_cb == nullptr || font_srv == nullptr) {
         return;
     }

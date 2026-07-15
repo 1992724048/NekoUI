@@ -5,12 +5,14 @@
 #include <climits>
 #include <vector>
 
-#include <glm/glm.hpp>
+#include "../Type.hpp"
 
 #include "../Backend/Backend.hpp"
 #include "../Engine/Context.hpp"
 
 namespace neko::widget {
+    using namespace neko::type;
+
     struct Constraints {
         int x = 0, y = 0;
         int width = INT_MAX;
@@ -40,7 +42,7 @@ namespace neko::widget {
         std::atomic<Widget*> parent{};
         std::atomic<std::weak_ptr<Widget>> root{};
 
-        glm::ivec4 bounds{};
+        IVec4 bounds{};
 
         int z_index{0};
 
