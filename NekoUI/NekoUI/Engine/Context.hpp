@@ -28,5 +28,7 @@ namespace neko::engine {
 
         std::weak_ptr<mouse::Mouse> mouse;
         std::weak_ptr<keyboard::Keyboard> keyboard;
+
+        std::weak_ptr<widget::Widget> root;
     };
 } // namespace neko::engine

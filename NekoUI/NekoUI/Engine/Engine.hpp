@@ -37,8 +37,9 @@ namespace neko::engine {
 
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
         auto set_root_widget(Args&&... args) -> std::shared_ptr<T> {
-            const std::shared_ptr<T> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
+            const std::shared_ptr<T> widget = std::make_shared<T>(*context, std::forward<Args>(args)...);
             root = widget;
+            context->root = widget;
             frame();
             return widget;
         }
@@ -49,20 +50,11 @@ namespace neko::engine {
         // 刷新一帧
         auto frame() -> void;
 
-        /*!
-         * @brief 构建Widget
-         * @note 如果控件变更请调用该函数更新控件列表
-         */
-        auto build() -> void;
-
         // 投递窗口消息
         auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void override;
     private:
-        friend widget::Widget;
-
         auto del_widget(const std::weak_ptr<widget::Widget>& widget) -> bool;
         auto reg_widget(const std::weak_ptr<widget::Widget>& widget) -> bool;
-        auto get_widget(const std::string& id) -> std::optional<std::weak_ptr<widget::Widget>>;
 
         auto bind_animation(animation::AnimationBase& anim) -> void;
         auto bind_value_state(state::ValueStateBase& state) -> void;

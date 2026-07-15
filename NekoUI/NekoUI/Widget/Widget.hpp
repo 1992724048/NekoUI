@@ -20,7 +20,6 @@ namespace neko::widget {
     };
 
     class Widget {
-        friend class engine::Engine;
     public:
         virtual auto draw(engine::Context& context, backend::Backend& backend) -> void {}
         virtual auto layout(Constraints constraints) -> void {}
@@ -30,6 +29,11 @@ namespace neko::widget {
 
         [[nodiscard]] auto id() const -> const std::string&;
     protected:
+        Widget(engine::Context& context);
+        Widget(Widget* parent);
+
+        engine::Context* context{};
+
         ~Widget();
 
         std::atomic<Widget*> parent{};

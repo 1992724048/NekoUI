@@ -12,7 +12,7 @@ namespace neko::engine {
         static constexpr size_t MSG_QUEUE_MAX = 32;
 
         // 投递窗口消息
-        virtual auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+        virtual auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void = 0;
     protected:
         std::array<MsgEvent, MSG_QUEUE_MAX> msg_queue{};
         std::mutex msg_mutex;
@@ -21,8 +21,8 @@ namespace neko::engine {
         std::jthread msg_thread;
         size_t msg_head{}, msg_tail{}, msg_count{};
 
-        virtual auto msg_loop() -> void;
-        virtual auto msg_dequeue() -> std::optional<MsgEvent>;
-        virtual auto msg_dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+        virtual auto msg_loop() -> void = 0;
+        virtual auto msg_dequeue() -> std::optional<MsgEvent> = 0;
+        virtual auto msg_dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void = 0;
     };
 }

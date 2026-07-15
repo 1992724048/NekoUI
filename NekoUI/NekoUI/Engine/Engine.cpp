@@ -64,8 +64,6 @@ namespace neko::engine {
         render_notify.notify_one();
     }
 
-    auto Engine::build() -> void {}
-
     auto Engine::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
         std::unique_lock lock(msg_mutex);
         msg_space.wait(lock,
@@ -108,19 +106,6 @@ namespace neko::engine {
 
         frame();
         return true;
-    }
-
-    auto Engine::get_widget(const std::string& id) -> std::optional<std::weak_ptr<widget::Widget>> {
-        if (id.empty()) {
-            return std::nullopt;
-        }
-
-        std::shared_lock _(id_map_mutex);
-        if (const auto it = id_widgets.find(id); it != id_widgets.end()) {
-            return it->second;
-        }
-
-        return std::nullopt;
     }
 
     auto Engine::bind_animation(animation::AnimationBase& anim) -> void {
