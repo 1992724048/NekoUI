@@ -307,6 +307,7 @@ namespace neko::animation {
         T new_value_;
         T start_value_;
         TimeType duration_time_{};
+        std::function<void(T)> on_update_{nullptr};
 
         std::chrono::time_point<std::chrono::steady_clock> start_ = std::chrono::steady_clock::now();
     public:
@@ -334,6 +335,10 @@ namespace neko::animation {
             }
         }
 
+        auto on_update(std::function<void(T)> callback) -> void {
+            on_update_ = std::move(callback);
+        }
+
         auto tick() -> T {
             if (!change_) {
                 return now_value_;
@@ -346,6 +351,9 @@ namespace neko::animation {
                 if (change_.exchange(false) && dec_) {
                     dec_();
                 }
+                if (on_update_) {
+                    on_update_(now_value_);
+                }
                 return now_value_;
             }
 
@@ -353,6 +361,9 @@ namespace neko::animation {
             const float eased = EasingFnType(process);
             const T interpolated = static_cast<T>(static_cast<float>(start_value_) + ((static_cast<float>(new_value_) - static_cast<float>(start_value_)) * eased));
             now_value_ = interpolated;
+            if (on_update_) {
+                on_update_(now_value_);
+            }
             return now_value_;
         }
 
