@@ -3,7 +3,7 @@
 #include "../Engine/Engine.hpp"
 
 neko::widget::Widget::~Widget() {
-    engine->del_widget(this);
+    
 }
 
 auto neko::widget::Widget::raw_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool {
@@ -12,6 +12,10 @@ auto neko::widget::Widget::raw_event(engine::Context& context, UINT msg, WPARAM 
 
 auto neko::widget::Widget::hit_test(const mouse::Mouse& mouse) const -> bool {
     return false;
+}
+
+auto neko::widget::Widget::id() const -> const std::string& {
+    return id_;
 }
 
 neko::widget::Widget::Widget(engine::Engine* engine) {

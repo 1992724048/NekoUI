@@ -30,6 +30,12 @@
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NekoUI\Engine\MsgLoop.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Engine\RenderLoop.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
@@ -66,6 +72,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Widget\Style\CSS.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\Platform\Platform.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\Center.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\MsgLoop.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\RenderLoop.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -16,8 +16,15 @@ namespace neko::widget {
 
 namespace neko::engine {
     struct Context {
+        std::function<void()> mark_dirty;
+
+        std::function<void(std::weak_ptr<widget::Widget>)> widget_dirty;
+
         std::function<void()> anim_inc;
         std::function<void()> anim_dec;
+
+        std::function<void(std::weak_ptr<widget::Widget>)> reg_widget;
+        std::function<void(std::weak_ptr<widget::Widget>)> del_widget;
 
         std::weak_ptr<mouse::Mouse> mouse;
         std::weak_ptr<keyboard::Keyboard> keyboard;

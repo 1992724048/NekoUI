@@ -268,11 +268,15 @@ namespace neko::animation {
 
     class AnimationBase {
     protected:
-        std::atomic_bool change_{false};
         std::function<void()> inc_{nullptr};
         std::function<void()> dec_{nullptr};
+        std::atomic_bool change_{false};
     public:
-        virtual ~AnimationBase() = default;
+        virtual ~AnimationBase() {
+            if (change_.exchange(false) && dec_) {
+                dec_();
+            }
+        }
 
         AnimationBase() = default;
 
@@ -299,14 +303,18 @@ namespace neko::animation {
 
     template<typename T, auto EasingFnType = ease::linear::in, typename TimeType = std::chrono::milliseconds> requires std::is_arithmetic_v<T> && EasingFn<decltype(EasingFnType)>
     class Animation final : public AnimationBase {
+        T now_value_;
+        T new_value_;
+        T start_value_;
+        TimeType duration_time_{};
+
         std::chrono::time_point<std::chrono::steady_clock> start_ = std::chrono::steady_clock::now();
     public:
         explicit Animation(T initial_value, const int duration_ms = 0) :
             now_value_{initial_value},
             new_value_{initial_value},
             start_value_{initial_value},
-            duration_time_{std::chrono::duration_cast<TimeType>(std::chrono::milliseconds(duration_ms))} {
-        }
+            duration_time_{std::chrono::duration_cast<TimeType>(std::chrono::milliseconds(duration_ms))} {}
 
         Animation(const Animation&) = delete;
         Animation(Animation&&) noexcept = delete;
@@ -316,7 +324,7 @@ namespace neko::animation {
 
         auto to_value(T target, std::optional<TimeType> custom_duration = std::nullopt) -> void {
             start_ = std::chrono::steady_clock::now();
-            start_value_ = now_value_.load();
+            start_value_ = now_value_;
             new_value_ = target;
             if (custom_duration.has_value()) {
                 duration_time_ = custom_duration.value();
@@ -327,29 +335,29 @@ namespace neko::animation {
         }
 
         auto tick() -> T {
-            if (!change_.load()) {
-                return now_value_.load();
+            if (!change_) {
+                return now_value_;
             }
 
             const auto elapsed = std::chrono::duration_cast<TimeType>(std::chrono::steady_clock::now() - start_);
 
             if (elapsed >= duration_time_) {
-                now_value_.store(new_value_);
+                now_value_ = new_value_;
                 if (change_.exchange(false) && dec_) {
                     dec_();
                 }
-                return now_value_.load();
+                return now_value_;
             }
 
             const float process = static_cast<float>(elapsed.count()) / static_cast<float>(duration_time_.count());
             const float eased = EasingFnType(process);
             const T interpolated = static_cast<T>(static_cast<float>(start_value_) + ((static_cast<float>(new_value_) - static_cast<float>(start_value_)) * eased));
-            now_value_.store(interpolated);
-            return now_value_.load();
+            now_value_ = interpolated;
+            return now_value_;
         }
 
         [[nodiscard]] auto value() const -> T {
-            return now_value_.load();
+            return now_value_;
         }
 
         auto operator()() -> T {
@@ -364,10 +372,5 @@ namespace neko::animation {
             to_value(target);
             return *this;
         }
-    private:
-        std::atomic<T> now_value_;
-        T new_value_;
-        T start_value_;
-        TimeType duration_time_{};
     };
 } // namespace neko::animation

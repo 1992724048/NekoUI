@@ -2,31 +2,38 @@
 #include <array>
 #include <atomic>
 #include <condition_variable>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <shared_mutex>
 #include <thread>
 #include <tuple>
 #include <type_traits>
 
 #include "Context.hpp"
+#include "MsgLoop.hpp"
+
 #include "../Type.hpp"
 
 #include "../Backend/Backend.hpp"
 #include "../Widget/Widget.hpp"
 
 #include "Component/Animation.hpp"
+#include "Component/ValueState.hpp"
 
 namespace neko::engine {
     using namespace neko::type;
 
-    class Engine final {
+    class Engine final : public MsgLoop {
     public:
         explicit Engine(HWND hwnd);
         ~Engine();
 
         Engine(const Engine&) = delete;
         auto operator=(const Engine&) -> Engine& = delete;
+        Engine(Engine&&) = delete;
+        auto operator=(Engine&&) -> Engine& = delete;
 
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
         auto set_root_widget(Args&&... args) -> std::shared_ptr<T> {
@@ -36,16 +43,30 @@ namespace neko::engine {
             return widget;
         }
 
+        // 清空引擎资源
         auto clear() -> void;
+
+        // 刷新一帧
         auto frame() -> void;
-        auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
-    protected:
+
+        /*!
+         * @brief 构建Widget
+         * @note 如果控件变更请调用该函数更新控件列表
+         */
+        auto build() -> void;
+
+        // 投递窗口消息
+        auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void override;
+    private:
         friend widget::Widget;
 
-        auto del_widget(widget::Widget* widget) -> bool;
-        auto reg_widget(std::weak_ptr<widget::Widget> widget) -> void;
-        auto reg_animation(animation::AnimationBase& widget) -> void;
-    private:
+        auto del_widget(const std::weak_ptr<widget::Widget>& widget) -> bool;
+        auto reg_widget(const std::weak_ptr<widget::Widget>& widget) -> bool;
+        auto get_widget(const std::string& id) -> std::optional<std::weak_ptr<widget::Widget>>;
+
+        auto bind_animation(animation::AnimationBase& anim) -> void;
+        auto bind_value_state(state::ValueStateBase& state) -> void;
+
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};
         std::shared_ptr<mouse::Mouse> mouse;
@@ -62,17 +83,9 @@ namespace neko::engine {
         auto render_wait() -> void;
         auto render_frame() -> void;
 
-        static constexpr size_t MSG_QUEUE_MAX = 32;
-        using MsgEvent = std::tuple<UINT, WPARAM, LPARAM>;
-        std::array<MsgEvent, MSG_QUEUE_MAX> msg_queue{};
-        std::mutex msg_mutex;
-        std::condition_variable msg_notify;
-        std::condition_variable msg_space;
-        std::jthread msg_thread;
-        size_t msg_head{}, msg_tail{}, msg_count{};
-        auto msg_loop() -> void;
-        auto msg_dequeue() -> std::optional<MsgEvent>;
-        auto msg_dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+        auto msg_loop() -> void override;
+        auto msg_dequeue() -> std::optional<MsgEvent> override;
+        auto msg_dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void override;
 
         Vec2I resize_size{};
         std::atomic_bool dirty{true};
@@ -80,7 +93,14 @@ namespace neko::engine {
         std::atomic_bool resize_pending{false};
         auto mark_dirty() -> void;
 
+        std::shared_mutex id_map_mutex;
+        std::map<std::string, std::weak_ptr<widget::Widget>> id_widgets{};
+
+        std::shared_mutex dirty_list_mutex;
+        std::vector<std::weak_ptr<widget::Widget>> dirty_list;
+        auto mark_widget_dirty(const std::weak_ptr<widget::Widget>& widget) -> void;
+
         std::atomic<std::weak_ptr<widget::Widget>> focused{};
         std::atomic<std::shared_ptr<widget::Widget>> root{};
     };
-} // namespace neko::engine
+}

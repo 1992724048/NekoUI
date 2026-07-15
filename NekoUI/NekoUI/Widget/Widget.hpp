@@ -22,20 +22,13 @@ namespace neko::widget {
     class Widget {
         friend class engine::Engine;
     public:
-        explicit Widget(engine::Engine* engine);
-        explicit Widget(Widget* parent);
-
         virtual auto draw(engine::Context& context, backend::Backend& backend) -> void {}
         virtual auto layout(Constraints constraints) -> void {}
-        virtual auto update(engine::Context& context) -> void {}
         virtual auto raw_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool;
 
-        template<typename T, typename... Args> requires std::is_base_of_v<Widget, T>
-        auto add(Args&&... args) -> std::shared_ptr<T> {
-            return std::make_shared<T>(engine, std::forward<Args>(args)...);
-        }
-
         [[nodiscard]] virtual auto hit_test(const mouse::Mouse& mouse) const -> bool;
+
+        [[nodiscard]] auto id() const -> const std::string&;
     protected:
         ~Widget();
 
@@ -46,12 +39,9 @@ namespace neko::widget {
 
         int z_index{0};
 
-        std::atomic_bool isVisible{true};
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
-
-        std::string id;
     private:
-        engine::Engine* engine;
+        std::string id_;
     };
-} // namespace neko::widget
+}

@@ -7,9 +7,11 @@
 namespace neko::state {
     class ValueStateBase {
     protected:
-        std::atomic_bool change_{false};
-    public:
         std::function<void()> mark_dirty;
+    public:
+        auto bind(const std::function<void()>& dirty) -> void {
+            mark_dirty = dirty;
+        }
     };
 
     template<typename T>

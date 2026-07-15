@@ -3,11 +3,13 @@
 #include <print>
 #include <string>
 
+#include "NekoUI/Type.hpp"
 #include "NekoUI/Engine/Engine.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
-#include "NekoUI/Type.hpp"
 
 using namespace neko::type;
+
+static std::unique_ptr<neko::engine::Engine> engine;
 
 namespace {
     auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> LRESULT {
@@ -24,7 +26,7 @@ namespace {
                 break;
         }
 
-        if (auto* engine = reinterpret_cast<neko::engine::Engine*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA))) {
+        if (engine) {
             switch (msg) {
                 case WM_SIZE:
                 case WM_DPICHANGED:
@@ -76,31 +78,8 @@ auto main(int argc, char* argv[]) -> int try {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    neko::engine::Engine engine(hwnd);
-    [[maybe_unused]] auto btn = engine.set_root_widget<neko::widget::Button>(Vec4I{100, 100, 200, 50}, "点我");
-
-    class_name += L"2";
-    win_class.lpszClassName = class_name.data();
-    win_class.hInstance = GetModuleHandleW(nullptr);
-    win_class.lpfnWndProc = msg_proc;
-    win_class.hCursor = LoadCursorW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(32512));
-    win_class.style = CS_HREDRAW | CS_VREDRAW;
-
-    if (RegisterClassW(&win_class) == 0U) {
-        std::println("Error {:#X}", GetLastError());
-        return 0;
-    }
-
-    hwnd = CreateWindowW(class_name.data(), L"NekoUI2", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, win_class.hInstance, nullptr);
-    if (hwnd == nullptr) {
-        std::println("Error {:#X}", GetLastError());
-        return 0;
-    }
-
-    ShowWindow(hwnd, SW_SHOW);
-    UpdateWindow(hwnd);
-
-    neko::engine::Engine engine2(hwnd);
+    engine = std::make_unique<neko::engine::Engine>(hwnd);
+    [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{100, 100, 200, 50}, "点我");
 
     MSG msg{};
     while (GetMessageW(&msg, nullptr, 0, 0) != 0) {

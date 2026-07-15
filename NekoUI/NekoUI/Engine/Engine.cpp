@@ -24,6 +24,13 @@ namespace neko::engine {
 
         context->anim_inc = std::bind(&Engine::anim_inc, this);
         context->anim_dec = std::bind(&Engine::anim_dec, this);
+
+        context->del_widget = std::bind(&Engine::del_widget, this, std::placeholders::_1);
+        context->reg_widget = std::bind(&Engine::reg_widget, this, std::placeholders::_1);
+
+        context->mark_dirty = std::bind(&Engine::mark_dirty, this);
+        context->widget_dirty = std::bind(&Engine::mark_widget_dirty, this, std::placeholders::_1);
+
         context->mouse = mouse;
         context->keyboard = keyboard;
 
@@ -42,17 +49,22 @@ namespace neko::engine {
             msg_notify.notify_one();
             msg_thread.join();
         }
+        clear();
     }
 
     auto Engine::clear() -> void {
         root = nullptr;
         focused.load().reset();
+        id_widgets.clear();
+        dirty_list.clear();
     }
 
     auto Engine::frame() -> void {
         pending = true;
         render_notify.notify_one();
     }
+
+    auto Engine::build() -> void {}
 
     auto Engine::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
         std::unique_lock lock(msg_mutex);
@@ -68,15 +80,55 @@ namespace neko::engine {
         msg_notify.notify_one();
     }
 
-    auto Engine::del_widget(widget::Widget* widget) -> bool {
+    auto Engine::del_widget(const std::weak_ptr<widget::Widget>& widget) -> bool {
+        if (widget.expired()) {
+            return false;
+        }
+
+        const auto w = widget.lock();
+
+        std::unique_lock _(id_map_mutex);
+        if (const auto it = id_widgets.find(w->id()); it != id_widgets.end()) {
+            id_widgets.erase(it);
+        }
+
         frame();
         return true;
     }
 
-    auto Engine::reg_widget(std::weak_ptr<widget::Widget> widget) -> void {
+    auto Engine::reg_widget(const std::weak_ptr<widget::Widget>& widget) -> bool {
+        if (widget.expired()) {
+            return false;
+        }
+
+        const auto w = widget.lock();
+
+        std::unique_lock _(id_map_mutex);
+        id_widgets[w->id()] = w;
+
+        frame();
+        return true;
     }
 
-    auto Engine::reg_animation(animation::AnimationBase& widget) -> void {
+    auto Engine::get_widget(const std::string& id) -> std::optional<std::weak_ptr<widget::Widget>> {
+        if (id.empty()) {
+            return std::nullopt;
+        }
+
+        std::shared_lock _(id_map_mutex);
+        if (const auto it = id_widgets.find(id); it != id_widgets.end()) {
+            return it->second;
+        }
+
+        return std::nullopt;
+    }
+
+    auto Engine::bind_animation(animation::AnimationBase& anim) -> void {
+        anim.bind(std::bind(&Engine::anim_inc, this), std::bind(&Engine::anim_dec, this));
+    }
+
+    auto Engine::bind_value_state(state::ValueStateBase& state) -> void {
+        state.bind(std::bind(&Engine::mark_dirty, this));
     }
 
     auto Engine::anim_inc() -> void {
@@ -103,9 +155,10 @@ namespace neko::engine {
             return;
         }
         std::unique_lock lock(render_lock);
+        std::shared_lock _(dirty_list_mutex);
         render_notify.wait(lock,
                            [this] -> bool {
-                               return render_thread.get_stop_token().stop_requested() || pending || dirty;
+                               return render_thread.get_stop_token().stop_requested() || pending || dirty || !dirty_list.empty();
                            });
         pending = false;
     }
@@ -122,7 +175,10 @@ namespace neko::engine {
             widget->draw(*context, *backend);
         }
         backend->end();
+
         dirty = false;
+        std::unique_lock _(dirty_list_mutex);
+        dirty_list.clear();
     }
 
     auto Engine::msg_loop() -> void {
@@ -137,7 +193,6 @@ namespace neko::engine {
             keyboard->handle(msg, wparam, lparam);
             msg_dispatch(msg, wparam, lparam);
 
-            root.load()->update(*context);
             if (dirty) {
                 frame();
             }
@@ -210,5 +265,10 @@ namespace neko::engine {
 
     auto Engine::mark_dirty() -> void {
         dirty = true;
+    }
+
+    auto Engine::mark_widget_dirty(const std::weak_ptr<widget::Widget>& widget) -> void {
+        std::unique_lock _(dirty_list_mutex);
+        dirty_list.push_back(widget);
     }
 } // namespace neko::engine
