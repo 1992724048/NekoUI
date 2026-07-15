@@ -73,6 +73,14 @@ namespace neko::engine {
         return true;
     }
 
+    auto Engine::reg_widget(std::weak_ptr<widget::Widget> widget) {
+        return {};
+    }
+
+    auto Engine::reg_animation(animation::AnimationBase& widget) {
+        return {};
+    }
+
     auto Engine::anim_inc() -> void {
         ++animation;
     }
