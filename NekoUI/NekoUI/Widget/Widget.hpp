@@ -42,7 +42,7 @@ namespace neko::widget {
         std::atomic<Widget*> parent{};
         std::atomic<std::weak_ptr<Widget>> root{};
 
-        IVec4 bounds{};
+        Vec4I bounds{};
 
         int z_index{0};
 

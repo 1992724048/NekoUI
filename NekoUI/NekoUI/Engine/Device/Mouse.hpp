@@ -10,8 +10,8 @@ namespace neko::mouse {
 
     struct Mouse {
     private:
-        IVec2 pos{};
-        IVec2 prev_pos{};
+        Vec2I pos{};
+        Vec2I prev_pos{};
         bool left_down = false;
         bool right_down = false;
         bool middle_down = false;
@@ -45,12 +45,12 @@ namespace neko::mouse {
             return pos != prev_pos;
         }
 
-        [[nodiscard]] auto is_inside(const IVec4 r) const -> bool {
+        [[nodiscard]] auto is_inside(const Vec4I r) const -> bool {
             const float s = dpi_scale_;
             return pos.x >= r.x * s && pos.x <= (r.x + r.z) * s && pos.y >= r.y * s && pos.y <= (r.y + r.w) * s;
         }
 
-        [[nodiscard]] auto is_inside_circle(const IVec2 center, const int radius) const -> bool {
+        [[nodiscard]] auto is_inside_circle(const Vec2I center, const int radius) const -> bool {
             const float s = dpi_scale_;
             const float dx = static_cast<float>(pos.x) - (static_cast<float>(center.x) * s);
             const float dy = static_cast<float>(pos.y) - (static_cast<float>(center.y) * s);
@@ -58,7 +58,7 @@ namespace neko::mouse {
             return (dx * dx) + (dy * dy) <= r * r;
         }
 
-        [[nodiscard]] auto is_inside_rounded(const IVec4 r, const int corner_radius) const -> bool {
+        [[nodiscard]] auto is_inside_rounded(const Vec4I r, const int corner_radius) const -> bool {
             const float s = dpi_scale_;
             const int rx = static_cast<int>(r.x * s);
             const int ry = static_cast<int>(r.y * s);
@@ -74,16 +74,16 @@ namespace neko::mouse {
                 return true;
             }
 
-            const std::array<IVec2, 4> corners{IVec2{rx + cr, ry + cr}, {rx + rw - cr, ry + cr}, {rx + cr, ry + rh - cr}, {rx + rw - cr, ry + rh - cr}};
+            const std::array<Vec2I, 4> corners{Vec2I{rx + cr, ry + cr}, {rx + rw - cr, ry + cr}, {rx + cr, ry + rh - cr}, {rx + rw - cr, ry + rh - cr}};
             return std::ranges::any_of(corners,
-                                       [&](const IVec2 c) -> bool {
+                                       [&](const Vec2I c) -> bool {
                                            const auto dx = static_cast<float>(pos.x - c.x);
                                            const auto dy = static_cast<float>(pos.y - c.y);
                                            return (dx * dx) + (dy * dy) <= static_cast<float>(cr * cr);
                                        });
         }
 
-        [[nodiscard]] auto is_inside_polygon(const std::span<const IVec2> pts) const -> bool {
+        [[nodiscard]] auto is_inside_polygon(const std::span<const Vec2I> pts) const -> bool {
             if (pts.size() < 3) {
                 return false;
             }

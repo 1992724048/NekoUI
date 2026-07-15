@@ -12,7 +12,7 @@ namespace neko::widget {
     class Button final : public Widget {
     public:
         explicit Button(Widget* parent);
-        explicit Button(engine::Engine* engine, IVec4 bounds, std::string_view label);
+        explicit Button(engine::Engine* engine, Vec4I bounds, std::string_view label);
     private:
         animation::Animation<int, animation::ease::quad::in_out> color{0, 200};
     };

@@ -30,7 +30,7 @@ namespace neko::engine {
 
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
         auto set_root_widget(Args&&... args) -> std::shared_ptr<T> {
-            const std::shared_ptr<widget::Widget> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
+            const std::shared_ptr<T> widget = std::make_shared<T>(this, std::forward<Args>(args)...);
             root = widget;
             frame();
             return widget;
@@ -43,8 +43,8 @@ namespace neko::engine {
         friend widget::Widget;
 
         auto del_widget(widget::Widget* widget) -> bool;
-        auto reg_widget(std::weak_ptr<widget::Widget> widget);
-        auto reg_animation(animation::AnimationBase& widget);
+        auto reg_widget(std::weak_ptr<widget::Widget> widget) -> void;
+        auto reg_animation(animation::AnimationBase& widget) -> void;
     private:
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};
@@ -74,7 +74,7 @@ namespace neko::engine {
         auto msg_dequeue() -> std::optional<MsgEvent>;
         auto msg_dispatch(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
 
-        IVec2 resize_size{};
+        Vec2I resize_size{};
         std::atomic_bool dirty{true};
         std::atomic_bool pending{};
         std::atomic_bool resize_pending{false};

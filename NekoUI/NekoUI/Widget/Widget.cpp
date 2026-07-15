@@ -3,7 +3,7 @@
 #include "../Engine/Engine.hpp"
 
 neko::widget::Widget::~Widget() {
-    engine->del(this);
+    engine->del_widget(this);
 }
 
 auto neko::widget::Widget::raw_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool {

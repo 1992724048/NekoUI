@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <cstdint>
+
 namespace neko::type {
     template<typename T, size_t N>
     struct Vec;
@@ -48,9 +50,27 @@ namespace neko::type {
     using Vec2 = Vec<float, 2>;
     using Vec3 = Vec<float, 3>;
     using Vec4 = Vec<float, 4>;
-    using IVec2 = Vec<int, 2>;
-    using IVec3 = Vec<int, 3>;
-    using IVec4 = Vec<int, 4>;
+    using Vec2I = Vec<int, 2>;
+    using Vec3I = Vec<int, 3>;
+    using Vec4I = Vec<int, 4>;
 
-    using Color = Vec4;
+    struct Color {
+        uint32_t value;
+
+        [[nodiscard]] constexpr auto r() const -> uint8_t {
+            return static_cast<uint8_t>(value >> 24);
+        }
+
+        [[nodiscard]] constexpr auto g() const -> uint8_t {
+            return static_cast<uint8_t>(value >> 16);
+        }
+
+        [[nodiscard]] constexpr auto b() const -> uint8_t {
+            return static_cast<uint8_t>(value >> 8);
+        }
+
+        [[nodiscard]] constexpr auto a() const -> uint8_t {
+            return static_cast<uint8_t>(value);
+        }
+    };
 } // namespace neko::type

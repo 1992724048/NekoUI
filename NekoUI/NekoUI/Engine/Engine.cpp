@@ -73,12 +73,10 @@ namespace neko::engine {
         return true;
     }
 
-    auto Engine::reg_widget(std::weak_ptr<widget::Widget> widget) {
-        return {};
+    auto Engine::reg_widget(std::weak_ptr<widget::Widget> widget) -> void {
     }
 
-    auto Engine::reg_animation(animation::AnimationBase& widget) {
-        return {};
+    auto Engine::reg_animation(animation::AnimationBase& widget) -> void {
     }
 
     auto Engine::anim_inc() -> void {
@@ -167,7 +165,7 @@ namespace neko::engine {
     auto Engine::msg_dispatch(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
         switch (msg) {
             case WM_SIZE: {
-                resize_size = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                resize_size = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                 resize_pending.store(true, std::memory_order_release);
                 dirty = true;
                 break;
