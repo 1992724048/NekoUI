@@ -208,8 +208,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NekoUI\Backend\Backend.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
-    <ClCompile Include="NekoUI\Engine\MsgLoop.cpp" />
-    <ClCompile Include="NekoUI\Engine\RenderLoop.cpp" />
+    <ClCompile Include="NekoUI\Engine\EventRouter.cpp" />
+    <ClCompile Include="NekoUI\Engine\InvalidationTracker.cpp" />
+    <ClCompile Include="NekoUI\Engine\WidgetTree.cpp" />
+    <ClCompile Include="NekoUI\Engine\RenderScheduler.cpp" />
+    <ClCompile Include="NekoUI\Engine\MsgPump.cpp" />
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
@@ -218,9 +221,12 @@
     <ClInclude Include="NekoUI\Backend\stb_truetype.h" />
     <ClInclude Include="NekoUI\Engine\Component\ValueState.hpp" />
     <ClInclude Include="NekoUI\Engine\Context.hpp" />
-    <ClInclude Include="NekoUI\Engine\MsgLoop.hpp" />
+    <ClInclude Include="NekoUI\Engine\EventRouter.hpp" />
+    <ClInclude Include="NekoUI\Engine\InvalidationTracker.hpp" />
+    <ClInclude Include="NekoUI\Engine\WidgetTree.hpp" />
+    <ClInclude Include="NekoUI\Engine\RenderScheduler.hpp" />
+    <ClInclude Include="NekoUI\Engine\MsgPump.hpp" />
     <ClInclude Include="NekoUI\Engine\Platform\Platform.hpp" />
-    <ClInclude Include="NekoUI\Engine\RenderLoop.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Engine\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />

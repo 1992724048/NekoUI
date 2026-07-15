@@ -21,6 +21,18 @@
     <ClCompile Include="NekoUI\Engine\Engine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NekoUI\Engine\EventRouter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Engine\InvalidationTracker.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Engine\WidgetTree.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Engine\RenderScheduler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="NekoUI\Backend\Backend.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -30,7 +42,7 @@
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Engine\MsgLoop.cpp">
+    <ClCompile Include="NekoUI\Engine\MsgPump.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NekoUI\Engine\RenderLoop.cpp">
@@ -51,6 +63,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\Context.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\EventRouter.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\InvalidationTracker.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\WidgetTree.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\RenderScheduler.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Backend\stb_truetype.h">
@@ -80,7 +104,7 @@
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Engine\MsgLoop.hpp">
+    <ClInclude Include="NekoUI\Engine\MsgPump.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\RenderLoop.hpp">
