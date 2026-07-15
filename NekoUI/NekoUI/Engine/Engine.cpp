@@ -37,26 +37,15 @@ namespace neko::engine {
             frame();
         };
 
-        context->mark_dirty = [this] {
-            invalidation_.mark_dirty();
-        };
-        context->widget_dirty = [this](const std::weak_ptr<widget::Widget>& w) {
-            invalidation_.mark_widget_dirty(w);
-        };
+        context->mark_dirty = std::bind(InvalidationTracker::mark_dirty, &invalidation_);
+        context->widget_dirty = std::bind(InvalidationTracker::mark_widget_dirty, &invalidation_, std::placeholders::_1);
 
         context->mouse = mouse;
         context->keyboard = keyboard;
 
-        render_scheduler_ = std::make_unique<RenderScheduler>([this] {
-                                                                  render_frame();
-                                                              },
-                                                              invalidation_);
-
+        render_scheduler_ = std::make_unique<RenderScheduler>(std::bind(render_frame, this), invalidation_);
         event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, *render_scheduler_, invalidation_);
-
-        msg_pump_ = std::make_unique<MsgPump>([this](const UINT msg, const WPARAM wparam, const LPARAM lparam) {
-            event_router_->dispatch(msg, wparam, lparam);
-        });
+        msg_pump_ = std::make_unique<MsgPump>(std::bind(EventRouter::dispatch, &event_router_, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     }
 
     Engine::~Engine() {
@@ -97,7 +86,6 @@ namespace neko::engine {
             widget->draw(*context, *backend);
         }
         backend->end();
-
         invalidation_.clear();
     }
 } // namespace neko::engine

@@ -1,10 +1,13 @@
 #pragma once
 
 #include <atomic>
+#include <list>
 #include <map>
 #include <memory>
 #include <shared_mutex>
 #include <string>
+#include <variant>
+#include <vector>
 
 namespace neko::widget {
     class Widget;
@@ -26,6 +29,10 @@ namespace neko::engine {
 
         auto clear() -> void;
     private:
+        using WidgetContainer = std::variant<std::vector<widget::Widget>, std::list<widget::Widget>, widget::Widget>;
+
+        std::list<WidgetContainer> widgets;
+
         std::atomic<std::shared_ptr<widget::Widget>> root_;
         std::atomic<std::weak_ptr<widget::Widget>> focused_;
         std::map<std::string, std::weak_ptr<widget::Widget>> id_widgets_;
