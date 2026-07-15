@@ -3,6 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="../Library/glm/glm.vcxitems" Id="bf232a4e-9838-4e2a-a144-bcc9f616d646" />
   <Project Path="NekoUI/NekoUI.vcxproj" Id="9e3c3203-b1bb-4f78-8a90-f03a31b4af5a" />
 </Solution>

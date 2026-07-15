@@ -194,7 +194,7 @@ auto Backend::set_dpi(const UINT dpi) -> void {
     dpi_scale = static_cast<float>(dpi) / 96.0F;
 }
 
-auto Backend::begin(const glm::vec4 color) const -> void {
+auto Backend::begin() const -> void {
     if (ctx == nullptr || rtv == nullptr) {
         return;
     }
@@ -205,7 +205,8 @@ auto Backend::begin(const glm::vec4 color) const -> void {
     vp.MaxDepth = 1.0F;
     ctx->RSSetViewports(1, &vp);
 
-    ctx->ClearRenderTargetView(rtv, &color.r);
+    constexpr std::array color{0.0F, 0.0F, 0.0F, 0.0F};
+    ctx->ClearRenderTargetView(rtv, color.data());
 
     ctx->RSSetState(rs);
     ctx->OMSetBlendState(bs_opaque, nullptr, 0xFFFFFFFF);

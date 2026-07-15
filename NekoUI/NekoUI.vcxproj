@@ -73,9 +73,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared">
-    <Import Project="..\..\Library\glm\glm.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -209,7 +207,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NekoUI\Backend\Backend.cpp" />
-    <ClCompile Include="NekoUI\Engine\Component\ColorSeed\ColorSeed.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
@@ -217,7 +214,6 @@
   <ItemGroup>
     <ClInclude Include="NekoUI\Backend\Backend.hpp" />
     <ClInclude Include="NekoUI\Backend\stb_truetype.h" />
-    <ClInclude Include="NekoUI\Engine\Component\ColorSeed\ColorSeed.hpp" />
     <ClInclude Include="NekoUI\Engine\Component\ValueState.hpp" />
     <ClInclude Include="NekoUI\Engine\Context.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />

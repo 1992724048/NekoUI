@@ -36,7 +36,7 @@ namespace neko::backend {
             return dpi_scale;
         }
 
-        auto begin(glm::vec4 color) const -> void;
+        auto begin() const -> void;
         auto end() const -> void;
 
         auto draw_rect_fill(glm::ivec4 rect, Color color) const -> void;

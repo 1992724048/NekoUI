@@ -5,11 +5,12 @@
 
 namespace neko::keyboard {
     struct Keyboard {
+    private:
         std::array<bool, 256> down{};
         std::array<bool, 256> prev_down{};
         std::array<wchar_t, 16> chars{};
         int char_count = 0;
-
+    public:
         [[nodiscard]] auto ctrl() const -> bool {
             return down[VK_CONTROL];
         }

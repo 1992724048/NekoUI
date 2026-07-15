@@ -1,4 +1,4 @@
-// 2026-07-02 03:02:19
+// 2026-07-15 16:28:46
 
 #pragma once
 #include <Windows.h>
@@ -7,6 +7,7 @@
 
 namespace neko::mouse {
     struct Mouse {
+    private:
         glm::ivec2 pos{};
         glm::ivec2 prev_pos{};
         bool left_down = false;
@@ -17,7 +18,7 @@ namespace neko::mouse {
         bool prev_middle = false;
         int wheel_delta = 0;
         float dpi_scale_ = 1.0F;
-
+    public:
         auto set_dpi(const UINT dpi) -> void {
             dpi_scale_ = dpi / 96.0F;
         }

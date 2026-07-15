@@ -3,8 +3,13 @@
 #include "Engine.hpp"
 
 #include <cmath>
+#include <minwindef.h>
+#include <mutex>
+#include <optional>
+#include <thread>
+#include <windef.h>
 
-#include "Component/Animation.hpp"
+#include "../Widget/Widget.hpp"
 
 namespace neko::engine {
     Engine::Engine(const HWND hwnd) {
@@ -13,19 +18,14 @@ namespace neko::engine {
 
         mouse = std::make_shared<mouse::Mouse>();
         keyboard = std::make_shared<keyboard::Keyboard>();
-        scheme = std::make_shared<color::ColorScheme>();
-        *scheme = scheme->from_seed({19 / 255, 161 / 255, 14 / 255, 1});
 
         const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
 
-        context->present = std::bind(&Engine::frame, this);
-        context->mark_dirty = std::bind(&Engine::mark_dirty, this);
         context->anim_inc = std::bind(&Engine::anim_inc, this);
         context->anim_dec = std::bind(&Engine::anim_dec, this);
         context->mouse = mouse;
         context->keyboard = keyboard;
-        context->color_scheme = scheme;
 
         msg_thread = std::jthread(&Engine::msg_loop, this);
         render_thread = std::jthread(&Engine::render_loop, this);
@@ -68,9 +68,17 @@ namespace neko::engine {
         msg_notify.notify_one();
     }
 
-    auto Engine::del(widget::Widget* widget) -> bool {
+    auto Engine::del_widget(widget::Widget* widget) -> bool {
         frame();
         return true;
+    }
+
+    auto Engine::anim_inc() -> void {
+        ++animation;
+    }
+
+    auto Engine::anim_dec() -> void {
+        --animation;
     }
 
     auto Engine::render_loop() -> void {
@@ -101,7 +109,7 @@ namespace neko::engine {
             backend->resize(resize_size);
         }
 
-        backend->begin(scheme->primary);
+        backend->begin();
         const auto widget = root.load();
         if (widget) {
             widget->layout({.x = 0, .y = 0, .width = resize_size.x, .height = resize_size.y});
@@ -191,16 +199,6 @@ namespace neko::engine {
             case WM_TIMER:
                 break;
             default: ;
-        }
-    }
-
-    auto Engine::anim_inc() -> void {
-        animation.fetch_add(1, std::memory_order_relaxed);
-    }
-
-    auto Engine::anim_dec() -> void {
-        if (animation.fetch_sub(1, std::memory_order_relaxed) == 0) {
-            animation.store(0, std::memory_order_relaxed);
         }
     }
 

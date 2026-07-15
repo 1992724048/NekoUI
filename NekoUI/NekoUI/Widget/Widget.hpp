@@ -20,7 +20,6 @@ namespace neko::widget {
     class Widget {
         friend class engine::Engine;
     public:
-        ~Widget();
         explicit Widget(engine::Engine* engine);
         explicit Widget(Widget* parent);
 
@@ -36,6 +35,8 @@ namespace neko::widget {
 
         [[nodiscard]] virtual auto hit_test(const mouse::Mouse& mouse) const -> bool;
     protected:
+        ~Widget();
+
         std::atomic<Widget*> parent{};
         std::atomic<std::weak_ptr<Widget>> root{};
 
@@ -45,6 +46,7 @@ namespace neko::widget {
 
         std::atomic_bool isVisible{true};
         std::atomic_bool isFocus{true};
+        std::atomic_bool isDirty{true};
 
         std::string id;
     private:
