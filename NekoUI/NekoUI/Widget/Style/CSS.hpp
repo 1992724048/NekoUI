@@ -2,14 +2,16 @@
 #include "../../Type.hpp"
 
 namespace neko::css {
+    using namespace neko::type;
+
     struct Background {
         type::Color color;
     };
 
     struct Size {
-        glm::vec2 size;
-        glm::vec2 margin;
-        glm::vec2 padding;
+        Vec2 size;
+        Vec2 margin;
+        Vec2 padding;
     };
 
     struct Border {

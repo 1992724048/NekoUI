@@ -1,14 +1,19 @@
-// 2026-07-02 03:02:19
+// 2026-07-15 16:28:46
 
 #pragma once
 #include <Windows.h>
+#include <algorithm>
+#include <array>
 #include <span>
-#include <glm/glm.hpp>
+#include "../../Type.hpp"
 
 namespace neko::mouse {
+    using namespace neko::type;
+
     struct Mouse {
-        glm::ivec2 pos{};
-        glm::ivec2 prev_pos{};
+    private:
+        Vec2I pos{};
+        Vec2I prev_pos{};
         bool left_down = false;
         bool right_down = false;
         bool middle_down = false;
@@ -17,7 +22,7 @@ namespace neko::mouse {
         bool prev_middle = false;
         int wheel_delta = 0;
         float dpi_scale_ = 1.0F;
-
+    public:
         auto set_dpi(const UINT dpi) -> void {
             dpi_scale_ = dpi / 96.0F;
         }
@@ -42,12 +47,12 @@ namespace neko::mouse {
             return pos != prev_pos;
         }
 
-        [[nodiscard]] auto is_inside(const glm::ivec4 r) const -> bool {
+        [[nodiscard]] auto is_inside(const Vec4I r) const -> bool {
             const float s = dpi_scale_;
             return pos.x >= r.x * s && pos.x <= (r.x + r.z) * s && pos.y >= r.y * s && pos.y <= (r.y + r.w) * s;
         }
 
-        [[nodiscard]] auto is_inside_circle(const glm::ivec2 center, const int radius) const -> bool {
+        [[nodiscard]] auto is_inside_circle(const Vec2I center, const int radius) const -> bool {
             const float s = dpi_scale_;
             const float dx = static_cast<float>(pos.x) - (static_cast<float>(center.x) * s);
             const float dy = static_cast<float>(pos.y) - (static_cast<float>(center.y) * s);
@@ -55,7 +60,7 @@ namespace neko::mouse {
             return (dx * dx) + (dy * dy) <= r * r;
         }
 
-        [[nodiscard]] auto is_inside_rounded(const glm::ivec4 r, const int corner_radius) const -> bool {
+        [[nodiscard]] auto is_inside_rounded(const Vec4I r, const int corner_radius) const -> bool {
             const float s = dpi_scale_;
             const int rx = static_cast<int>(r.x * s);
             const int ry = static_cast<int>(r.y * s);
@@ -71,16 +76,16 @@ namespace neko::mouse {
                 return true;
             }
 
-            const std::array<glm::ivec2, 4> corners{glm::ivec2{rx + cr, ry + cr}, {rx + rw - cr, ry + cr}, {rx + cr, ry + rh - cr}, {rx + rw - cr, ry + rh - cr}};
+            const std::array<Vec2I, 4> corners{Vec2I{rx + cr, ry + cr}, {rx + rw - cr, ry + cr}, {rx + cr, ry + rh - cr}, {rx + rw - cr, ry + rh - cr}};
             return std::ranges::any_of(corners,
-                                       [&](const glm::ivec2 c) -> bool {
+                                       [&](const Vec2I c) -> bool {
                                            const auto dx = static_cast<float>(pos.x - c.x);
                                            const auto dy = static_cast<float>(pos.y - c.y);
                                            return (dx * dx) + (dy * dy) <= static_cast<float>(cr * cr);
                                        });
         }
 
-        [[nodiscard]] auto is_inside_polygon(const std::span<const glm::ivec2> pts) const -> bool {
+        [[nodiscard]] auto is_inside_polygon(const std::span<const Vec2I> pts) const -> bool {
             if (pts.size() < 3) {
                 return false;
             }

@@ -170,7 +170,7 @@ Backend::~Backend() {
     }
 }
 
-auto Backend::resize(const glm::ivec2 new_size) -> void {
+auto Backend::resize(const Vec2I new_size) -> void {
     if (size == new_size) {
         return;
     }
@@ -194,7 +194,10 @@ auto Backend::set_dpi(const UINT dpi) -> void {
     dpi_scale = static_cast<float>(dpi) / 96.0F;
 }
 
-auto Backend::begin(const glm::vec4 color) const -> void {
+auto Backend::begin() const -> void {
+    if (ctx == nullptr || rtv == nullptr) {
+        return;
+    }
     ctx->OMSetRenderTargets(1, &rtv, nullptr);
     D3D11_VIEWPORT vp{};
     vp.Width = static_cast<float>(size.x);
@@ -202,7 +205,8 @@ auto Backend::begin(const glm::vec4 color) const -> void {
     vp.MaxDepth = 1.0F;
     ctx->RSSetViewports(1, &vp);
 
-    ctx->ClearRenderTargetView(rtv, &color.r);
+    constexpr std::array color{0.0F, 0.0F, 0.0F, 0.0F};
+    ctx->ClearRenderTargetView(rtv, color.data());
 
     ctx->RSSetState(rs);
     ctx->OMSetBlendState(bs_opaque, nullptr, 0xFFFFFFFF);
@@ -214,11 +218,14 @@ auto Backend::begin(const glm::vec4 color) const -> void {
 }
 
 auto Backend::end() const -> void {
+    if (swap_chain == nullptr) {
+        return;
+    }
     swap_chain->Present(1, 0);
 }
 
-auto Backend::draw_rect_fill(const glm::ivec4 rect, const Color color) const -> void {
-    if (cbuffer == nullptr) {
+auto Backend::draw_rect_fill(const Vec4I rect, const Color color) const -> void {
+    if (ctx == nullptr || cbuffer == nullptr) {
         return;
     }
     struct RectData {
@@ -226,18 +233,16 @@ auto Backend::draw_rect_fill(const glm::ivec4 rect, const Color color) const -> 
         float c_r, c_g, c_b, c_a;
         float s_w, s_h;
         float p0, p1;
-    } const data{
-        .r_x = static_cast<float>(rect.x) * dpi_scale,
-        .r_y = static_cast<float>(rect.y) * dpi_scale,
-        .r_w = static_cast<float>(rect.z) * dpi_scale,
-        .r_h = static_cast<float>(rect.w) * dpi_scale,
-        .c_r = color.r / 255.0F,
-        .c_g = color.g / 255.0F,
-        .c_b = color.b / 255.0F,
-        .c_a = color.a / 255.0F,
-        .s_w = static_cast<float>(size.x),
-        .s_h = static_cast<float>(size.y),
-    };
+    } const data{.r_x = static_cast<float>(rect.x) * dpi_scale,
+                 .r_y = static_cast<float>(rect.y) * dpi_scale,
+                 .r_w = static_cast<float>(rect.z) * dpi_scale,
+                 .r_h = static_cast<float>(rect.w) * dpi_scale,
+                 .c_r = color.r() / 255.0F,
+                 .c_g = color.g() / 255.0F,
+                 .c_b = color.b() / 255.0F,
+                 .c_a = color.a() / 255.0F,
+                 .s_w = static_cast<float>(size.x),
+                 .s_h = static_cast<float>(size.y),};
 
     D3D11_MAPPED_SUBRESOURCE mapped{};
     if (FAILED(ctx->Map(cbuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
@@ -248,15 +253,15 @@ auto Backend::draw_rect_fill(const glm::ivec4 rect, const Color color) const -> 
     ctx->Draw(6, 0);
 }
 
-auto Backend::draw_rect(const glm::ivec4 rect, const Color color, const int thickness) const -> void {
+auto Backend::draw_rect(const Vec4I rect, const Color color, const int thickness) const -> void {
     draw_rect_fill({rect.x, rect.y, rect.z, thickness}, color);
     draw_rect_fill({rect.x, rect.y + rect.w - thickness, rect.z, thickness}, color);
     draw_rect_fill({rect.x, rect.y + thickness, thickness, rect.w - (thickness * 2)}, color);
     draw_rect_fill({rect.x + rect.z - thickness, rect.y + thickness, thickness, rect.w - (thickness * 2)}, color);
 }
 
-auto Backend::draw_line(const glm::ivec2 from, const glm::ivec2 to, const Color color, const int thickness) const -> void {
-    const glm::ivec2 d = to - from;
+auto Backend::draw_line(const Vec2I from, const Vec2I to, const Color color, const int thickness) const -> void {
+    const Vec2I d = to - from;
     if (std::abs(d.x) >= std::abs(d.y)) {
         draw_rect_fill({std::min(from.x, to.x), from.y - (thickness / 2), std::abs(d.x) + thickness, thickness}, color);
     } else {
@@ -264,12 +269,12 @@ auto Backend::draw_line(const glm::ivec2 from, const glm::ivec2 to, const Color 
     }
 }
 
-auto Backend::draw_circle_fill(const glm::ivec2 center, const int radius, const Color color) const -> void {
+auto Backend::draw_circle_fill(const Vec2I center, const int radius, const Color color) const -> void {
     draw_rect_fill({center.x - radius, center.y - radius, radius * 2, radius * 2}, color);
 }
 
-auto Backend::draw_text(const std::string_view text, const glm::ivec2 pos, const Color color, const float font_size) -> void {
-    if (text.empty() || text_cb == nullptr || font_srv == nullptr) {
+auto Backend::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) -> void {
+    if (ctx == nullptr || text_cb == nullptr || font_srv == nullptr) {
         return;
     }
 
@@ -282,10 +287,10 @@ auto Backend::draw_text(const std::string_view text, const glm::ivec2 pos, const
     ctx->OMSetBlendState(bs_alpha, nullptr, 0xFFFFFFFF);
 
     TextCB cb{};
-    cb.c_r = color.r / 255.0F;
-    cb.c_g = color.g / 255.0F;
-    cb.c_b = color.b / 255.0F;
-    cb.c_a = color.a / 255.0F;
+    cb.c_r = color.r() / 255.0F;
+    cb.c_g = color.g() / 255.0F;
+    cb.c_b = color.b() / 255.0F;
+    cb.c_a = color.a() / 255.0F;
     cb.s_w = static_cast<float>(size.x);
     cb.s_h = static_cast<float>(size.y);
 
@@ -376,9 +381,19 @@ auto Backend::init_device(const HWND hwnd) -> bool {
     constexpr std::array levels{D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0,};
     ID3D11Device* device_raw{};
     ID3D11DeviceContext* ctx_raw{};
-    if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels.data(), levels.size(), D3D11_SDK_VERSION, &device_raw, nullptr, &ctx_raw))) {
-        std::println(stderr, "[NekoUI] DX11 device init failed");
-        return false;
+    HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels.data(), levels.size(), D3D11_SDK_VERSION, &device_raw, nullptr, &ctx_raw);
+    if (FAILED(hr)) {
+        #ifdef _DEBUG
+        if ((hr == DXGI_ERROR_SDK_COMPONENT_MISSING) || (hr == E_INVALIDARG)) {
+            std::println(stderr, "[NekoUI] DX11 debug layer not available, retrying without debug flag");
+            flags &= ~D3D11_CREATE_DEVICE_DEBUG;
+            hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels.data(), levels.size(), D3D11_SDK_VERSION, &device_raw, nullptr, &ctx_raw);
+        }
+        #endif
+        if (FAILED(hr)) {
+            std::println(stderr, "[NekoUI] DX11 device init failed");
+            return false;
+        }
     }
     device_raw->QueryInterface(&device);
     ctx_raw->QueryInterface(&ctx);

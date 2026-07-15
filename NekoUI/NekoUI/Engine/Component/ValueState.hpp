@@ -1,23 +1,32 @@
 ﻿#pragma once
 #include <algorithm>
+#include <atomic>
 #include <functional>
 #include <utility>
 
 namespace neko::state {
-    template<typename T>
-    class ValueState {
-        T value;
+    class ValueStateBase {
+    protected:
         std::function<void()> mark_dirty;
     public:
-        auto operator()(std::function<void()> mark_dirty) -> void {
-            this->mark_dirty = std::move(mark_dirty);
+        auto bind(const std::function<void()>& dirty) -> void {
+            mark_dirty = dirty;
+        }
+    };
+
+    template<typename T>
+    class ValueState : public ValueStateBase {
+        T value;
+    public:
+        auto operator()(std::function<void()> callback) -> void {
+            this->mark_dirty = callback;
         }
 
         auto ref() -> T& {
             return value;
         }
 
-        operator T() {
+        explicit operator T() {
             return ref();
         }
 

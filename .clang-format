@@ -31,10 +31,9 @@ BraceWrapping:
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
 BreakBeforeBraces: Custom
-BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: AfterColon
 BreakConstructorInitializersBeforeComma: false
-ColumnLimit: 200
+ColumnLimit: 220
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ContinuationIndentWidth: 8
 EmptyLineBeforeAccessModifier: Never
@@ -60,5 +59,11 @@ SpacesInAngles: false
 SpacesInConditionalStatement: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
+TabWidth: 4
+---
+Language: JavaScript
+BasedOnStyle: LLVM
+ColumnLimit: 120
+IndentWidth: 4
 TabWidth: 4
 ...
