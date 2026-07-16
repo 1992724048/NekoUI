@@ -15,14 +15,11 @@ namespace neko::platform {
         uint32_t dpi;
     };
 
-    enum class ThemeMode : uint8_t {
-        Light,
-        Dark,
-    };
+    enum class ThemeMode : uint8_t { Light, Dark, };
 
     struct ThemeChangedEvent {
         ThemeMode mode;
-        uint32_t color; // ARGB accent color
+        uint32_t color;
     };
 
     struct DestroyEvent {};

@@ -1,6 +1,7 @@
 #include "Win32.hpp"
 #ifdef _WIN32
 #include <dwmapi.h>
+#include <string_view>
 #pragma comment(lib, "dwmapi.lib")
 
 namespace {
@@ -50,7 +51,6 @@ namespace neko::platform {
                 return device::MouseButtonEvent{.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam)), .button = device::MouseButton::Middle, .pressed = false,};
             case WM_MOUSEWHEEL:
                 return device::MouseWheelEvent{.delta = GET_WHEEL_DELTA_WPARAM(wparam),};
-
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
                 return device::KeyEvent{.key = static_cast<int>(wparam), .pressed = true,};
@@ -59,23 +59,18 @@ namespace neko::platform {
                 return device::KeyEvent{.key = static_cast<int>(wparam), .pressed = false,};
             case WM_CHAR:
                 return device::CharEvent{.ch = static_cast<wchar_t>(wparam),};
-
             case WM_SIZE:
                 return ResizeEvent{.width = static_cast<int>(LOWORD(lparam)), .height = static_cast<int>(HIWORD(lparam)),};
-
             case WM_DPICHANGED:
                 return DpiChangeEvent{.dpi = static_cast<uint32_t>(LOWORD(wparam)),};
-
             case WM_DESTROY:
                 return DestroyEvent{};
-
             case WM_SETTINGCHANGE: {
-                if (lparam != 0 && wcscmp(reinterpret_cast<const wchar_t*>(lparam), L"ImmersiveColorSet") == 0) {
+                if (lparam != 0 && std::wstring_view{reinterpret_cast<const wchar_t*>(lparam)} == L"ImmersiveColorSet") {
                     return query_theme();
                 }
                 return std::nullopt;
             }
-
             default:
                 return std::nullopt;
         }

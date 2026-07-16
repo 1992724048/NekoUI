@@ -54,12 +54,12 @@ namespace neko::engine {
                        [&](const platform::DpiChangeEvent& e) -> void {
                            handle_dpi_change(e);
                        },
-                        [&](const platform::ThemeChangedEvent& e) -> void {
-                            handle_theme_change(e);
-                        },
-                        [&](const platform::DestroyEvent&) -> void {
-                            handle_destroy();
-                        },
+                       [&](const platform::ThemeChangedEvent& e) -> void {
+                           handle_theme_change(e);
+                       },
+                       [&](const platform::DestroyEvent&) -> void {
+                           handle_destroy();
+                       },
                    },
                    event);
 
@@ -70,9 +70,7 @@ namespace neko::engine {
 
     auto EventRouter::handle_input(const platform::Event& event) const -> void {
         const auto root = tree_.get_root();
-        if (!root) {
-            return;
-        }
+        if (!root) {}
     }
 
     auto EventRouter::handle_resize(const platform::ResizeEvent& e) const -> void {
