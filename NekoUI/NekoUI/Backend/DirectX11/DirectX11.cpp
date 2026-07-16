@@ -1,6 +1,4 @@
-// 2026-07-16 03:12:05
-// Adapted from Backend.cpp — DX11 implementation moved into DirectX11 class
-
+#ifdef _WIN32
 #include "DirectX11.hpp"
 
 #include <array>
@@ -580,4 +578,5 @@ namespace neko::backend {
         device_->CreateSamplerState(&sm, &font_sampler_);
         return true;
     }
-}
+} // namespace neko::backend
+#endif

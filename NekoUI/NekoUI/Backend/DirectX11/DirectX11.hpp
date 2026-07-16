@@ -1,4 +1,5 @@
 #pragma once
+#ifdef _WIN32
 #include <DirectXMath.h>
 #include <Windows.h>
 #include <d3d11.h>
@@ -76,3 +77,4 @@ namespace neko::backend {
         std::unordered_map<int, stbtt_packedchar> cjk_glyphs_{};
     };
 }
+#endif
