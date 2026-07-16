@@ -15,20 +15,23 @@
 #include "../Engine/Context.hpp"
 #include "../Platform/Event.hpp"
 
+#include <numbers>
+
 namespace neko::widget {
     using namespace neko::type;
 
     struct Constraints {
         int x = 0, y = 0;
-        int width = INT_MAX;
-        int height = INT_MAX;
+        int width = std::numeric_limits<int>::max();
+        int height = std::numeric_limits<int>::max();
     };
 
     class Widget {
     public:
         auto draw(engine::Context& context, backend::Backend& backend) -> void;
+        auto create(engine::Context& context) -> void;
+        auto update(engine::Context& context) -> void;
         auto layout(Constraints constraints) -> void;
-        virtual auto raw_event(engine::Context& context, const platform::Event& event) -> bool;
 
         [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool;
 
@@ -59,9 +62,6 @@ namespace neko::widget {
 
         mutable std::shared_mutex mutex_{};
         std::vector<std::shared_ptr<Widget>> children_{};
-
-        std::atomic<Widget*> parent{};
-        std::atomic<std::weak_ptr<Widget>> root{};
 
         Vec4I bounds{};
 

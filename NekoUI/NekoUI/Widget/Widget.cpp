@@ -19,16 +19,6 @@ namespace neko::widget {
         }
     }
 
-    auto Widget::raw_event(engine::Context& context, const platform::Event& event) -> bool {
-        std::shared_lock lock(mutex_);
-        for (auto it = children_.rbegin(); it != children_.rend(); ++it) {
-            if ((*it)->raw_event(context, event)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     auto Widget::hit_test(const device::Mouse& mouse) const -> bool {
         std::shared_lock lock(mutex_);
         if (mouse.is_inside(bounds)) {

@@ -1,12 +1,10 @@
 #pragma once
 
 #include <atomic>
-#include <list>
 #include <map>
 #include <memory>
 #include <shared_mutex>
 #include <string>
-#include <variant>
 #include <vector>
 
 #include "MutableWidget.hpp"

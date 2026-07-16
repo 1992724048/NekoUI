@@ -6,9 +6,7 @@
 #include "WidgetTree.hpp"
 
 #include <cmath>
-#include <mutex>
 #include <optional>
-#include <thread>
 
 #include "../Widget/Widget.hpp"
 
