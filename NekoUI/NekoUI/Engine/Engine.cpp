@@ -8,23 +8,12 @@
 #include <cmath>
 #include <optional>
 
-#include "../Platform/Platform.hpp"
-#include "../Style/ColorScheme.hpp"
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {
     Engine::Engine(std::unique_ptr<backend::Backend> backend) :
         backend{std::move(backend)} {
         context = std::make_unique<Context>();
-
-        // Initialise ColorScheme from the current system theme before any
-        // WM_SETTINGCHANGE arrives.
-        {
-            const auto theme = platform::Platform::instance().query_theme();
-            context->scheme = (theme.mode == platform::ThemeMode::Dark)
-                ? style::ColorScheme::dark(theme.color)
-                : style::ColorScheme::light(theme.color);
-        }
 
         mouse = std::make_shared<device::Mouse>();
         keyboard = std::make_shared<device::Keyboard>();

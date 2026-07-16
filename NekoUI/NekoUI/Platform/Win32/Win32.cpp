@@ -67,6 +67,8 @@ namespace neko::platform {
                 return ResizeEvent{.width = static_cast<int>(LOWORD(lparam)), .height = static_cast<int>(HIWORD(lparam)),};
             case WM_DPICHANGED:
                 return DpiChangeEvent{.dpi = static_cast<uint32_t>(LOWORD(wparam)),};
+            case WM_CREATE:
+                return this->query_theme();
             case WM_DESTROY:
                 return DestroyEvent{};
             case WM_SETTINGCHANGE: {
