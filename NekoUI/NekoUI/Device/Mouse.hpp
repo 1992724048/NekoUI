@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <span>
-#include "../../Type.hpp"
+#include "../Type.hpp"
 
 namespace neko::device {
     using namespace neko::type;

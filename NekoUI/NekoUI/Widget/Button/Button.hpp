@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include "../../Engine/Component/Animation.hpp"
+#include "../../Component/Animation.hpp"
 
 namespace neko::widget {
     class Button final : public Widget {

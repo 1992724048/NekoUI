@@ -14,8 +14,8 @@
 
 #include "../Widget/Widget.hpp"
 
-#include "Device/keyboard.hpp"
-#include "Device/mouse.hpp"
+#include "../Device/keyboard.hpp"
+#include "../Device/mouse.hpp"
 
 namespace neko::engine {
     Engine::Engine(const HWND hwnd) {

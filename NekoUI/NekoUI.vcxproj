@@ -207,9 +207,11 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NekoUI\Backend\Backend.cpp" />
+    <ClCompile Include="NekoUI\Backend\DirectX11\DirectX11.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
     <ClCompile Include="NekoUI\Engine\EventRouter.cpp" />
     <ClCompile Include="NekoUI\Engine\InvalidationTracker.cpp" />
+    <ClCompile Include="NekoUI\Platform\Win32\Win32.cpp" />
     <ClCompile Include="NekoUI\Engine\WidgetTree.cpp" />
     <ClCompile Include="NekoUI\Engine\RenderScheduler.cpp" />
     <ClCompile Include="NekoUI\Engine\MsgPump.cpp" />
@@ -218,22 +220,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NekoUI\Backend\Backend.hpp" />
+    <ClInclude Include="NekoUI\Backend\DirectX11\DirectX11.hpp" />
     <ClInclude Include="NekoUI\Backend\stb_truetype.h" />
-    <ClInclude Include="NekoUI\Engine\Component\ValueState.hpp" />
+    <ClInclude Include="NekoUI\Component\ValueState.hpp" />
     <ClInclude Include="NekoUI\Engine\Context.hpp" />
     <ClInclude Include="NekoUI\Engine\EventRouter.hpp" />
     <ClInclude Include="NekoUI\Engine\InvalidationTracker.hpp" />
     <ClInclude Include="NekoUI\Engine\MutableWidget.hpp" />
+    <ClInclude Include="NekoUI\NekoUI.hpp" />
+    <ClInclude Include="NekoUI\Platform\Win32\Win32.hpp" />
     <ClInclude Include="NekoUI\Engine\WidgetTree.hpp" />
     <ClInclude Include="NekoUI\Engine\RenderScheduler.hpp" />
     <ClInclude Include="NekoUI\Engine\MsgPump.hpp" />
-    <ClInclude Include="NekoUI\Engine\Platform\Platform.hpp" />
+    <ClInclude Include="NekoUI\Platform\Platform.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />
-    <ClInclude Include="NekoUI\Engine\Component\Animation.hpp" />
+    <ClInclude Include="NekoUI\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />
     <ClInclude Include="NekoUI\Widget\Style\CSS.hpp" />
-    <ClInclude Include="NekoUI\Engine\Device\keyboard.hpp" />
-    <ClInclude Include="NekoUI\Engine\Device\mouse.hpp" />
+    <ClInclude Include="NekoUI\Device\keyboard.hpp" />
+    <ClInclude Include="NekoUI\Device\mouse.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>

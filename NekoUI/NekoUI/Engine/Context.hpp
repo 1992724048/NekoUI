@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "Device/Keyboard.hpp"
-#include "Device/mouse.hpp"
+#include "../Device/Keyboard.hpp"
+#include "../Device/mouse.hpp"
 
 namespace neko::backend {
     class Backend;

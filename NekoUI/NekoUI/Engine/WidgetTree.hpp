@@ -31,7 +31,9 @@ namespace neko::engine {
 
         auto clear() -> void;
     private:
-        std::list<MutableWidget> widgets;
+        std::vector<MutableWidget> widgets;
+
+        std::atomic_int index_count{0};
 
         std::atomic<std::shared_ptr<widget::Widget>> root_;
         std::atomic<std::weak_ptr<widget::Widget>> focused_;
