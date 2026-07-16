@@ -6,6 +6,7 @@
 
 namespace neko::platform {
     struct NativeMessage;
+    struct NativeWindow;
 
     class Platform {
     public:
@@ -25,7 +26,7 @@ namespace neko::platform {
             return {.mode = ThemeMode::Light, .color = type::Color{.value = 0}};
         }
 
-        [[nodiscard]] virtual auto activate_ime(void* native_window, bool active) const -> bool {
+        [[nodiscard]] virtual auto activate_ime(const NativeWindow& native_window, bool active) const -> bool {
             return false;
         }
 

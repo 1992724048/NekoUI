@@ -117,7 +117,7 @@ namespace neko::platform {
         ime_thread_mgr_->CreateDocumentMgr(&ime_doc_mgr_);
     }
 
-    auto Win32::activate_ime(void* native_window, bool active) const -> bool {
+    auto Win32::activate_ime(const NativeWindow& native_window, bool active) const -> bool {
         init_ime();
         if (!ime_thread_mgr_) { return false; }
 
