@@ -29,6 +29,10 @@ namespace neko::platform {
 
     Win32::Win32() = default;
 
+    auto Win32::query_theme() const -> ThemeChangedEvent {
+        return ::query_theme();
+    }
+
     auto Win32::translate_event(const NativeMessage& nm) const -> std::optional<Event> {
         const UINT msg = nm.msg;
         const WPARAM wparam = nm.wparam;

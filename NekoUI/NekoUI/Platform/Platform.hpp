@@ -21,6 +21,10 @@ namespace neko::platform {
             return std::nullopt;
         }
 
+        [[nodiscard]] virtual auto query_theme() const -> ThemeChangedEvent {
+            return {.mode = ThemeMode::Light, .color = type::Color{.value = 0}};
+        }
+
         static auto instance() -> const Platform& {
             return *platform;
         }

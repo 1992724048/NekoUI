@@ -88,9 +88,7 @@ namespace neko::engine {
     }
 
     auto EventRouter::handle_theme_change(const platform::ThemeChangedEvent& e) const -> void {
-        context_.scheme = (e.mode == platform::ThemeMode::Dark)
-            ? style::ColorScheme::dark(e.color)
-            : style::ColorScheme::light(e.color);
+        context_.scheme = (e.mode == platform::ThemeMode::Dark) ? style::ColorScheme::dark(e.color) : style::ColorScheme::light(e.color);
         invalidation_.mark_dirty();
     }
 

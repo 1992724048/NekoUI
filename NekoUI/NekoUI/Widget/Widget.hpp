@@ -29,7 +29,7 @@ namespace neko::widget {
     class Widget {
     public:
         auto draw(engine::Context& context, backend::Backend& backend) -> void;
-        auto create(engine::Context& context) -> void;
+        auto build(engine::Context& context) -> void;
         auto update(engine::Context& context) -> void;
         auto layout(Constraints constraints) -> void;
 
