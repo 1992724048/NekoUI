@@ -42,6 +42,10 @@ namespace neko::type {
             struct {
                 T r, g, b, a;
             };
+
+            struct {
+                T x, y, width, height;
+            };
         };
 
         constexpr auto operator==(const Vec&) const -> bool = default;

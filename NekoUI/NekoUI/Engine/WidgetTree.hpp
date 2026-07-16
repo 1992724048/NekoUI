@@ -24,10 +24,8 @@ namespace neko::engine {
         auto set_focus(std::weak_ptr<widget::Widget> w) -> void;
         auto get_focus() const -> std::weak_ptr<widget::Widget>;
 
-        auto register_widget(const std::weak_ptr<widget::Widget>& w) -> void;
-        auto unregister_widget(const std::weak_ptr<widget::Widget>& w) -> void;
-
         auto clear() -> void;
+        auto build() -> void;
     private:
         std::vector<MutableWidget> widgets;
 
@@ -37,6 +35,6 @@ namespace neko::engine {
         std::atomic<std::weak_ptr<widget::Widget>> focused_;
 
         std::map<std::string, std::weak_ptr<widget::Widget>> id_widgets_;
-        mutable std::shared_mutex id_map_mutex_;
+        mutable std::shared_mutex mutex_;
     };
 }

@@ -32,6 +32,19 @@ namespace neko::platform {
         cached_theme_ = ::query_theme();
     }
 
+    Win32::~Win32() {
+        if (ime_doc_mgr_) {
+            ime_doc_mgr_->Release();
+        }
+        if (ime_thread_mgr_) {
+            ime_thread_mgr_->Deactivate();
+            ime_thread_mgr_->Release();
+        }
+        if (ime_com_initialized_) {
+            CoUninitialize();
+        }
+    }
+
     auto Win32::translate_event(const NativeMessage& nm) const -> std::optional<Event> {
         const UINT msg = nm.msg;
         const WPARAM wparam = nm.wparam;
@@ -86,17 +99,62 @@ namespace neko::platform {
         return cached_theme_;
     }
 
-    Win32::~Win32() {
-        if (ime_doc_mgr_) {
-            ime_doc_mgr_->Release();
+    auto Win32::activate_ime(type::Handle native_window, const bool active) const -> bool {
+        init_ime();
+        if (!ime_thread_mgr_ || !ime_doc_mgr_) {
+            return false;
         }
-        if (ime_thread_mgr_) {
-            ime_thread_mgr_->Deactivate();
-            ime_thread_mgr_->Release();
-        }
-        if (ime_com_initialized_) {
-            CoUninitialize();
-        }
+
+        ime_thread_mgr_->SetFocus(active ? ime_doc_mgr_ : nullptr);
+        return true;
+    }
+
+    auto Win32::show_window(const type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_SHOW);
+    }
+
+    auto Win32::hide_window(const type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_HIDE);
+    }
+
+    auto Win32::close_window(const type::Handle native_window) const -> void {
+        PostMessageW(static_cast<HWND>(native_window), WM_CLOSE, 0, 0);
+    }
+
+    auto Win32::maximize_window(const type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_MAXIMIZE);
+    }
+
+    auto Win32::minimize_window(const type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_MINIMIZE);
+    }
+
+    auto Win32::restore_window(const type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_RESTORE);
+    }
+
+    auto Win32::destroy_window(const type::Handle native_window) const -> void {
+        DestroyWindow(static_cast<HWND>(native_window));
+    }
+
+    auto Win32::move_window(const type::Handle native_window, const int x, const int y) const -> void {
+        SetWindowPos(static_cast<HWND>(native_window), nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    }
+
+    auto Win32::resize_window(const type::Handle native_window, const int width, const int height) const -> void {
+        SetWindowPos(static_cast<HWND>(native_window), nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+    }
+
+    auto Win32::set_focus(const type::Handle native_window) const -> void {
+        SetFocus(static_cast<HWND>(native_window));
+    }
+
+    auto Win32::set_opacity(const type::Handle native_window, const float opacity) const -> void {
+        const auto hwnd = static_cast<HWND>(native_window);
+        const auto ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+        SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED);
+        const auto alpha = static_cast<BYTE>(std::clamp(opacity, 0.0F, 1.0F) * 255.0F);
+        SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA);
     }
 
     auto Win32::init_ime() const -> void {
@@ -124,64 +182,6 @@ namespace neko::platform {
             ime_doc_mgr_->Push(context);
             context->Release();
         }
-    }
-
-    auto Win32::show_window(type::Handle native_window) const -> void {
-        ShowWindow(static_cast<HWND>(native_window), SW_SHOW);
-    }
-
-    auto Win32::hide_window(type::Handle native_window) const -> void {
-        ShowWindow(static_cast<HWND>(native_window), SW_HIDE);
-    }
-
-    auto Win32::close_window(type::Handle native_window) const -> void {
-        PostMessageW(static_cast<HWND>(native_window), WM_CLOSE, 0, 0);
-    }
-
-    auto Win32::maximize_window(type::Handle native_window) const -> void {
-        ShowWindow(static_cast<HWND>(native_window), SW_MAXIMIZE);
-    }
-
-    auto Win32::minimize_window(type::Handle native_window) const -> void {
-        ShowWindow(static_cast<HWND>(native_window), SW_MINIMIZE);
-    }
-
-    auto Win32::restore_window(type::Handle native_window) const -> void {
-        ShowWindow(static_cast<HWND>(native_window), SW_RESTORE);
-    }
-
-    auto Win32::destroy_window(type::Handle native_window) const -> void {
-        DestroyWindow(static_cast<HWND>(native_window));
-    }
-
-    auto Win32::move_window(type::Handle native_window, int x, int y) const -> void {
-        SetWindowPos(static_cast<HWND>(native_window), nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-    }
-
-    auto Win32::resize_window(type::Handle native_window, int width, int height) const -> void {
-        SetWindowPos(static_cast<HWND>(native_window), nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
-    }
-
-    auto Win32::set_focus(const type::Handle native_window) const -> void {
-        SetFocus(static_cast<HWND>(native_window));
-    }
-
-    auto Win32::set_opacity(const type::Handle native_window, const float opacity) const -> void {
-        const auto hwnd = static_cast<HWND>(native_window);
-        const auto ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
-        SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED);
-        const auto alpha = static_cast<BYTE>(std::clamp(opacity, 0.0f, 1.0f) * 255.0f);
-        SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA);
-    }
-
-    auto Win32::activate_ime(type::Handle native_window, bool active) const -> bool {
-        init_ime();
-        if (!ime_thread_mgr_ || !ime_doc_mgr_) {
-            return false;
-        }
-
-        ime_thread_mgr_->SetFocus(active ? ime_doc_mgr_ : nullptr);
-        return true;
     }
 }
 #endif
