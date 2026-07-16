@@ -16,7 +16,7 @@
 namespace neko::backend {
     class DirectX11 final : public Backend {
     public:
-        DirectX11(ID3D11Device* device, ID3D11DeviceContext* ctx, HWND hwnd);
+        explicit DirectX11(HWND hwnd);
         ~DirectX11() override;
 
         auto resize(Vec2I new_size) -> void override;
@@ -46,6 +46,7 @@ namespace neko::backend {
             float p0, p1;
         };
 
+        auto init_device() -> void;
         auto init_swap_chain(HWND hwnd) -> void;
         auto init_shaders() -> bool;
         auto init_states() -> bool;

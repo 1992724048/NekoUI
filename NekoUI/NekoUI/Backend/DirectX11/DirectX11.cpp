@@ -108,11 +108,8 @@ namespace {
 }
 
 namespace neko::backend {
-    DirectX11::DirectX11(ID3D11Device* device, ID3D11DeviceContext* ctx, const HWND hwnd) :
-        device_(device),
-        ctx_(ctx) {
-        device_->AddRef();
-        ctx_->AddRef();
+    DirectX11::DirectX11(const HWND hwnd) {
+        init_device();
         init_swap_chain(hwnd);
         init_shaders();
         init_states();
@@ -376,6 +373,18 @@ namespace neko::backend {
         ctx_->PSSetShaderResources(0, 0, nullptr);
         ctx_->VSSetConstantBuffers(0, 1, &cbuffer_);
         ctx_->OMSetBlendState(bs_opaque_, nullptr, 0xFFFFFFFF);
+    }
+
+    auto DirectX11::init_device() -> void {
+        UINT create_flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+        #ifdef _DEBUG
+        create_flags |= D3D11_CREATE_DEVICE_DEBUG;
+        #endif
+        D3D_FEATURE_LEVEL feature_level{};
+        if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flags,
+            nullptr, 0, D3D11_SDK_VERSION, &device_, &feature_level, &ctx_))) {
+            std::println(stderr, "[NekoUI] D3D11CreateDevice failed");
+        }
     }
 
     auto DirectX11::init_swap_chain(const HWND hwnd) -> void {

@@ -3,7 +3,6 @@
 #include <print>
 #include <string>
 
-#include <d3d11.h>
 #include "NekoUI/Type.hpp"
 #include "NekoUI/Backend/DirectX11/DirectX11.hpp"
 #include "NekoUI/Engine/Engine.hpp"
@@ -65,19 +64,7 @@ auto main(int argc, char* argv[]) -> int try {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    ID3D11Device* device{};
-    ID3D11DeviceContext* ctx{};
-    UINT create_flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-    #ifdef _DEBUG
-    create_flags |= D3D11_CREATE_DEVICE_DEBUG;
-    #endif
-    D3D_FEATURE_LEVEL feature_level{};
-    if (FAILED(D3D11CreateDevice( nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flags, nullptr, 0, D3D11_SDK_VERSION, &device, &feature_level, &ctx ))) {
-        std::println("Error: D3D11CreateDevice failed");
-        return 0;
-    }
-
-    auto directx11 = std::make_unique<neko::backend::DirectX11>(device, ctx, hwnd);
+    auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
     [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");
