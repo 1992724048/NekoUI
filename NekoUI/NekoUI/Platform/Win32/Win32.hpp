@@ -19,7 +19,9 @@ namespace neko::platform {
         Win32();
         [[nodiscard]] auto translate_event(const NativeMessage& nm) const -> std::optional<Event> override;
         [[nodiscard]] auto query_theme() const -> ThemeChangedEvent override;
-
+    private:
+        mutable ThemeChangedEvent cached_theme_{};
+    public:
         static auto handle_message(const UINT msg, const WPARAM wparam, const LPARAM lparam, const std::weak_ptr<engine::MsgPump>& pump) -> bool {
             if (const auto p = pump.lock()) {
                 const NativeMessage native{.msg = msg, .wparam = wparam, .lparam = lparam};

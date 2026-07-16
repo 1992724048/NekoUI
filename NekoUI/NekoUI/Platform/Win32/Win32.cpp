@@ -27,10 +27,8 @@ namespace {
 namespace neko::platform {
     NEKO_REGISTER_PLATFORM(Win32)
 
-    Win32::Win32() = default;
-
-    auto Win32::query_theme() const -> ThemeChangedEvent {
-        return ::query_theme();
+    Win32::Win32() {
+        cached_theme_ = ::query_theme();
     }
 
     auto Win32::translate_event(const NativeMessage& nm) const -> std::optional<Event> {
@@ -73,13 +71,18 @@ namespace neko::platform {
                 return DestroyEvent{};
             case WM_SETTINGCHANGE: {
                 if (lparam != 0 && std::wstring_view{reinterpret_cast<const wchar_t*>(lparam)} == L"ImmersiveColorSet") {
-                    return query_theme();
+                    cached_theme_ = ::query_theme();
+                    return cached_theme_;
                 }
                 return std::nullopt;
             }
             default:
                 return std::nullopt;
         }
+    }
+
+    auto Win32::query_theme() const -> ThemeChangedEvent {
+        return cached_theme_;
     }
 }
 #endif
