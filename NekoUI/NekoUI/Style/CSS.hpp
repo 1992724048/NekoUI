@@ -5,7 +5,7 @@ namespace neko::style {
     using namespace neko::type;
 
     struct Background {
-        type::Color color;
+        Color color;
     };
 
     struct Size {
@@ -16,6 +16,6 @@ namespace neko::style {
 
     struct Border {
         float size;
-        type::Color color;
+        Color color;
     };
 } // namespace neko::css
