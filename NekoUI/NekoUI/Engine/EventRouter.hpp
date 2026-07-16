@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "../Platform/Platform.hpp"
@@ -7,7 +8,6 @@
 namespace neko::engine {
     class WidgetTree;
     class RenderScheduler;
-    class MsgPump;
     class InvalidationTracker;
     struct Context;
 }
@@ -24,7 +24,7 @@ namespace neko::backend {
 namespace neko::engine {
     class EventRouter {
     public:
-        EventRouter(WidgetTree& tree, device::Mouse& mouse, device::Keyboard& keyboard, Context& context, backend::Backend& backend, const std::shared_ptr<RenderScheduler>& scheduler, const std::shared_ptr<MsgPump>& msg_pump, InvalidationTracker& invalidation);
+        EventRouter(WidgetTree& tree, device::Mouse& mouse, device::Keyboard& keyboard, Context& context, backend::Backend& backend, const std::shared_ptr<RenderScheduler>& scheduler, std::function<void()> destroy_handler, InvalidationTracker& invalidation);
 
         auto dispatch(const platform::Event& event) const -> void;
     private:
@@ -39,7 +39,7 @@ namespace neko::engine {
         Context& context_;
         backend::Backend& backend_;
         std::weak_ptr<RenderScheduler> scheduler_;
-        std::weak_ptr<MsgPump> msg_pump_;
+        std::function<void()> destroy_handler_;
         InvalidationTracker& invalidation_;
     };
 }
