@@ -228,6 +228,7 @@
     <ClInclude Include="NekoUI\Engine\InvalidationTracker.hpp" />
     <ClInclude Include="NekoUI\Engine\MutableWidget.hpp" />
     <ClInclude Include="NekoUI\NekoUI.hpp" />
+    <ClInclude Include="NekoUI\Platform\Event.hpp" />
     <ClInclude Include="NekoUI\Platform\Win32\Win32.hpp" />
     <ClInclude Include="NekoUI\Engine\WidgetTree.hpp" />
     <ClInclude Include="NekoUI\Engine\RenderScheduler.hpp" />
@@ -236,7 +237,7 @@
     <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />
-    <ClInclude Include="NekoUI\Widget\Style\CSS.hpp" />
+    <ClInclude Include="NekoUI\Style\CSS.hpp" />
     <ClInclude Include="NekoUI\Device\keyboard.hpp" />
     <ClInclude Include="NekoUI\Device\mouse.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />

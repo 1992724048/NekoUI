@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Windows.h>
 #include <array>
 #include <atomic>
 #include <condition_variable>
@@ -9,30 +8,25 @@
 #include <optional>
 #include <semaphore>
 #include <thread>
-#include <tuple>
+
+#include "../Platform/Event.hpp"
 
 namespace neko::engine {
     class MsgPump {
     public:
-        using MessageHandler = std::function<void(UINT, WPARAM, LPARAM)>;
+        using MessageHandler = std::function<void(platform::Event)>;
 
         explicit MsgPump(MessageHandler handler);
         ~MsgPump();
 
-        auto push_msg(UINT msg, WPARAM wparam, LPARAM lparam) -> void;
+        auto push_msg(const platform::Event& event) -> void;
         auto stop() -> void;
     private:
         auto msg_loop() -> void;
-        auto msg_dequeue() -> std::optional<std::tuple<UINT, WPARAM, LPARAM>>;
-
-        struct Msg {
-            UINT msg;
-            WPARAM wparam;
-            LPARAM lparam;
-        };
+        auto msg_dequeue() -> std::optional<platform::Event>;
 
         static constexpr size_t kQueueSize = 32;
-        std::array<Msg, kQueueSize> msg_queue_{};
+        std::array<platform::Event, kQueueSize> msg_queue_{};
         std::mutex msg_mutex_;
         std::condition_variable msg_notify_;
         std::counting_semaphore<kQueueSize> msg_space_{kQueueSize};
@@ -41,4 +35,4 @@ namespace neko::engine {
         std::atomic_bool running_{true};
         MessageHandler handler_;
     };
-} // namespace neko::engine
+}

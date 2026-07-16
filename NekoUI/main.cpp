@@ -5,6 +5,8 @@
 
 #include "NekoUI/Type.hpp"
 #include "NekoUI/Engine/Engine.hpp"
+#include "NekoUI/Platform/Platform.hpp"
+#include "NekoUI/Platform/Win32/Win32.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
 
 using namespace neko::type;
@@ -49,7 +51,10 @@ namespace {
                 case WM_CHAR:
                 case WM_TIMER:
                     if (!msg_pump.expired()) {
-                        msg_pump.lock()->push_msg(msg, wparam, lparam);
+                        const neko::platform::NativeMessage native{.msg = msg, .wparam = wparam, .lparam = lparam};
+                        if (auto event = neko::platform::Platform::instance().translate_event(native)) {
+                            msg_pump.lock()->push_msg(std::move(*event));
+                        }
                     }
                     break;
                 default: ;

@@ -4,7 +4,7 @@
 #include <functional>
 #include <utility>
 
-namespace neko::state {
+namespace neko::component {
     class ValueStateBase {
     protected:
         std::function<void()> mark_dirty;

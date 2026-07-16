@@ -1,9 +1,21 @@
 #pragma once
-#include <Windows.h>
 #include <algorithm>
 #include <array>
 
 namespace neko::device {
+    inline constexpr int kVkControl = 0x11;
+    inline constexpr int kVkShift = 0x10;
+    inline constexpr int kVkMenu = 0x12;
+
+    struct KeyEvent {
+        int key;
+        bool pressed;
+    };
+
+    struct CharEvent {
+        wchar_t ch;
+    };
+
     struct Keyboard {
     private:
         std::array<bool, 256> down{};
@@ -12,15 +24,15 @@ namespace neko::device {
         int char_count = 0;
     public:
         [[nodiscard]] auto ctrl() const -> bool {
-            return down[VK_CONTROL];
+            return down[kVkControl];
         }
 
         [[nodiscard]] auto shift() const -> bool {
-            return down[VK_SHIFT];
+            return down[kVkShift];
         }
 
         [[nodiscard]] auto alt() const -> bool {
-            return down[VK_MENU];
+            return down[kVkMenu];
         }
 
         [[nodiscard]] auto just_pressed(const int vk) const -> bool {
@@ -38,26 +50,15 @@ namespace neko::device {
                                        });
         }
 
-        auto handle(const UINT msg, const WPARAM wparam, LPARAM lparam) -> bool {
-            switch (msg) {
-                case WM_KEYDOWN:
-                case WM_SYSKEYDOWN:
-                    prev_down = down;
-                    down[wparam & 0xFF] = true;
-                    return true;
-                case WM_KEYUP:
-                case WM_SYSKEYUP:
-                    prev_down = down;
-                    down[wparam & 0xFF] = false;
-                    return true;
-                case WM_CHAR:
-                    if (char_count < 16) {
-                        chars[char_count++] = static_cast<wchar_t>(wparam);
-                    }
-                    return true;
-                default:
-                    return false;
+        auto handle(const KeyEvent& e) -> void {
+            prev_down = down;
+            down[e.key & 0xFF] = e.pressed;
+        }
+
+        auto handle(const CharEvent& e) -> void {
+            if (char_count < 16) {
+                chars[char_count++] = e.ch;
             }
         }
     };
-} // namespace neko::keyboard
+}

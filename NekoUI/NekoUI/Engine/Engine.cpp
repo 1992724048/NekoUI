@@ -14,9 +14,6 @@
 
 #include "../Widget/Widget.hpp"
 
-#include "../Device/keyboard.hpp"
-#include "../Device/mouse.hpp"
-
 namespace neko::engine {
     Engine::Engine(const HWND hwnd) {
         backend = std::make_unique<backend::Backend>(hwnd);
@@ -48,7 +45,7 @@ namespace neko::engine {
 
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
         event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_, invalidation_);
-        msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
     }
 
     Engine::~Engine() {

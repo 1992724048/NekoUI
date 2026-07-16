@@ -63,4 +63,4 @@ namespace neko::engine {
         pending_.store(false, std::memory_order_relaxed);
         return !render_thread_.get_stop_token().stop_requested();
     }
-} // namespace neko::engine
+}

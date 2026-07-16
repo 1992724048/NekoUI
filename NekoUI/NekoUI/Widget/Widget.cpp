@@ -20,10 +20,10 @@ namespace neko::widget {
         }
     }
 
-    auto Widget::raw_event(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
+    auto Widget::raw_event(engine::Context& context, const platform::Event& event) -> bool {
         std::shared_lock lock(mutex_);
         for (auto it = children_.rbegin(); it != children_.rend(); ++it) {
-            if ((*it)->raw_event(context, msg, wparam, lparam)) {
+            if ((*it)->raw_event(context, event)) {
                 return true;
             }
         }

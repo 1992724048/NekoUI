@@ -13,6 +13,7 @@
 
 #include "../Backend/Backend.hpp"
 #include "../Engine/Context.hpp"
+#include "../Platform/Event.hpp"
 
 namespace neko::widget {
     using namespace neko::type;
@@ -28,7 +29,7 @@ namespace neko::widget {
         virtual auto draw_self(engine::Context& context, backend::Backend& backend) -> void {}
         auto draw(engine::Context& context, backend::Backend& backend) -> void;
         auto layout(Constraints constraints) -> void;
-        virtual auto raw_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool;
+        virtual auto raw_event(engine::Context& context, const platform::Event& event) -> bool;
 
         [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool;
 
