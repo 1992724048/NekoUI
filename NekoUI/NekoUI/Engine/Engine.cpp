@@ -80,7 +80,6 @@ namespace neko::engine {
         }
 
         backend->begin();
-        backend->draw_rect_fill({0, 0, 100, 100}, context->scheme.inversePrimary);
         const auto widget = widget_tree_.get_root();
         if (widget) {
             const auto [x, y] = render_scheduler_->pending_size();

@@ -84,5 +84,59 @@ namespace neko::platform {
     auto Win32::query_theme() const -> ThemeChangedEvent {
         return cached_theme_;
     }
+
+    Win32::~Win32() {
+        if (ime_doc_mgr_) {
+            ime_doc_mgr_->Release();
+        }
+        if (ime_thread_mgr_) {
+            ime_thread_mgr_->Deactivate();
+            ime_thread_mgr_->Release();
+        }
+        if (ime_com_initialized_) {
+            CoUninitialize();
+        }
+    }
+
+    auto Win32::init_ime() const -> void {
+        if (ime_initialized_) { return; }
+        ime_initialized_ = true;
+
+        const HRESULT com_hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        ime_com_initialized_ = (com_hr == S_OK);
+
+        if (FAILED(CoCreateInstance(CLSID_TF_ThreadMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,
+            reinterpret_cast<void**>(&ime_thread_mgr_)))) {
+            return;
+        }
+
+        if (FAILED(ime_thread_mgr_->Activate(&ime_client_id_))) {
+            return;
+        }
+
+        ime_thread_mgr_->CreateDocumentMgr(&ime_doc_mgr_);
+    }
+
+    auto Win32::activate_ime(void* native_window, bool active) const -> bool {
+        init_ime();
+        if (!ime_thread_mgr_) { return false; }
+
+        if (active) {
+            if (ime_doc_mgr_) {
+                ITfContext* context{};
+                if (SUCCEEDED(ime_thread_mgr_->CreateContext(ime_client_id_, 0, nullptr, &context, nullptr))) {
+                    ime_doc_mgr_->Push(context);
+                    context->Release();
+                }
+                ime_thread_mgr_->SetFocus(ime_doc_mgr_);
+            }
+        } else {
+            ime_thread_mgr_->SetFocus(nullptr);
+            if (ime_doc_mgr_) {
+                ime_doc_mgr_->Pop(TF_POPF_ALL);
+            }
+        }
+        return true;
+    }
 }
 #endif

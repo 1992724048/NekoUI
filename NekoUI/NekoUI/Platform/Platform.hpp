@@ -25,6 +25,10 @@ namespace neko::platform {
             return {.mode = ThemeMode::Light, .color = type::Color{.value = 0}};
         }
 
+        [[nodiscard]] virtual auto activate_ime(void* native_window, bool active) const -> bool {
+            return false;
+        }
+
         static auto instance() -> const Platform& {
             return *platform;
         }

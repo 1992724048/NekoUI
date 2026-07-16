@@ -30,6 +30,7 @@ namespace neko::backend {
         auto draw_line(Vec2I from, Vec2I to, Color color, int thickness) const -> void override;
         auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void override;
         auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void override;
+        [[nodiscard]] auto get_native_handle() const -> void* override { return hwnd_; }
     private:
         static constexpr int ATLAS_W = 4096;
         static constexpr int ATLAS_H = 4096;
@@ -73,6 +74,7 @@ namespace neko::backend {
         ID3D11Buffer* text_cb_{};
         float font_size_{};
         float dpi_scale_ = 1.0F;
+        HWND hwnd_{};
         std::array<stbtt_packedchar, FONT_COUNT> glyphs_{};
         std::unordered_map<int, stbtt_packedchar> cjk_glyphs_{};
     };
