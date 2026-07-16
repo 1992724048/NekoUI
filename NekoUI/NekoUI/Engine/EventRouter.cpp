@@ -70,8 +70,7 @@ namespace neko::engine {
     }
 
     auto EventRouter::handle_input(const platform::Event& event) const -> void {
-        const auto root = tree_.get_root();
-        if (!root) {}
+        tree_.input(context_, event);
     }
 
     auto EventRouter::handle_resize(const platform::ResizeEvent& e) const -> void {

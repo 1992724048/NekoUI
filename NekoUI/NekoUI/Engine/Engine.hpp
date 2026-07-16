@@ -30,7 +30,7 @@ namespace neko::engine {
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
         auto set_root_widget(Args&&... args) -> std::shared_ptr<T> {
             const std::shared_ptr<T> widget = std::make_shared<T>(*context, std::forward<Args>(args)...);
-            widget_tree_.set_root(widget);
+            widget_tree_.set_root(*context, widget);
             context->root = widget;
             render_scheduler_->request_frame();
             return widget;

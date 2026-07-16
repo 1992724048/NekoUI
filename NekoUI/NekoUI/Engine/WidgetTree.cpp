@@ -9,9 +9,9 @@
 namespace neko::engine {
     WidgetTree::WidgetTree() = default;
 
-    auto WidgetTree::set_root(std::shared_ptr<widget::Widget> w) -> void {
+    auto WidgetTree::set_root(Context& context, std::shared_ptr<widget::Widget> w) -> void {
         root_ = std::move(w);
-        build();
+        build(context);
     }
 
     auto WidgetTree::get_root() const -> std::shared_ptr<widget::Widget> {
@@ -60,36 +60,83 @@ namespace neko::engine {
         index_widgets_.clear();
         index_count = 0;
 
-        auto traverse = [&](auto& self, MutableWidget& mw, const std::string& parent_path) -> void {
+        traverse_impl([&](MutableWidget& mw) -> void {
+            const auto sp = mw.as_widget().lock();
+            if (!sp) {
+                return;
+            }
+
+            sp->z_index_ = index_count++;
+            index_widgets_[sp->z_index_] = sp;
+
+            std::ostringstream oss;
+            oss << "/" << sp->id_ << "#0x" << std::hex << reinterpret_cast<uintptr_t>(sp.get());
+            sp->path_ = oss.str();
+
+            if (!sp->id_.empty()) {
+                id_widgets_[sp->id_] = sp;
+            }
+
+            sp->build(context);
+        });
+    }
+
+    auto WidgetTree::event(Context& context) -> void {
+        for_each([&](widget::Widget& widget) -> void {
+            widget.event(context);
+        });
+    }
+
+    auto WidgetTree::input(Context& context, const platform::Event& event) -> void {
+        for_each([&](widget::Widget& widget) -> void {
+            widget.input(context, event);
+        });
+    }
+
+    auto WidgetTree::render(const type::Vec4I rect, Context& context, backend::Backend& backend) -> void {
+        for_each([&](widget::Widget& widget) -> void {
+            widget.draw(rect, context, backend);
+        });
+    }
+
+    auto WidgetTree::hit_test(const device::Mouse& mouse) -> bool {
+        bool hit{false};
+        for_each([&](const widget::Widget& widget) -> void {
+            if (widget.hit_test(mouse)) {
+                hit = true;
+            }
+        });
+        return hit;
+    }
+
+    auto WidgetTree::for_each(const std::function<void(widget::Widget&)>& callback) -> void {
+        std::shared_lock _(mutex_);
+
+        traverse_impl([&](MutableWidget& mw) -> void {
+            const auto sp = mw.as_widget().lock();
+            if (sp) {
+                callback(*sp);
+            }
+        });
+    }
+
+    auto WidgetTree::traverse_impl(const std::function<void(MutableWidget&)>& callback) -> void {
+        auto traverse = [&](auto& self, MutableWidget& mw) -> void {
             if (mw.is_widget()) {
-                const auto sp = mw.as_widget().lock();
-                if (sp) {
-                    sp->z_index_ = index_count++;
-                    index_widgets_[sp->z_index_] = mw.as_widget();
-
-                    std::ostringstream oss;
-                    oss << sp->id_ << "#0x" << std::hex << reinterpret_cast<uintptr_t>(sp.get());
-                    sp->path_ = parent_path.empty() ? "/" + oss.str() : parent_path + "/" + oss.str();
-
-                    if (!sp->id_.empty()) {
-                        id_widgets_[sp->id_] = mw.as_widget();
-                    }
-                }
+                callback(mw);
             } else if (mw.is_list()) {
                 for (auto& child : mw.as_list()) {
-                    self(self, child, parent_path);
+                    self(self, child);
                 }
             } else if (mw.is_vector()) {
                 for (auto& child : mw.as_vector()) {
-                    self(self, child, parent_path);
+                    self(self, child);
                 }
             }
         };
 
         for (auto& mw : widgets) {
-            traverse(traverse, mw, "");
+            traverse(traverse, mw);
         }
     }
-
-    auto WidgetTree::render(type::Vec4I rect, Context& context, backend::Backend& backend) -> void {}
 }
