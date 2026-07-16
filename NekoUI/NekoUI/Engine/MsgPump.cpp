@@ -21,6 +21,11 @@ namespace neko::engine {
         msg_notify_.notify_one();
     }
 
+    auto MsgPump::request_stop() -> void {
+        running_.store(false);
+        msg_notify_.notify_one();
+    }
+
     auto MsgPump::stop() -> void {
         running_.store(false);
         msg_notify_.notify_one();

@@ -20,6 +20,7 @@ namespace neko::engine {
         ~MsgPump();
 
         auto push_msg(const platform::Event& event) -> void;
+        auto request_stop() -> void;
         auto stop() -> void;
     private:
         auto msg_loop() -> void;

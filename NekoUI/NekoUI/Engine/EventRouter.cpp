@@ -2,6 +2,7 @@
 
 #include "Context.hpp"
 #include "InvalidationTracker.hpp"
+#include "MsgPump.hpp"
 #include "RenderScheduler.hpp"
 #include "WidgetTree.hpp"
 
@@ -15,6 +16,7 @@ namespace neko::engine {
                              Context& context,
                              backend::Backend& backend,
                              const std::shared_ptr<RenderScheduler>& scheduler,
+                             const std::shared_ptr<MsgPump>& msg_pump,
                              InvalidationTracker& invalidation) :
         tree_(tree),
         mouse_(mouse),
@@ -22,6 +24,7 @@ namespace neko::engine {
         context_(context),
         backend_(backend),
         scheduler_(scheduler),
+        msg_pump_(msg_pump),
         invalidation_(invalidation) {}
 
     auto EventRouter::dispatch(const platform::Event& event) const -> void {
@@ -86,6 +89,9 @@ namespace neko::engine {
     auto EventRouter::handle_destroy() const -> void {
         if (!scheduler_.expired()) {
             scheduler_.lock()->stop();
+        }
+        if (!msg_pump_.expired()) {
+            msg_pump_.lock()->request_stop();
         }
     }
 }
