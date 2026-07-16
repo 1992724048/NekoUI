@@ -149,6 +149,18 @@ namespace neko::platform {
         ShowWindow(static_cast<HWND>(native_window), SW_RESTORE);
     }
 
+    auto Win32::destroy_window(type::Handle native_window) const -> void {
+        DestroyWindow(static_cast<HWND>(native_window));
+    }
+
+    auto Win32::move_window(type::Handle native_window, int x, int y) const -> void {
+        SetWindowPos(static_cast<HWND>(native_window), nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    }
+
+    auto Win32::resize_window(type::Handle native_window, int width, int height) const -> void {
+        SetWindowPos(static_cast<HWND>(native_window), nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+    }
+
     auto Win32::activate_ime(type::Handle native_window, bool active) const -> bool {
         init_ime();
         if (!ime_thread_mgr_ || !ime_doc_mgr_) {
