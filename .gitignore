@@ -104,6 +104,7 @@ StyleCopReport.xml
 .superpowers
 .superpowers\sdd
 .opencode
+!.opencode/AGENTS.md
 
 # Chutzpah Test files
 _Chutzpah*
@@ -371,6 +372,7 @@ FodyWeavers.xsd
 /x64-Debug
 /x64-Release
 /AGENTS.md
+!/AGENTS.md
 stb_truetype.h
 docs
 !docs/superpowers/specs/
