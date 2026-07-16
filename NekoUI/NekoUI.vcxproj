@@ -214,6 +214,7 @@
     <ClCompile Include="NekoUI\Engine\WidgetTree.cpp" />
     <ClCompile Include="NekoUI\Engine\RenderScheduler.cpp" />
     <ClCompile Include="NekoUI\Engine\MsgPump.cpp" />
+    <ClCompile Include="NekoUI\Style\ColorScheme.cpp" />
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
@@ -233,6 +234,7 @@
     <ClInclude Include="NekoUI\Engine\RenderScheduler.hpp" />
     <ClInclude Include="NekoUI\Engine\MsgPump.hpp" />
     <ClInclude Include="NekoUI\Platform\Platform.hpp" />
+    <ClInclude Include="NekoUI\Style\ColorScheme.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />

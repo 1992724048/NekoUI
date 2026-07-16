@@ -77,6 +77,7 @@ NekoUI/                          # Git 仓库根
 │       │   ├── Platform.hpp      # 平台基类（单例）
 │       │   └── Win32/            # Win32 平台实现
 │       ├── Style/                # 样式系统
+│       │   ├── ColorScheme.hpp/.cpp # Material You 色调配色方案（HSL 近似，light/dark 双模式）
 │       │   └── CSS.hpp           # 基础样式结构体
 │       └── Widget/               # Widget 系统
 │           ├── Widget.hpp/.cpp   # Widget 基类
