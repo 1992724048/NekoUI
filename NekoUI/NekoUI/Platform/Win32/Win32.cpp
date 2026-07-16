@@ -1,5 +1,6 @@
 #include "Win32.hpp"
 #ifdef _WIN32
+#include <algorithm>
 #include <dwmapi.h>
 #include <string_view>
 #pragma comment(lib, "dwmapi.lib")
@@ -159,6 +160,18 @@ namespace neko::platform {
 
     auto Win32::resize_window(type::Handle native_window, int width, int height) const -> void {
         SetWindowPos(static_cast<HWND>(native_window), nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+    }
+
+    auto Win32::set_focus(const type::Handle native_window) const -> void {
+        SetFocus(static_cast<HWND>(native_window));
+    }
+
+    auto Win32::set_opacity(const type::Handle native_window, const float opacity) const -> void {
+        const auto hwnd = static_cast<HWND>(native_window);
+        const auto ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+        SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED);
+        const auto alpha = static_cast<BYTE>(std::clamp(opacity, 0.0f, 1.0f) * 255.0f);
+        SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA);
     }
 
     auto Win32::activate_ime(type::Handle native_window, bool active) const -> bool {

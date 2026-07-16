@@ -30,6 +30,8 @@ namespace neko::platform {
         virtual auto destroy_window(type::Handle native_window) const -> void = 0;
         virtual auto move_window(type::Handle native_window, int x, int y) const -> void = 0;
         virtual auto resize_window(type::Handle native_window, int width, int height) const -> void = 0;
+        virtual auto set_focus(type::Handle native_window) const -> void = 0;
+        virtual auto set_opacity(type::Handle native_window, float opacity) const -> void = 0;
 
         static auto instance() -> const Platform& {
             return *platform;

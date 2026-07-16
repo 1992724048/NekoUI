@@ -31,6 +31,8 @@ namespace neko::platform {
         auto destroy_window(type::Handle native_window) const -> void override;
         auto move_window(type::Handle native_window, int x, int y) const -> void override;
         auto resize_window(type::Handle native_window, int width, int height) const -> void override;
+        auto set_focus(type::Handle native_window) const -> void override;
+        auto set_opacity(type::Handle native_window, float opacity) const -> void override;
     private:
         mutable ThemeChangedEvent cached_theme_{};
         mutable ITfThreadMgr* ime_thread_mgr_{};
