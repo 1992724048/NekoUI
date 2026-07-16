@@ -15,8 +15,6 @@
 #include "../Engine/Context.hpp"
 #include "../Platform/Event.hpp"
 
-#include <numbers>
-
 namespace neko::engine {
     class WidgetTree;
 }
@@ -26,14 +24,17 @@ namespace neko::widget {
 
     class Widget {
     public:
+        Widget() = default;
         virtual ~Widget();
 
-        virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> void = 0;
-        virtual auto build(engine::Context& context) -> void = 0;
-        virtual auto event(engine::Context& context) -> void = 0;
-        virtual auto input(engine::Context& context, const platform::Event& event) -> void = 0;
+        virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> void {}
+        virtual auto build(engine::Context& context) -> void {}
+        virtual auto event(engine::Context& context) -> void {}
+        virtual auto input(engine::Context& context, const platform::Event& event) -> void {}
 
-        [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool = 0;
+        [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool {
+            return false;
+        }
 
         [[nodiscard]] auto id() const -> const std::string&;
         [[nodiscard]] auto index() const -> int;

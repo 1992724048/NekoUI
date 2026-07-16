@@ -216,6 +216,7 @@
     <ClCompile Include="NekoUI\Engine\MsgPump.cpp" />
     <ClCompile Include="NekoUI\Style\ColorScheme.cpp" />
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\Center.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
   <ItemGroup>
