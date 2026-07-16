@@ -125,6 +125,30 @@ namespace neko::platform {
         }
     }
 
+    auto Win32::show_window(type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_SHOW);
+    }
+
+    auto Win32::hide_window(type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_HIDE);
+    }
+
+    auto Win32::close_window(type::Handle native_window) const -> void {
+        PostMessageW(static_cast<HWND>(native_window), WM_CLOSE, 0, 0);
+    }
+
+    auto Win32::maximize_window(type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_MAXIMIZE);
+    }
+
+    auto Win32::minimize_window(type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_MINIMIZE);
+    }
+
+    auto Win32::restore_window(type::Handle native_window) const -> void {
+        ShowWindow(static_cast<HWND>(native_window), SW_RESTORE);
+    }
+
     auto Win32::activate_ime(type::Handle native_window, bool active) const -> bool {
         init_ime();
         if (!ime_thread_mgr_ || !ime_doc_mgr_) {

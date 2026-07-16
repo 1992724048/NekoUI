@@ -6,7 +6,6 @@
 
 namespace neko::platform {
     struct NativeMessage;
-    struct NativeWindow;
 
     class Platform {
     public:
@@ -21,6 +20,13 @@ namespace neko::platform {
         [[nodiscard]] virtual auto translate_event(const NativeMessage& msg) const -> std::optional<Event> = 0;
         [[nodiscard]] virtual auto query_theme() const -> ThemeChangedEvent = 0;
         [[nodiscard]] virtual auto activate_ime(type::Handle native_window, bool active) const -> bool = 0;
+
+        virtual auto show_window(type::Handle native_window) const -> void = 0;
+        virtual auto hide_window(type::Handle native_window) const -> void = 0;
+        virtual auto close_window(type::Handle native_window) const -> void = 0;
+        virtual auto maximize_window(type::Handle native_window) const -> void = 0;
+        virtual auto minimize_window(type::Handle native_window) const -> void = 0;
+        virtual auto restore_window(type::Handle native_window) const -> void = 0;
 
         static auto instance() -> const Platform& {
             return *platform;

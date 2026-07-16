@@ -22,6 +22,12 @@ namespace neko::platform {
         [[nodiscard]] auto translate_event(const NativeMessage& nm) const -> std::optional<Event> override;
         [[nodiscard]] auto query_theme() const -> ThemeChangedEvent override;
         [[nodiscard]] auto activate_ime(type::Handle native_window, bool active) const -> bool override;
+        auto show_window(type::Handle native_window) const -> void override;
+        auto hide_window(type::Handle native_window) const -> void override;
+        auto close_window(type::Handle native_window) const -> void override;
+        auto maximize_window(type::Handle native_window) const -> void override;
+        auto minimize_window(type::Handle native_window) const -> void override;
+        auto restore_window(type::Handle native_window) const -> void override;
     private:
         mutable ThemeChangedEvent cached_theme_{};
         mutable ITfThreadMgr* ime_thread_mgr_{};
