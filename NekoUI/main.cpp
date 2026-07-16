@@ -5,6 +5,7 @@
 
 #include "NekoUI/Type.hpp"
 #include "NekoUI/Engine/Engine.hpp"
+#include "NekoUI/Platform/Platform.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
 
 using namespace neko::type;
@@ -61,6 +62,8 @@ namespace {
 } // namespace
 
 auto main(int argc, char* argv[]) -> int try {
+    neko::platform::Platform::instance().check();
+
     std::wstring class_name = L"NekoUI";
 
     WNDCLASSW win_class{};

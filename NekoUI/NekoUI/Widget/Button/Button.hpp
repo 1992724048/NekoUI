@@ -26,6 +26,6 @@ namespace neko::widget {
         std::string text_{};
         Color color_{0xFF4A90D9};
         std::function<void()> on_click_{};
-        animation::Animation<int, animation::ease::quad::in_out> color_anim_{0, 200};
+        component::Animation<int, component::ease::quad::in_out> color_anim_{0, 200};
     };
 } // namespace neko::widget

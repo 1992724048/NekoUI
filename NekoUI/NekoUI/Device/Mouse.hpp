@@ -76,7 +76,7 @@ namespace neko::device {
                 return true;
             }
 
-            const std::array<Vec2I, 4> corners{Vec2I{rx + cr, ry + cr}, {rx + rw - cr, ry + cr}, {rx + cr, ry + rh - cr}, {rx + rw - cr, ry + rh - cr}};
+            const std::array<Vec2I, 4> corners{Vec2I{.x = rx + cr, .y = ry + cr}, {.x = rx + rw - cr, .y = ry + cr}, {.x = rx + cr, .y = ry + rh - cr}, {.x = rx + rw - cr, .y = ry + rh - cr}};
             return std::ranges::any_of(corners,
                                        [&](const Vec2I c) -> bool {
                                            const auto dx = static_cast<float>(pos.x - c.x);
@@ -112,30 +112,30 @@ namespace neko::device {
 
             switch (msg) {
                 case WM_MOUSEMOVE:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                    pos = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                     return true;
                 case WM_LBUTTONDOWN:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                    pos = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                     left_down = true;
                     return true;
                 case WM_LBUTTONUP:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                    pos = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                     left_down = false;
                     return true;
                 case WM_RBUTTONDOWN:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                    pos = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                     right_down = true;
                     return true;
                 case WM_RBUTTONUP:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                    pos = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                     right_down = false;
                     return true;
                 case WM_MBUTTONDOWN:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                    pos = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                     middle_down = true;
                     return true;
                 case WM_MBUTTONUP:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
+                    pos = {.x = static_cast<int>(LOWORD(lparam)), .y = static_cast<int>(HIWORD(lparam))};
                     middle_down = false;
                     return true;
                 case WM_MOUSEWHEEL:

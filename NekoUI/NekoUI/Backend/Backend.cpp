@@ -233,16 +233,18 @@ auto Backend::draw_rect_fill(const Vec4I rect, const Color color) const -> void 
         float c_r, c_g, c_b, c_a;
         float s_w, s_h;
         float p0, p1;
-    } const data{.r_x = static_cast<float>(rect.x) * dpi_scale,
-                 .r_y = static_cast<float>(rect.y) * dpi_scale,
-                 .r_w = static_cast<float>(rect.z) * dpi_scale,
-                 .r_h = static_cast<float>(rect.w) * dpi_scale,
-                 .c_r = color.r() / 255.0F,
-                 .c_g = color.g() / 255.0F,
-                 .c_b = color.b() / 255.0F,
-                 .c_a = color.a() / 255.0F,
-                 .s_w = static_cast<float>(size.x),
-                 .s_h = static_cast<float>(size.y),};
+    } const data{
+        .r_x = static_cast<float>(rect.x) * dpi_scale,
+        .r_y = static_cast<float>(rect.y) * dpi_scale,
+        .r_w = static_cast<float>(rect.z) * dpi_scale,
+        .r_h = static_cast<float>(rect.w) * dpi_scale,
+        .c_r = color.r() / 255.0F,
+        .c_g = color.g() / 255.0F,
+        .c_b = color.b() / 255.0F,
+        .c_a = color.a() / 255.0F,
+        .s_w = static_cast<float>(size.x),
+        .s_h = static_cast<float>(size.y),
+    };
 
     D3D11_MAPPED_SUBRESOURCE mapped{};
     if (FAILED(ctx->Map(cbuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
