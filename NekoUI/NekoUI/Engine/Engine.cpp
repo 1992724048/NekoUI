@@ -42,6 +42,7 @@ namespace neko::engine {
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
         event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
         msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
+        msg_pump_->push_msg(platform::Platform::instance().query_theme());
     }
 
     Engine::~Engine() {
@@ -79,7 +80,7 @@ namespace neko::engine {
         }
 
         backend->begin();
-        backend->draw_rect_fill({0, 0, 100, 100}, context->scheme.onPrimary);
+        backend->draw_rect_fill({0, 0, 100, 100}, context->scheme.inversePrimary);
         const auto widget = widget_tree_.get_root();
         if (widget) {
             const auto [x, y] = render_scheduler_->pending_size();

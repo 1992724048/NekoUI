@@ -67,14 +67,6 @@ auto main(int argc, char* argv[]) -> int try {
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
-
-    // Query the system theme now that the window exists and the event
-    // pipeline is ready. This flows through EventRouter::handle_theme_change
-    // and sets the initial ColorScheme on the context.
-    if (auto pump = msg_pump.lock()) {
-        pump->push_msg(neko::platform::Platform::instance().query_theme());
-    }
-
     [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");
 
     MSG msg{};
