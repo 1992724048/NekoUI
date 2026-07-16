@@ -9,11 +9,23 @@
 
 #include "MutableWidget.hpp"
 
+#include "../Type.hpp"
+
+namespace neko::device {
+    struct Mouse;
+}
+
+namespace neko::backend {
+    class Backend;
+}
+
 namespace neko::widget {
     class Widget;
 }
 
 namespace neko::engine {
+    struct Context;
+
     class WidgetTree {
     public:
         WidgetTree();
@@ -28,7 +40,10 @@ namespace neko::engine {
         auto prev_focus() -> std::weak_ptr<widget::Widget>;
 
         auto clear() -> void;
-        auto build() -> void;
+        auto build(Context& context) -> void;
+        auto event(Context& context) -> void;
+        auto render(type::Vec4I rect, Context& context, backend::Backend& backend) -> void;
+        auto hit_test(const device::Mouse& mouse) const -> bool;
     private:
         std::vector<MutableWidget> widgets;
 

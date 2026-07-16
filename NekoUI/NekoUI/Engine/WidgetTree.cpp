@@ -54,7 +54,7 @@ namespace neko::engine {
         widgets.clear();
     }
 
-    auto WidgetTree::build() -> void {
+    auto WidgetTree::build(Context& context) -> void {
         std::unique_lock _(mutex_);
         id_widgets_.clear();
         index_widgets_.clear();
@@ -90,4 +90,6 @@ namespace neko::engine {
             traverse(traverse, mw, "");
         }
     }
+
+    auto WidgetTree::render(type::Vec4I rect, Context& context, backend::Backend& backend) -> void {}
 }

@@ -24,9 +24,6 @@ namespace neko::engine {
         std::function<void()> anim_inc;
         std::function<void()> anim_dec;
 
-        std::function<void(std::weak_ptr<widget::Widget>)> reg_widget;
-        std::function<void(std::weak_ptr<widget::Widget>)> del_widget;
-
         std::weak_ptr<device::Mouse> mouse;
         std::weak_ptr<device::Keyboard> keyboard;
 

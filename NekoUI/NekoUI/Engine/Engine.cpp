@@ -26,15 +26,6 @@ namespace neko::engine {
         context->anim_inc = std::bind(&InvalidationTracker::anim_inc, &invalidation_);
         context->anim_dec = std::bind(&InvalidationTracker::anim_dec, &invalidation_);
 
-        context->reg_widget = [this](const std::weak_ptr<widget::Widget>& w) -> void {
-            widget_tree_.register_widget(w);
-            render_scheduler_->request_frame();
-        };
-        context->del_widget = [this](const std::weak_ptr<widget::Widget>& w) -> void {
-            widget_tree_.unregister_widget(w);
-            render_scheduler_->request_frame();
-        };
-
         context->mark_dirty = std::bind(&InvalidationTracker::mark_dirty, &invalidation_);
         context->widget_dirty = std::bind(&InvalidationTracker::mark_widget_dirty, &invalidation_, std::placeholders::_1);
 
@@ -87,12 +78,8 @@ namespace neko::engine {
         }
 
         backend->begin();
-        const auto widget = widget_tree_.get_root();
-        if (widget) {
-            const auto [x, y] = render_scheduler_->pending_size();
-            widget->layout({.x = 0, .y = 0, .width = x, .height = y});
-            widget->draw(*context, *backend);
-        }
+        const auto [x, y] = render_scheduler_->pending_size();
+        widget_tree_.render({0, 0, x, y}, *context, *backend);
         backend->end();
         invalidation_.clear();
     }

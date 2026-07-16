@@ -28,7 +28,7 @@ namespace neko::widget {
     public:
         virtual ~Widget();
 
-        virtual auto draw(engine::Context& context, backend::Backend& backend) -> void = 0;
+        virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> void = 0;
         virtual auto build(engine::Context& context) -> void = 0;
         virtual auto event(engine::Context& context) -> void = 0;
 
