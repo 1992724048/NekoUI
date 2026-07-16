@@ -40,9 +40,7 @@ namespace neko::engine {
         context->keyboard = keyboard;
 
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
-        event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_,
-                                                      [this] { clear(); },
-                                                      invalidation_);
+        event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
         msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
     }
 
@@ -59,6 +57,10 @@ namespace neko::engine {
             render_scheduler_->stop();
             render_scheduler_.reset();
         }
+        backend.reset();
+        context.reset();
+        mouse.reset();
+        keyboard.reset();
         widget_tree_.clear();
         invalidation_.clear();
     }

@@ -1,9 +1,11 @@
 ﻿#pragma once
+#include <cstdint>
 #include <functional>
 #include <memory>
 
 #include "../Device/Keyboard.hpp"
 #include "../Device/mouse.hpp"
+#include "../Platform/Event.hpp"
 
 namespace neko::backend {
     class Backend;
@@ -29,5 +31,8 @@ namespace neko::engine {
         std::weak_ptr<device::Keyboard> keyboard;
 
         std::weak_ptr<widget::Widget> root;
+
+        platform::ThemeMode theme_mode = platform::ThemeMode::Light;
+        uint32_t theme_color = 0;
     };
 } // namespace neko::engine

@@ -54,9 +54,12 @@ namespace neko::engine {
                        [&](const platform::DpiChangeEvent& e) -> void {
                            handle_dpi_change(e);
                        },
-                       [&](const platform::DestroyEvent&) -> void {
-                           handle_destroy();
-                       },
+                        [&](const platform::ThemeChangedEvent& e) -> void {
+                            handle_theme_change(e);
+                        },
+                        [&](const platform::DestroyEvent&) -> void {
+                            handle_destroy();
+                        },
                    },
                    event);
 
@@ -82,6 +85,12 @@ namespace neko::engine {
     auto EventRouter::handle_dpi_change(const platform::DpiChangeEvent& e) const -> void {
         backend_.set_dpi(e.dpi);
         mouse_.set_dpi(e.dpi);
+        invalidation_.mark_dirty();
+    }
+
+    auto EventRouter::handle_theme_change(const platform::ThemeChangedEvent& e) const -> void {
+        context_.theme_mode = e.mode;
+        context_.theme_color = e.color;
         invalidation_.mark_dirty();
     }
 

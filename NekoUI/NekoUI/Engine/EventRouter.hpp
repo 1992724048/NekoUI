@@ -31,6 +31,7 @@ namespace neko::engine {
         auto handle_input(const platform::Event& event) const -> void;
         auto handle_resize(const platform::ResizeEvent& e) const -> void;
         auto handle_dpi_change(const platform::DpiChangeEvent& e) const -> void;
+        auto handle_theme_change(const platform::ThemeChangedEvent& e) const -> void;
         auto handle_destroy() const -> void;
 
         WidgetTree& tree_;

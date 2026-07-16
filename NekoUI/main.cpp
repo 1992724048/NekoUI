@@ -21,7 +21,7 @@ namespace {
     auto msg_proc(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> LRESULT {
         switch (msg) {
             case WM_DESTROY:
-                PostQuitMessage(0);
+                // PostQuitMessage(0);
                 break;
             case WM_GETMINMAXINFO: {
                 auto* mmi = reinterpret_cast<MINMAXINFO*>(lparam);

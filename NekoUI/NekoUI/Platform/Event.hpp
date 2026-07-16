@@ -15,9 +15,19 @@ namespace neko::platform {
         uint32_t dpi;
     };
 
+    enum class ThemeMode : uint8_t {
+        Light,
+        Dark,
+    };
+
+    struct ThemeChangedEvent {
+        ThemeMode mode;
+        uint32_t color; // ARGB accent color
+    };
+
     struct DestroyEvent {};
 
-    using Event = std::variant<device::MouseMoveEvent, device::MouseButtonEvent, device::MouseWheelEvent, device::KeyEvent, device::CharEvent, ResizeEvent, DpiChangeEvent, DestroyEvent>;
+    using Event = std::variant<device::MouseMoveEvent, device::MouseButtonEvent, device::MouseWheelEvent, device::KeyEvent, device::CharEvent, ResizeEvent, DpiChangeEvent, ThemeChangedEvent, DestroyEvent>;
 
     template<typename... Ts>
     struct Overloaded : Ts... {
