@@ -16,7 +16,6 @@ using namespace neko::type;
 namespace {
     std::unique_ptr<neko::engine::Engine> engine;
     std::weak_ptr<neko::engine::MsgPump> msg_pump;
-    std::weak_ptr<neko::engine::RenderScheduler> render_scheduler;
 }
 
 namespace {
@@ -35,32 +34,7 @@ namespace {
         }
 
         if (engine) {
-            switch (msg) {
-                case WM_SIZE:
-                case WM_DPICHANGED:
-                case WM_MOUSEMOVE:
-                case WM_LBUTTONDOWN:
-                case WM_LBUTTONUP:
-                case WM_RBUTTONDOWN:
-                case WM_RBUTTONUP:
-                case WM_MBUTTONDOWN:
-                case WM_MBUTTONUP:
-                case WM_MOUSEWHEEL:
-                case WM_KEYDOWN:
-                case WM_KEYUP:
-                case WM_SYSKEYDOWN:
-                case WM_SYSKEYUP:
-                case WM_CHAR:
-                case WM_TIMER:
-                    if (!msg_pump.expired()) {
-                        const neko::platform::NativeMessage native{.msg = msg, .wparam = wparam, .lparam = lparam};
-                        if (auto event = neko::platform::Platform::instance().translate_event(native)) {
-                            msg_pump.lock()->push_msg(std::move(*event));
-                        }
-                    }
-                    break;
-                default: ;
-            }
+            neko::platform::Win32::handle_message(msg, wparam, lparam, msg_pump);
         }
 
         return DefWindowProcW(hwnd, msg, wparam, lparam);
@@ -106,7 +80,6 @@ auto main(int argc, char* argv[]) -> int try {
     auto directx11 = std::make_unique<neko::backend::DirectX11>(device, ctx, hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
-    render_scheduler = engine->get_render_scheduler();
     [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");
 
     MSG msg{};

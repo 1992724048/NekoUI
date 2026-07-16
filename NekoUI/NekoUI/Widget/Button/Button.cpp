@@ -10,13 +10,12 @@ using namespace neko::type;
 
 namespace neko::widget {
     Button::Button(Widget* parent, const Vec4I bounds, const std::string_view label) :
-        Widget{parent},
         text_{label.data(), label.size()} {
         this->bounds = bounds;
     }
 
     Button::Button(engine::Context& context, const Vec4I bounds, const std::string_view label) :
-        Widget{context},
+
         text_{label.data(), label.size()} {
         this->bounds = bounds;
     }

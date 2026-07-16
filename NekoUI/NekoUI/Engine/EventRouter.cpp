@@ -65,9 +65,6 @@ namespace neko::engine {
         if (!root) {
             return;
         }
-        if (!root->raw_event(context_, event)) {
-            static_cast<void>(root->hit_test(mouse_));
-        }
     }
 
     auto EventRouter::handle_resize(const platform::ResizeEvent& e) const -> void {

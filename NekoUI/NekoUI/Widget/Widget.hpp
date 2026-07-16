@@ -53,9 +53,6 @@ namespace neko::widget {
 
         [[nodiscard]] auto id() const -> const std::string&;
     protected:
-        Widget(engine::Context& context);
-        Widget(Widget* parent);
-
         engine::Context* context{};
 
         ~Widget();

@@ -47,14 +47,5 @@ namespace neko::widget {
         return id_;
     }
 
-    Widget::Widget(engine::Context& context) :
-        context{&context},
-        root{context.root} {}
-
-    Widget::Widget(Widget* parent) :
-        context{parent ? parent->context : nullptr},
-        parent{parent},
-        root{parent ? parent->root.load() : std::weak_ptr<Widget>{}} {}
-
     Widget::~Widget() = default;
 }
