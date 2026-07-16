@@ -18,17 +18,9 @@ namespace neko::platform {
         Platform() = default;
         virtual ~Platform() = default;
 
-        [[nodiscard]] virtual auto translate_event(const NativeMessage& msg) const -> std::optional<Event> {
-            return std::nullopt;
-        }
-
-        [[nodiscard]] virtual auto query_theme() const -> ThemeChangedEvent {
-            return {.mode = ThemeMode::Light, .color = type::Color{.value = 0}};
-        }
-
-        [[nodiscard]] virtual auto activate_ime(const NativeWindow& native_window, bool active) const -> bool {
-            return false;
-        }
+        [[nodiscard]] virtual auto translate_event(const NativeMessage& msg) const -> std::optional<Event> = 0;
+        [[nodiscard]] virtual auto query_theme() const -> ThemeChangedEvent = 0;
+        [[nodiscard]] virtual auto activate_ime(const NativeWindow& native_window, bool active) const -> bool = 0;
 
         static auto instance() -> const Platform& {
             return *platform;
