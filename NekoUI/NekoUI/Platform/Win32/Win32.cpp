@@ -90,6 +90,9 @@ namespace neko::platform {
                     .dpi = static_cast<uint32_t>(LOWORD(wparam)),
                 };
 
+            case WM_DESTROY:
+                return DestroyEvent{};
+
             default:
                 return std::nullopt;
         }

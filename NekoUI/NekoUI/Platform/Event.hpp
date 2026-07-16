@@ -15,7 +15,9 @@ namespace neko::platform {
         uint32_t dpi;
     };
 
-    using Event = std::variant<device::MouseMoveEvent, device::MouseButtonEvent, device::MouseWheelEvent, device::KeyEvent, device::CharEvent, ResizeEvent, DpiChangeEvent>;
+    struct DestroyEvent {};
+
+    using Event = std::variant<device::MouseMoveEvent, device::MouseButtonEvent, device::MouseWheelEvent, device::KeyEvent, device::CharEvent, ResizeEvent, DpiChangeEvent, DestroyEvent>;
 
     template<typename... Ts>
     struct Overloaded : Ts... {

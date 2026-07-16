@@ -52,6 +52,9 @@ namespace neko::engine {
                        [&](const platform::DpiChangeEvent& e) -> void {
                            handle_dpi_change(e);
                        },
+                       [&](const platform::DestroyEvent&) -> void {
+                           handle_destroy();
+                       },
                    },
                    event);
 
@@ -78,5 +81,11 @@ namespace neko::engine {
         backend_.set_dpi(e.dpi);
         mouse_.set_dpi(e.dpi);
         invalidation_.mark_dirty();
+    }
+
+    auto EventRouter::handle_destroy() const -> void {
+        if (!scheduler_.expired()) {
+            scheduler_.lock()->stop();
+        }
     }
 }
