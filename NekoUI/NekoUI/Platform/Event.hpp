@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <variant>
 
+#include "../Type.hpp"
 #include "../Device/Keyboard.hpp"
 #include "../Device/Mouse.hpp"
 
@@ -19,7 +20,7 @@ namespace neko::platform {
 
     struct ThemeChangedEvent {
         ThemeMode mode;
-        uint32_t color;
+        type::Color color;
     };
 
     struct DestroyEvent {};

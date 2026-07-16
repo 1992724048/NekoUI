@@ -33,6 +33,6 @@ namespace neko::engine {
         std::weak_ptr<widget::Widget> root;
 
         platform::ThemeMode theme_mode = platform::ThemeMode::Light;
-        uint32_t theme_color = 0;
+        type::Color theme_color = {.value = 0};
     };
 } // namespace neko::engine

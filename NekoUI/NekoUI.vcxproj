@@ -206,7 +206,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-
     <ClCompile Include="NekoUI\Backend\DirectX11\DirectX11.cpp" />
     <ClCompile Include="NekoUI\Engine\Engine.cpp" />
     <ClCompile Include="NekoUI\Engine\EventRouter.cpp" />

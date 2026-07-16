@@ -16,11 +16,11 @@ namespace {
             }
             RegCloseKey(key);
         }
-        DWORD color{};
-        if (FAILED(DwmGetColorizationColor(&color, nullptr))) {
-            color = 0;
+        DWORD raw{};
+        if (FAILED(DwmGetColorizationColor(&raw, nullptr))) {
+            raw = 0;
         }
-        return neko::platform::ThemeChangedEvent{.mode = mode, .color = color};
+        return neko::platform::ThemeChangedEvent{.mode = mode, .color = neko::type::Color{.value = raw}};
     }
 }
 
