@@ -44,4 +44,4 @@ namespace neko::engine {
         FrameCallback frame_callback_;
         InvalidationTracker& invalidation_;
     };
-} // namespace neko::engine
+}

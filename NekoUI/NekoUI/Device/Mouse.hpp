@@ -1,14 +1,32 @@
 // 2026-07-15 16:28:46
 
 #pragma once
-#include <Windows.h>
 #include <algorithm>
 #include <array>
 #include <span>
+
 #include "../Type.hpp"
 
 namespace neko::device {
     using namespace neko::type;
+
+    enum class MouseButton { Left, Right, Middle };
+
+    struct MouseMoveEvent {
+        int x;
+        int y;
+    };
+
+    struct MouseButtonEvent {
+        int x;
+        int y;
+        MouseButton button;
+        bool pressed;
+    };
+
+    struct MouseWheelEvent {
+        int delta;
+    };
 
     struct Mouse {
     private:
@@ -23,7 +41,7 @@ namespace neko::device {
         int wheel_delta = 0;
         float dpi_scale_ = 1.0F;
     public:
-        auto set_dpi(const UINT dpi) -> void {
+        auto set_dpi(const uint32_t dpi) -> void {
             dpi_scale_ = dpi / 96.0F;
         }
 
@@ -76,7 +94,7 @@ namespace neko::device {
                 return true;
             }
 
-            const std::array<Vec2I, 4> corners{Vec2I{rx + cr, ry + cr}, {rx + rw - cr, ry + cr}, {rx + cr, ry + rh - cr}, {rx + rw - cr, ry + rh - cr}};
+            const std::array<Vec2I, 4> corners{Vec2I{.x = rx + cr, .y = ry + cr}, {.x = rx + rw - cr, .y = ry + cr}, {.x = rx + cr, .y = ry + rh - cr}, {.x = rx + rw - cr, .y = ry + rh - cr}};
             return std::ranges::any_of(corners,
                                        [&](const Vec2I c) -> bool {
                                            const auto dx = static_cast<float>(pos.x - c.x);
@@ -104,46 +122,32 @@ namespace neko::device {
             return inside;
         }
 
-        auto handle(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
+        auto handle(const MouseMoveEvent& e) -> void {
             prev_pos = pos;
-            prev_left = left_down;
-            prev_right = right_down;
-            prev_middle = middle_down;
+            pos = {.x = e.x, .y = e.y};
+        }
 
-            switch (msg) {
-                case WM_MOUSEMOVE:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    return true;
-                case WM_LBUTTONDOWN:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    left_down = true;
-                    return true;
-                case WM_LBUTTONUP:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    left_down = false;
-                    return true;
-                case WM_RBUTTONDOWN:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    right_down = true;
-                    return true;
-                case WM_RBUTTONUP:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    right_down = false;
-                    return true;
-                case WM_MBUTTONDOWN:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    middle_down = true;
-                    return true;
-                case WM_MBUTTONUP:
-                    pos = {static_cast<int>(LOWORD(lparam)), static_cast<int>(HIWORD(lparam))};
-                    middle_down = false;
-                    return true;
-                case WM_MOUSEWHEEL:
-                    wheel_delta += GET_WHEEL_DELTA_WPARAM(wparam);
-                    return true;
-                default:
-                    return false;
+        auto handle(const MouseButtonEvent& e) -> void {
+            prev_pos = pos;
+            pos = {.x = e.x, .y = e.y};
+            switch (e.button) {
+                case MouseButton::Left:
+                    prev_left = left_down;
+                    left_down = e.pressed;
+                    break;
+                case MouseButton::Right:
+                    prev_right = right_down;
+                    right_down = e.pressed;
+                    break;
+                case MouseButton::Middle:
+                    prev_middle = middle_down;
+                    middle_down = e.pressed;
+                    break;
             }
         }
+
+        auto handle(const MouseWheelEvent& e) -> void {
+            wheel_delta += e.delta;
+        }
     };
-} // namespace neko::device
+}

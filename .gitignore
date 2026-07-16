@@ -24,7 +24,7 @@ mono_crash.*
 [Rr]eleases/
 x64/
 x86/
-[Ww][Ii][Nn]32/
+/[Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
@@ -373,3 +373,6 @@ FodyWeavers.xsd
 /AGENTS.md
 stb_truetype.h
 docs
+!docs/superpowers/specs/
+
+!docs/superpowers/plans/

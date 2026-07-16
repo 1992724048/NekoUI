@@ -2,7 +2,6 @@
 
 namespace neko::widget {
     auto Widget::draw(engine::Context& context, backend::Backend& backend) -> void {
-        draw_self(context, backend);
         std::shared_lock lock(mutex_);
         for (const auto& child : children_) {
             child->draw(context, backend);
@@ -20,10 +19,10 @@ namespace neko::widget {
         }
     }
 
-    auto Widget::raw_event(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
+    auto Widget::raw_event(engine::Context& context, const platform::Event& event) -> bool {
         std::shared_lock lock(mutex_);
         for (auto it = children_.rbegin(); it != children_.rend(); ++it) {
-            if ((*it)->raw_event(context, msg, wparam, lparam)) {
+            if ((*it)->raw_event(context, event)) {
                 return true;
             }
         }

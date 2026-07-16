@@ -24,72 +24,62 @@ namespace neko::engine {
         scheduler_(scheduler),
         invalidation_(invalidation) {}
 
-    auto EventRouter::dispatch(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
-        mouse_.handle(msg, wparam, lparam);
-        keyboard_.handle(msg, wparam, lparam);
-
-        switch (msg) {
-            case WM_SIZE:
-                handle_resize(lparam);
-                break;
-            case WM_DPICHANGED:
-                handle_dpi_change(wparam);
-                break;
-            case WM_MOUSEMOVE:
-            case WM_LBUTTONDOWN:
-            case WM_LBUTTONUP:
-            case WM_RBUTTONDOWN:
-            case WM_RBUTTONUP:
-            case WM_MBUTTONDOWN:
-            case WM_MBUTTONUP:
-            case WM_MOUSEWHEEL:
-                handle_mouse(msg, wparam, lparam);
-                break;
-            case WM_KEYDOWN:
-            case WM_KEYUP:
-            case WM_CHAR:
-                handle_keyboard(msg, wparam, lparam);
-                break;
-            case WM_TIMER: default:
-                break;
-        }
+    auto EventRouter::dispatch(const platform::Event& event) const -> void {
+        std::visit(platform::Overloaded{
+                       [&](const device::MouseMoveEvent& e) -> void {
+                           mouse_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::MouseButtonEvent& e) -> void {
+                           mouse_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::MouseWheelEvent& e) -> void {
+                           mouse_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::KeyEvent& e) -> void {
+                           keyboard_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::CharEvent& e) -> void {
+                           keyboard_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const platform::ResizeEvent& e) -> void {
+                           handle_resize(e);
+                       },
+                       [&](const platform::DpiChangeEvent& e) -> void {
+                           handle_dpi_change(e);
+                       },
+                   },
+                   event);
 
         if (invalidation_.is_dirty() && !scheduler_.expired()) {
             scheduler_.lock()->request_frame();
         }
     }
 
-    auto EventRouter::handle_mouse(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
+    auto EventRouter::handle_input(const platform::Event& event) const -> void {
         const auto root = tree_.get_root();
         if (!root) {
             return;
         }
-        if (!root->raw_event(context_, msg, wparam, lparam)) {
+        if (!root->raw_event(context_, event)) {
             static_cast<void>(root->hit_test(mouse_));
         }
     }
 
-    auto EventRouter::handle_keyboard(const UINT msg, const WPARAM wparam, const LPARAM lparam) const -> void {
-        if (wparam == VK_TAB) {
-            return;
-        }
-        const auto focused = tree_.get_focus().lock();
-        if (focused) {
-            focused->raw_event(context_, msg, wparam, lparam);
-        }
-    }
-
-    auto EventRouter::handle_dpi_change(const WPARAM wparam) const -> void {
-        const UINT dpi = LOWORD(wparam);
-        backend_.set_dpi(dpi);
-        mouse_.set_dpi(dpi);
-        invalidation_.mark_dirty();
-    }
-
-    auto EventRouter::handle_resize(const LPARAM lparam) const -> void {
+    auto EventRouter::handle_resize(const platform::ResizeEvent& e) const -> void {
         if (!scheduler_.expired()) {
-            scheduler_.lock()->set_pending_size(LOWORD(lparam), HIWORD(lparam));
+            scheduler_.lock()->set_pending_size(e.width, e.height);
         }
         invalidation_.mark_dirty();
     }
-} // namespace neko::engine
+
+    auto EventRouter::handle_dpi_change(const platform::DpiChangeEvent& e) const -> void {
+        backend_.set_dpi(e.dpi);
+        mouse_.set_dpi(e.dpi);
+        invalidation_.mark_dirty();
+    }
+}

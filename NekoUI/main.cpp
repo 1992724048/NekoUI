@@ -3,8 +3,12 @@
 #include <print>
 #include <string>
 
+#include <d3d11.h>
 #include "NekoUI/Type.hpp"
+#include "NekoUI/Backend/DirectX11/DirectX11.hpp"
 #include "NekoUI/Engine/Engine.hpp"
+#include "NekoUI/Platform/Platform.hpp"
+#include "NekoUI/Platform/Win32/Win32.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
 
 using namespace neko::type;
@@ -49,7 +53,10 @@ namespace {
                 case WM_CHAR:
                 case WM_TIMER:
                     if (!msg_pump.expired()) {
-                        msg_pump.lock()->push_msg(msg, wparam, lparam);
+                        const neko::platform::NativeMessage native{.msg = msg, .wparam = wparam, .lparam = lparam};
+                        if (auto event = neko::platform::Platform::instance().translate_event(native)) {
+                            msg_pump.lock()->push_msg(std::move(*event));
+                        }
                     }
                     break;
                 default: ;
@@ -84,7 +91,20 @@ auto main(int argc, char* argv[]) -> int try {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    engine = std::make_unique<neko::engine::Engine>(hwnd);
+    ID3D11Device* device{};
+    ID3D11DeviceContext* ctx{};
+    UINT create_flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    #ifdef _DEBUG
+    create_flags |= D3D11_CREATE_DEVICE_DEBUG;
+    #endif
+    D3D_FEATURE_LEVEL feature_level{};
+    if (FAILED(D3D11CreateDevice( nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flags, nullptr, 0, D3D11_SDK_VERSION, &device, &feature_level, &ctx ))) {
+        std::println("Error: D3D11CreateDevice failed");
+        return 0;
+    }
+
+    auto directx11 = std::make_unique<neko::backend::DirectX11>(device, ctx, hwnd);
+    engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
     render_scheduler = engine->get_render_scheduler();
     [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");

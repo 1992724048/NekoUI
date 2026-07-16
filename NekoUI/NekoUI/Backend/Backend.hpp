@@ -1,92 +1,34 @@
 ﻿#pragma once
-#include <DirectXMath.h>
-#include <Windows.h>
-#include <d3d11.h>
-#include <dxgi1_2.h>
-
-#include <array>
-#include <functional>
-#include <string>
+#include <cstdint>
 #include <string_view>
-#include <unordered_map>
-
-#include "stb_truetype.h"
 
 #include "../Type.hpp"
 
 namespace neko::engine {
     class Engine;
-} // namespace neko::engine
+}
 
 namespace neko::backend {
     using namespace neko::type;
 
-    class Backend final {
-        friend class engine::Engine;
+    class Backend {
     public:
-        explicit Backend(HWND hwnd);
-        ~Backend();
+        Backend() = default;
+        virtual ~Backend() = default;
         Backend(const Backend&) = delete;
         auto operator=(const Backend&) -> Backend& = delete;
 
-        auto resize(Vec2I new_size) -> void;
-        auto set_dpi(UINT dpi) -> void;
+        virtual auto resize(Vec2I new_size) -> void = 0;
+        virtual auto set_dpi(unsigned int dpi) -> void = 0;
+        [[nodiscard]] virtual auto get_dpi_scale() const -> float = 0;
 
-        [[nodiscard]] auto get_dpi_scale() const -> float {
-            return dpi_scale;
-        }
+        virtual auto begin() const -> void = 0;
+        virtual auto end() const -> void = 0;
 
-        auto begin() const -> void;
-        auto end() const -> void;
-
-        auto draw_rect_fill(Vec4I rect, Color color) const -> void;
-        auto draw_rect(Vec4I rect, Color color, int thickness) const -> void;
-        auto draw_line(Vec2I from, Vec2I to, Color color, int thickness) const -> void;
-        auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void;
-        auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void;
-    private:
-        static constexpr int ATLAS_W = 4096;
-        static constexpr int ATLAS_H = 4096;
-        static constexpr int FONT_FIRST = 32;
-        static constexpr int FONT_COUNT = 96;
-        static constexpr int CJK_FIRST = 0x4E00;
-        static constexpr int CJK_LAST = 0x9FFF;
-
-        struct TextCB {
-            float r_x, r_y, r_w, r_h;
-            float c_r, c_g, c_b, c_a;
-            float s_w, s_h;
-            float uv_u, uv_v;
-            float uv_w, uv_h;
-            float p0, p1;
-        };
-
-        auto init_device(HWND hwnd) -> bool;
-        auto init_shaders() -> bool;
-        auto init_states() -> bool;
-        auto init_font() -> bool;
-
-        ID3D11Device* device{};
-        ID3D11DeviceContext* ctx{};
-        IDXGISwapChain1* swap_chain{};
-        ID3D11RenderTargetView* rtv{};
-        ID3D11VertexShader* vs{};
-        ID3D11PixelShader* ps{};
-        ID3D11InputLayout* layout{};
-        ID3D11RasterizerState* rs{};
-        ID3D11BlendState* bs_alpha{};
-        ID3D11BlendState* bs_opaque{};
-        ID3D11Buffer* cbuffer{};
-        Vec2I size{};
-
-        ID3D11ShaderResourceView* font_srv{};
-        ID3D11SamplerState* font_sampler{};
-        ID3D11VertexShader* text_vs{};
-        ID3D11PixelShader* text_ps{};
-        ID3D11Buffer* text_cb{};
-        float font_size{};
-        float dpi_scale = 1.0F;
-        std::array<stbtt_packedchar, FONT_COUNT> glyphs{};
-        std::unordered_map<int, stbtt_packedchar> cjk_glyphs{};
+        virtual auto draw_rect_fill(Vec4I rect, Color color) const -> void = 0;
+        virtual auto draw_rect(Vec4I rect, Color color, int thickness) const -> void = 0;
+        virtual auto draw_line(Vec2I from, Vec2I to, Color color, int thickness) const -> void = 0;
+        virtual auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void = 0;
+        virtual auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void = 0;
     };
 } // namespace neko::backend

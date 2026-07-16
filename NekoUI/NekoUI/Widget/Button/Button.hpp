@@ -19,13 +19,10 @@ namespace neko::widget {
         [[nodiscard]] auto color() const -> Color;
         auto set_on_click(std::function<void()> callback) -> void;
         auto animate_color(Color target, int duration_ms = 200) -> void;
-    protected:
-        auto draw_self(engine::Context& context, backend::Backend& backend) -> void override;
-        auto raw_event(engine::Context& context, UINT msg, WPARAM wparam, LPARAM lparam) -> bool override;
     private:
         std::string text_{};
         Color color_{0xFF4A90D9};
         std::function<void()> on_click_{};
-        animation::Animation<int, animation::ease::quad::in_out> color_anim_{0, 200};
+        component::Animation<int, component::ease::quad::in_out> color_anim_{0, 200};
     };
 } // namespace neko::widget

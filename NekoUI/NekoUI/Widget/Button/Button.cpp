@@ -62,41 +62,4 @@ namespace neko::widget {
         }
         color_anim_.to_value(static_cast<int>(target.value), std::optional{std::chrono::milliseconds{duration_ms}});
     }
-
-    auto Button::draw_self(engine::Context& /*context*/, backend::Backend& backend) -> void {
-        Vec4I b{};
-        Color fill{};
-        std::string label;
-        {
-            std::shared_lock lock(mutex_);
-            b = bounds;
-            fill = color_;
-            label = text_;
-        }
-
-        backend.draw_rect_fill(b, fill);
-        if (!label.empty()) {
-            const Vec2I pos{b.x + 8, b.y + ((b.w - 16) / 2)};
-            backend.draw_text(label, pos, Color{0xFF000000});
-        }
-
-        if (color_anim_.is_active()) {
-            color_anim_();
-        }
-    }
-
-    auto Button::raw_event(engine::Context& context, const UINT msg, const WPARAM wparam, const LPARAM lparam) -> bool {
-        if (msg == WM_LBUTTONUP) {
-            std::function<void()> callback;
-            {
-                std::shared_lock lock(mutex_);
-                callback = on_click_;
-            }
-            if (callback) {
-                callback();
-            }
-            return true;
-        }
-        return Widget::raw_event(context, msg, wparam, lparam);
-    }
 } // namespace neko::widget

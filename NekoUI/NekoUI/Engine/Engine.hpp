@@ -19,7 +19,7 @@ namespace neko::engine {
 
     class Engine final {
     public:
-        explicit Engine(HWND hwnd);
+        explicit Engine(std::unique_ptr<backend::Backend> backend);
         ~Engine();
 
         Engine(const Engine&) = delete;

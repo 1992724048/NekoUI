@@ -7,7 +7,7 @@
 #include <optional>
 #include <type_traits>
 
-namespace neko::animation {
+namespace neko::component {
     namespace ease {
         inline namespace linear {
             constexpr auto in(const float t) -> float {

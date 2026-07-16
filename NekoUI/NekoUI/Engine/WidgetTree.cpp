@@ -54,4 +54,4 @@ namespace neko::engine {
         std::unique_lock _(id_map_mutex_);
         id_widgets_.clear();
     }
-} // namespace neko::engine
+}

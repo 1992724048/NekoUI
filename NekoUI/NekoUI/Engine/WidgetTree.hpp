@@ -41,4 +41,4 @@ namespace neko::engine {
         std::map<std::string, std::weak_ptr<widget::Widget>> id_widgets_;
         mutable std::shared_mutex id_map_mutex_;
     };
-} // namespace neko::engine
+}

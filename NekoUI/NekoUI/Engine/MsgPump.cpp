@@ -10,11 +10,11 @@ namespace neko::engine {
         stop();
     }
 
-    auto MsgPump::push_msg(const UINT msg, const WPARAM wparam, const LPARAM lparam) -> void {
+    auto MsgPump::push_msg(const platform::Event& event) -> void {
         msg_space_.acquire();
         {
             std::scoped_lock lock(msg_mutex_);
-            msg_queue_[tail_] = Msg{.msg = msg, .wparam = wparam, .lparam = lparam};
+            msg_queue_[tail_] = event;
             tail_ = (tail_ + 1) % kQueueSize;
             ++count_;
         }
@@ -31,16 +31,15 @@ namespace neko::engine {
 
     auto MsgPump::msg_loop() -> void {
         while (running_.load()) {
-            const auto ev = msg_dequeue();
+            auto ev = msg_dequeue();
             if (!ev.has_value()) {
                 break;
             }
-            const auto [msg, wparam, lparam] = *ev;
-            handler_(msg, wparam, lparam);
+            handler_(*ev);
         }
     }
 
-    auto MsgPump::msg_dequeue() -> std::optional<std::tuple<UINT, WPARAM, LPARAM>> {
+    auto MsgPump::msg_dequeue() -> std::optional<platform::Event> {
         std::unique_lock lock(msg_mutex_);
         msg_notify_.wait(lock,
                          [this] -> bool {
@@ -49,11 +48,11 @@ namespace neko::engine {
         if (!running_.load()) {
             return std::nullopt;
         }
-        const auto ev = msg_queue_[head_];
+        auto ev = msg_queue_[head_];
         head_ = (head_ + 1) % kQueueSize;
         --count_;
         lock.unlock();
         msg_space_.release();
-        return std::make_tuple(ev.msg, ev.wparam, ev.lparam);
+        return ev;
     }
-} // namespace neko::engine
+}

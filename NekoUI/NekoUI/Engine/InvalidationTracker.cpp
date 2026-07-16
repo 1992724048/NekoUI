@@ -42,4 +42,4 @@ namespace neko::engine {
         std::unique_lock _(dirty_list_mutex_);
         dirty_list_.clear();
     }
-} // namespace neko::engine
+}

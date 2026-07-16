@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "../../Type.hpp"
+#include "../Type.hpp"
 
-namespace neko::css {
+namespace neko::style {
     using namespace neko::type;
 
     struct Background {

@@ -6,36 +6,31 @@
 #include "WidgetTree.hpp"
 
 #include <cmath>
-#include <minwindef.h>
 #include <mutex>
 #include <optional>
 #include <thread>
-#include <windef.h>
 
 #include "../Widget/Widget.hpp"
 
-#include "../Device/keyboard.hpp"
-#include "../Device/mouse.hpp"
-
 namespace neko::engine {
-    Engine::Engine(const HWND hwnd) {
-        backend = std::make_unique<backend::Backend>(hwnd);
+    Engine::Engine(std::unique_ptr<backend::Backend> backend) :
+        backend{std::move(backend)} {
         context = std::make_unique<Context>();
 
         mouse = std::make_shared<device::Mouse>();
         keyboard = std::make_shared<device::Keyboard>();
 
-        const UINT initial_dpi = static_cast<UINT>(std::round(backend->get_dpi_scale() * 96.0F));
+        const auto initial_dpi = static_cast<unsigned int>(std::round(this->backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
 
         context->anim_inc = std::bind(&InvalidationTracker::anim_inc, &invalidation_);
         context->anim_dec = std::bind(&InvalidationTracker::anim_dec, &invalidation_);
 
-        context->reg_widget = [this](const std::weak_ptr<widget::Widget>& w) {
+        context->reg_widget = [this](const std::weak_ptr<widget::Widget>& w) -> void {
             widget_tree_.register_widget(w);
             render_scheduler_->request_frame();
         };
-        context->del_widget = [this](const std::weak_ptr<widget::Widget>& w) {
+        context->del_widget = [this](const std::weak_ptr<widget::Widget>& w) -> void {
             widget_tree_.unregister_widget(w);
             render_scheduler_->request_frame();
         };
@@ -48,7 +43,7 @@ namespace neko::engine {
 
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
         event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_, invalidation_);
-        msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
     }
 
     Engine::~Engine() {
@@ -91,4 +86,4 @@ namespace neko::engine {
         backend->end();
         invalidation_.clear();
     }
-} // namespace neko::engine
+}

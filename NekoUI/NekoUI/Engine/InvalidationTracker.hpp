@@ -27,4 +27,4 @@ namespace neko::engine {
         std::shared_mutex dirty_list_mutex_;
         std::vector<std::weak_ptr<widget::Widget>> dirty_list_;
     };
-} // namespace neko::engine
+}
