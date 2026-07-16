@@ -6,6 +6,7 @@
 #include "WidgetTree.hpp"
 
 #include "../Backend/Backend.hpp"
+#include "../Style/ColorScheme.hpp"
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {
@@ -87,8 +88,9 @@ namespace neko::engine {
     }
 
     auto EventRouter::handle_theme_change(const platform::ThemeChangedEvent& e) const -> void {
-        context_.theme_mode = e.mode;
-        context_.theme_color = e.color;
+        context_.scheme = (e.mode == platform::ThemeMode::Dark)
+            ? style::ColorScheme::dark(e.color)
+            : style::ColorScheme::light(e.color);
         invalidation_.mark_dirty();
     }
 

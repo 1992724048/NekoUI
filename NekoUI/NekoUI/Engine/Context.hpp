@@ -1,11 +1,11 @@
 ﻿#pragma once
-#include <cstdint>
 #include <functional>
 #include <memory>
 
 #include "../Device/Keyboard.hpp"
 #include "../Device/mouse.hpp"
 #include "../Platform/Event.hpp"
+#include "../Style/ColorScheme.hpp"
 
 namespace neko::backend {
     class Backend;
@@ -32,7 +32,6 @@ namespace neko::engine {
 
         std::weak_ptr<widget::Widget> root;
 
-        platform::ThemeMode theme_mode = platform::ThemeMode::Light;
-        type::Color theme_color = {.value = 0};
+        style::ColorScheme scheme;
     };
 } // namespace neko::engine
