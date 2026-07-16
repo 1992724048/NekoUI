@@ -10,6 +10,7 @@ namespace neko::engine {
 
     auto WidgetTree::set_root(std::shared_ptr<widget::Widget> w) -> void {
         root_ = std::move(w);
+        build();
     }
 
     auto WidgetTree::get_root() const -> std::shared_ptr<widget::Widget> {
