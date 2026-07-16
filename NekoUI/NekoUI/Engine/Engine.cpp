@@ -15,6 +15,8 @@ namespace neko::engine {
         backend{std::move(backend)} {
         context = std::make_unique<Context>();
 
+        native_handle_ = this->backend->get_native_handle();
+
         mouse = std::make_shared<device::Mouse>();
         keyboard = std::make_shared<device::Keyboard>();
 

@@ -36,12 +36,14 @@ namespace neko::engine {
             return widget;
         }
 
+        [[nodiscard]] auto get_native_handle() const -> Handle { return native_handle_; }
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
     private:
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};
+        Handle native_handle_{};
         std::shared_ptr<device::Mouse> mouse;
         std::shared_ptr<device::Keyboard> keyboard;
 

@@ -54,6 +54,8 @@ namespace neko::type {
     using Vec3I = Vec<int, 3>;
     using Vec4I = Vec<int, 4>;
 
+    using Handle = void*;
+
     struct Color {
         uint32_t value;
 

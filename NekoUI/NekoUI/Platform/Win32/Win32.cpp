@@ -99,23 +99,25 @@ namespace neko::platform {
     }
 
     auto Win32::init_ime() const -> void {
-        if (ime_initialized_) { return; }
+        if (ime_initialized_) {
+            return;
+        }
         ime_initialized_ = true;
 
         const HRESULT com_hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         ime_com_initialized_ = (com_hr == S_OK);
 
-        if (FAILED(CoCreateInstance(CLSID_TF_ThreadMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,
-            reinterpret_cast<void**>(&ime_thread_mgr_)))) {
+        if (FAILED(CoCreateInstance(CLSID_TF_ThreadMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, reinterpret_cast<void**>(&ime_thread_mgr_)))) {
             return;
         }
 
-        if (FAILED(ime_thread_mgr_->Activate(&ime_client_id_))) { return; }
-        if (FAILED(ime_thread_mgr_->CreateDocumentMgr(&ime_doc_mgr_))) { return; }
+        if (FAILED(ime_thread_mgr_->Activate(&ime_client_id_))) {
+            return;
+        }
+        if (FAILED(ime_thread_mgr_->CreateDocumentMgr(&ime_doc_mgr_))) {
+            return;
+        }
 
-        // Push a single context onto the document manager so the IME has
-        // something to compose into. Focus (SetFocus / nullptr) is managed
-        // separately in activate_ime.
         ITfContext* context{};
         if (SUCCEEDED(ime_doc_mgr_->CreateContext(ime_client_id_, 0, nullptr, &context, nullptr))) {
             ime_doc_mgr_->Push(context);
@@ -125,7 +127,9 @@ namespace neko::platform {
 
     auto Win32::activate_ime(const NativeWindow& native_window, bool active) const -> bool {
         init_ime();
-        if (!ime_thread_mgr_ || !ime_doc_mgr_) { return false; }
+        if (!ime_thread_mgr_ || !ime_doc_mgr_) {
+            return false;
+        }
 
         ime_thread_mgr_->SetFocus(active ? ime_doc_mgr_ : nullptr);
         return true;

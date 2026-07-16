@@ -31,7 +31,7 @@ namespace neko::backend {
         auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void override;
         auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void override;
 
-        [[nodiscard]] auto get_native_handle() const -> void* override {
+        [[nodiscard]] auto get_native_handle() const -> Handle override {
             return hwnd_;
         }
     private:

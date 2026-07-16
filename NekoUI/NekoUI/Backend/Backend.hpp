@@ -31,6 +31,6 @@ namespace neko::backend {
         virtual auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void = 0;
         virtual auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void = 0;
 
-        [[nodiscard]] virtual auto get_native_handle() const -> void* = 0;
+        [[nodiscard]] virtual auto get_native_handle() const -> Handle = 0;
     };
 } // namespace neko::backend
