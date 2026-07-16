@@ -66,6 +66,8 @@ namespace {
 } // namespace
 
 auto main(int argc, char* argv[]) -> int try {
+    neko::platform::Platform::instance().check();
+
     std::wstring class_name = L"NekoUI";
 
     WNDCLASSW win_class{};
