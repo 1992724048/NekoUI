@@ -15,17 +15,13 @@ namespace neko::platform {
         LPARAM lparam;
     };
 
-    struct NativeWindow {
-        HWND hwnd;
-    };
-
     class Win32 final : public Platform {
     public:
         Win32();
         ~Win32() override;
         [[nodiscard]] auto translate_event(const NativeMessage& nm) const -> std::optional<Event> override;
         [[nodiscard]] auto query_theme() const -> ThemeChangedEvent override;
-        [[nodiscard]] auto activate_ime(const NativeWindow& native_window, bool active) const -> bool override;
+        [[nodiscard]] auto activate_ime(type::Handle native_window, bool active) const -> bool override;
     private:
         mutable ThemeChangedEvent cached_theme_{};
         mutable ITfThreadMgr* ime_thread_mgr_{};

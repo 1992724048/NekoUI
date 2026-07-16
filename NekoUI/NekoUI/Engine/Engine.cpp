@@ -40,6 +40,7 @@ namespace neko::engine {
 
         context->mouse = mouse;
         context->keyboard = keyboard;
+        context->native_handle = native_handle_;
 
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
         event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
@@ -50,6 +51,10 @@ namespace neko::engine {
     Engine::~Engine() {
         clear();
         event_router_.reset();
+    }
+
+    auto Engine::get_native_handle() const -> Handle {
+        return native_handle_;
     }
 
     auto Engine::clear() -> void {

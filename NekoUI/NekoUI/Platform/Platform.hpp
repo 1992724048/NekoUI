@@ -20,7 +20,7 @@ namespace neko::platform {
 
         [[nodiscard]] virtual auto translate_event(const NativeMessage& msg) const -> std::optional<Event> = 0;
         [[nodiscard]] virtual auto query_theme() const -> ThemeChangedEvent = 0;
-        [[nodiscard]] virtual auto activate_ime(const NativeWindow& native_window, bool active) const -> bool = 0;
+        [[nodiscard]] virtual auto activate_ime(type::Handle native_window, bool active) const -> bool = 0;
 
         static auto instance() -> const Platform& {
             return *platform;

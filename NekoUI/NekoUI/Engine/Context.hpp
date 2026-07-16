@@ -33,5 +33,6 @@ namespace neko::engine {
         std::weak_ptr<widget::Widget> root;
 
         style::ColorScheme scheme;
+        type::Handle native_handle;
     };
 } // namespace neko::engine
