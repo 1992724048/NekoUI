@@ -36,6 +36,7 @@ namespace neko::widget {
 
         [[nodiscard]] auto id() const -> const std::string&;
         [[nodiscard]] auto index() const -> int;
+        [[nodiscard]] auto path() const -> const std::string&;
     protected:
         Vec4I bounds{.width = std::numeric_limits<int>::max(), .height = std::numeric_limits<int>::max()};
 
@@ -46,5 +47,6 @@ namespace neko::widget {
 
         int z_index_{0};
         std::string id_;
+        std::string path_;
     };
 }

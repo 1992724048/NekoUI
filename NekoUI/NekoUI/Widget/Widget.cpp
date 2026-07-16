@@ -10,4 +10,8 @@ namespace neko::widget {
     auto Widget::index() const -> int {
         return z_index_;
     }
+
+    auto Widget::path() const -> const std::string& {
+        return path_;
+    }
 }
