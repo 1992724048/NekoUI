@@ -91,7 +91,7 @@ namespace neko::engine {
             scheduler_.lock()->stop();
         }
         if (!msg_pump_.expired()) {
-            msg_pump_.lock()->request_stop();
+            msg_pump_.lock()->stop();
         }
     }
 }

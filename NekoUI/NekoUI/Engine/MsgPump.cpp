@@ -21,15 +21,10 @@ namespace neko::engine {
         msg_notify_.notify_one();
     }
 
-    auto MsgPump::request_stop() -> void {
-        running_.store(false);
-        msg_notify_.notify_one();
-    }
-
     auto MsgPump::stop() -> void {
         running_.store(false);
         msg_notify_.notify_one();
-        if (msg_thread_.joinable()) {
+        if (msg_thread_.joinable() && msg_thread_.get_id() != std::this_thread::get_id()) {
             msg_thread_.join();
         }
     }
