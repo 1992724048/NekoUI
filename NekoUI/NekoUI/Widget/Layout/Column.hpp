@@ -18,6 +18,8 @@ namespace neko::widget {
         auto background(style::Background bg) -> Column& { background_ = bg; return *this; }
         auto widget_size(style::Size sz) -> Column& { size_ = sz; return *this; }
 
+        auto style(std::string_view name) -> Column& { class_name_ = name; return *this; }
+
     private:
         style::Background background_;
         style::Size size_{{400, 300}};

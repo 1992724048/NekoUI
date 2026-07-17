@@ -21,6 +21,12 @@ namespace neko::widget {
         auto on_click(std::function<void()> cb) -> Button&;
         auto text(std::string t) -> Button&;
 
+        /// 设置 CSS 类名，返回 Button& 保持链式类型
+        auto style(std::string_view name) -> Button& {
+            class_name_ = name;
+            return *this;
+        }
+
         auto background(style::Background bg) -> Button& {
             background_ = bg;
             return *this;

@@ -32,7 +32,7 @@ namespace neko::widget {
         return *this;
     }
 
-    auto Widget::get_class_name() const -> const std::string& {
+    auto Widget::get_style() const -> const std::string& {
         return class_name_;
     }
 }

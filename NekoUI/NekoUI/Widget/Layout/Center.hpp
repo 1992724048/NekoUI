@@ -14,6 +14,8 @@ namespace neko::widget {
 
         auto background(style::Background bg) -> Center& { background_ = bg; return *this; }
 
+        auto style(std::string_view name) -> Center& { class_name_ = name; return *this; }
+
     private:
         style::Background background_;
     };

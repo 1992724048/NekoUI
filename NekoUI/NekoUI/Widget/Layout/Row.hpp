@@ -20,6 +20,8 @@ namespace neko::widget {
             size_ = sz;
             return *this;
         }
+
+        auto style(std::string_view name) -> Row& { class_name_ = name; return *this; }
     private:
         style::Background background_;
         style::Size size_{{400, 50}};
