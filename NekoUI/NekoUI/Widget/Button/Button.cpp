@@ -41,8 +41,10 @@ namespace neko::widget {
     auto Button::input(engine::Context& context, const platform::Event& event) -> void {
         const auto* mouse_evt = std::get_if<device::MouseButtonEvent>(&event);
         if (mouse_evt && mouse_evt->button == device::MouseButton::Left && mouse_evt->pressed) {
-            if (on_click_) {
-                on_click_();
+            if (on_click_ && context.mouse.lock()) {
+                if (context.mouse.lock()->is_inside(bounds)) {
+                    on_click_();
+                }
             }
         }
     }
