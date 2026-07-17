@@ -1,11 +1,12 @@
 #include "Renderer.hpp"
 #include "Context.hpp"
-#include "WidgetVisitor.hpp"
 #include "TreeManager.hpp"
+#include "WidgetVisitor.hpp"
 #include "../Backend/Backend.hpp"
 
 namespace neko::engine {
-    Renderer::Renderer(TreeManager& tree) : tree_(tree) {}
+    Renderer::Renderer(TreeManager& tree) :
+        tree_(tree) {}
 
     auto Renderer::render(const type::Vec4I rect, Context& context, backend::Backend& backend) const -> void {
         std::shared_lock _(tree_.mutex_);

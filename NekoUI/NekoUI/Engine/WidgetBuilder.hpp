@@ -8,7 +8,6 @@ namespace neko::engine {
     public:
         explicit WidgetBuilder(TreeManager& tree);
         auto build(Context& context) -> void;
-
     private:
         TreeManager& tree_;
     };
