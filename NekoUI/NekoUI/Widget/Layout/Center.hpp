@@ -15,10 +15,7 @@ namespace neko::widget {
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
         auto hit_test(const device::Mouse& mouse) const -> bool override;
 
-        auto style(const CenterStyle& s) -> Center& {
-            style_ = s;
-            return *this;
-        }
+        auto style(const CenterStyle& s) -> Center&;
     private:
         CenterStyle style_{};
     };
