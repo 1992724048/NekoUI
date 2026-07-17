@@ -1,29 +1,13 @@
 #pragma once
 #include "../Widget.hpp"
-
-#include "../../Style/CSS.hpp"
+#include "../Stylable.hpp"
 
 namespace neko::widget {
-    class Row final : public Widget {
+    class Row final : public Widget, public Stylable<Row> {
     public:
         explicit Row(engine::Context&);
 
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
-        auto hit_test(const device::Mouse& mouse) const -> bool override;
-
-        auto background(style::Background bg) -> Row& {
-            background_ = bg;
-            return *this;
-        }
-
-        auto widget_size(style::Size sz) -> Row& {
-            size_ = sz;
-            return *this;
-        }
-
-        auto style(std::string_view name) -> Row& { class_name_ = name; return *this; }
-    private:
-        style::Background background_;
-        style::Size size_{{400, 50}};
+        [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
     };
 } // namespace neko::widget

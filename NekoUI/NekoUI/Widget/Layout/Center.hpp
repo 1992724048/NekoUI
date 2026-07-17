@@ -1,23 +1,15 @@
 #pragma once
 #include "../Widget.hpp"
-
-#include "../../Style/CSS.hpp"
+#include "../Stylable.hpp"
 
 namespace neko::widget {
 
-    class Center final : public Widget {
+    class Center final : public Widget, public Stylable<Center> {
     public:
         explicit Center(engine::Context&);
 
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
-        auto hit_test(const device::Mouse& mouse) const -> bool override;
-
-        auto background(style::Background bg) -> Center& { background_ = bg; return *this; }
-
-        auto style(std::string_view name) -> Center& { class_name_ = name; return *this; }
-
-    private:
-        style::Background background_;
+        [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
     };
 
 } // namespace neko::widget

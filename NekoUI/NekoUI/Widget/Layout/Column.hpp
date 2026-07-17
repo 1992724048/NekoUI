@@ -1,28 +1,18 @@
 #pragma once
 #include "../Widget.hpp"
-
-#include "../../Style/CSS.hpp"
+#include "../Stylable.hpp"
 
 namespace neko::widget {
 
-    class Column final : public Widget {
+    class Column final : public Widget, public Stylable<Column> {
     public:
-        explicit Column(engine::Context& /*unused*/);
+        explicit Column(engine::Context&);
 
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
         auto build(engine::Context& context) -> void override;
         auto event(engine::Context& context) -> void override;
         auto input(engine::Context& context, const platform::Event& event) -> void override;
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
-
-        auto background(style::Background bg) -> Column& { background_ = bg; return *this; }
-        auto widget_size(style::Size sz) -> Column& { size_ = sz; return *this; }
-
-        auto style(std::string_view name) -> Column& { class_name_ = name; return *this; }
-
-    private:
-        style::Background background_;
-        style::Size size_{{400, 300}};
     };
 
 } // namespace neko::widget
