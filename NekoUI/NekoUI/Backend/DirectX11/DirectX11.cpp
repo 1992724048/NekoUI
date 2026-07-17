@@ -106,7 +106,8 @@ namespace {
 }
 
 namespace neko::backend {
-    DirectX11::DirectX11(const HWND hwnd) : hwnd_{hwnd} {
+    DirectX11::DirectX11(const HWND hwnd) :
+        hwnd_{hwnd} {
         init_device();
         init_swap_chain(hwnd);
         init_shaders();

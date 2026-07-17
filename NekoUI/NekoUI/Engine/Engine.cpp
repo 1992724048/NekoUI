@@ -79,6 +79,7 @@ namespace neko::engine {
 
         backend->begin();
         const auto [x, y] = render_scheduler_->pending_size();
+        backend->draw_rect_fill({0, 0, x, y}, context->scheme.primary);
         widget_tree_.render({0, 0, x, y}, *context, *backend);
         backend->end();
         invalidation_.clear();

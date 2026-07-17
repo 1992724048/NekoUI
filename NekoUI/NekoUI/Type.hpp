@@ -36,15 +36,19 @@ namespace neko::type {
     struct Vec<T, 4> {
         union {
             struct {
-                T x, y, z, w;
+                T x, y;
+
+                union {
+                    T z, width;
+                };
+
+                union {
+                    T w, height;
+                };
             };
 
             struct {
                 T r, g, b, a;
-            };
-
-            struct {
-                T x, y, width, height;
             };
         };
 
