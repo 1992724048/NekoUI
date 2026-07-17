@@ -21,7 +21,10 @@ namespace neko::type {
         }
 
         constexpr auto operator==(const Vec&) const -> bool = default;
-        constexpr auto operator<=>(const Vec&) const = default;
+        constexpr auto operator<=>(const Vec& other) const {
+            if (auto c = x <=> other.x; c != 0) return c;
+            return y <=> other.y;
+        }
     };
 
     template<typename T>
@@ -37,7 +40,11 @@ namespace neko::type {
         };
 
         constexpr auto operator==(const Vec&) const -> bool = default;
-        constexpr auto operator<=>(const Vec&) const = default;
+        constexpr auto operator<=>(const Vec& other) const {
+            if (auto c = x <=> other.x; c != 0) return c;
+            if (auto c = y <=> other.y; c != 0) return c;
+            return z <=> other.z;
+        }
     };
 
     template<typename T>
@@ -61,7 +68,12 @@ namespace neko::type {
         };
 
         constexpr auto operator==(const Vec&) const -> bool = default;
-        constexpr auto operator<=>(const Vec&) const = default;
+        constexpr auto operator<=>(const Vec& other) const {
+            if (auto c = x <=> other.x; c != 0) return c;
+            if (auto c = y <=> other.y; c != 0) return c;
+            if (auto c = z <=> other.z; c != 0) return c;
+            return w <=> other.w;
+        }
     };
 
     using Vec2 = Vec<float, 2>;
@@ -71,6 +83,7 @@ namespace neko::type {
     using Vec3I = Vec<int, 3>;
     using Vec4I = Vec<int, 4>;
 
+    using Size = Vec2I;
     using Rect = Vec4I;
 
     using Handle = void*;

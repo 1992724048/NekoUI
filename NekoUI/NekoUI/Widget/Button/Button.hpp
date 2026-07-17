@@ -11,7 +11,7 @@ namespace neko::widget {
         Color background_color{0xFF1E1E1E};
         Color text_color{0xFFFFFFFF};
         float font_size{16.0F};
-        Vec2 size{.x = std::numeric_limits<float>::max(), .y = std::numeric_limits<float>::max()};
+        Size size{.x = std::numeric_limits<int>::max(), .y = std::numeric_limits<int>::max()};
         float border_size{0.0F};
         Color border_color{};
     };

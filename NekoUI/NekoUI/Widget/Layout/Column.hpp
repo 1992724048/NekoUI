@@ -4,7 +4,7 @@
 namespace neko::widget {
     struct ColumnStyle {
         Color background_color{};
-        Vec2 size{.x = std::numeric_limits<float>::max(), .y = std::numeric_limits<float>::max()};
+        Size size{.x = std::numeric_limits<int>::max(), .y = std::numeric_limits<int>::max()};
         float padding{8.0F};
         float spacing{4.0F};
     };
