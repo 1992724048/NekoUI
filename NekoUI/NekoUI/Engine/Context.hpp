@@ -24,8 +24,7 @@ namespace neko::engine {
         std::function<void()> anim_inc;
         std::function<void()> anim_dec;
 
-        /// build<T>() 添加子 Widget 后自动触发 WidgetTree 重建
-        std::function<void()> on_widget_tree_changed;
+        std::function<void()> widget_tree_changed;
 
         std::weak_ptr<device::Mouse> mouse;
         std::weak_ptr<device::Keyboard> keyboard;

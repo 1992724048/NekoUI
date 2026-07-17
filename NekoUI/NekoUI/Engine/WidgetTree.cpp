@@ -120,13 +120,31 @@ namespace neko::engine {
     }
 
     auto WidgetTree::hit_test(const device::Mouse& mouse) const -> bool {
-        bool hit{false};
-        for_each([&](const widget::Widget& widget) -> void {
-            if (widget.hit_test(mouse)) {
-                hit = true;
+        std::shared_lock _(mutex_);
+
+        const auto root = root_.load();
+        if (!root) return false;
+
+        // 从下往上（高 z_index = 顶层 → 低 z_index = 底层），命中即短路返回
+        auto test_recursive = [&](auto& self, widget::Widget& w) -> bool {
+            auto& children = w.get_children();
+
+            if (children.is_widget()) {
+                if (children.as_widget() && self(self, *children.as_widget())) return true;
+            } else if (children.is_list()) {
+                for (auto it = children.as_list().rbegin(); it != children.as_list().rend(); ++it) {
+                    if (it->is_widget() && it->as_widget() && self(self, *it->as_widget())) return true;
+                }
+            } else if (children.is_vector()) {
+                for (auto it = children.as_vector().rbegin(); it != children.as_vector().rend(); ++it) {
+                    if (it->is_widget() && it->as_widget() && self(self, *it->as_widget())) return true;
+                }
             }
-        });
-        return hit;
+
+            return w.hit_test(mouse);
+        };
+
+        return test_recursive(test_recursive, *root);
     }
 
     auto WidgetTree::for_each(const std::function<void(widget::Widget&)>& callback) const -> void {

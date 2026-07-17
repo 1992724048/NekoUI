@@ -26,7 +26,7 @@ namespace neko::engine {
         context->anim_inc = std::bind(&InvalidationTracker::anim_inc, &invalidation_);
         context->anim_dec = std::bind(&InvalidationTracker::anim_dec, &invalidation_);
 
-        context->on_widget_tree_changed = [this] { widget_tree_.build(*context); };
+        context->widget_tree_changed = std::bind(&Engine::rebuild, this);
 
         context->mark_dirty = std::bind(&InvalidationTracker::mark_dirty, &invalidation_);
         context->widget_dirty = std::bind(&InvalidationTracker::mark_widget_dirty, &invalidation_, std::placeholders::_1);
