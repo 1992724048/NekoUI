@@ -7,12 +7,11 @@
 #include "../../Component/Animation.hpp"
 
 namespace neko::widget {
-    /// Button 样式
     struct ButtonStyle {
         Color background_color{0xFF1E1E1E};
         Color text_color{0xFFFFFFFF};
         float font_size{16.0F};
-        Vec2 size{.x = 100, .y = 40};
+        Vec2 size{.x = std::numeric_limits<float>::max(), .y = std::numeric_limits<float>::max()};
         float border_size{0.0F};
         Color border_color{};
     };

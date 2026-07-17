@@ -8,7 +8,13 @@ namespace neko::type {
 
     template<typename T>
     struct Vec<T, 2> {
-        T x, y;
+        union {
+            T x, width;
+        };
+
+        union {
+            T y, height;
+        };
 
         constexpr auto operator-(const Vec& other) const -> Vec {
             return {.x = x - other.x, .y = y - other.y};
@@ -61,6 +67,7 @@ namespace neko::type {
     using Vec2I = Vec<int, 2>;
     using Vec3I = Vec<int, 3>;
     using Vec4I = Vec<int, 4>;
+
     /// Widget 绘制区域
     struct Rect {
         int x = 0;

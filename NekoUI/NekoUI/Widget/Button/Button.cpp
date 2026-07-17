@@ -1,5 +1,7 @@
 ﻿#include "Button.hpp"
 
+#include <limits>
+
 #include "../../Backend/Backend.hpp"
 #include "../../Device/Mouse.hpp"
 #include "../../Platform/Event.hpp"
@@ -12,22 +14,29 @@ namespace neko::widget {
     auto Button::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
         const auto& s = style_;
 
+        // 当 size 为 max 时使用父容器传入的 rect，否则用自身 bounds
+        const auto use_parent_rect = s.size.x == std::numeric_limits<float>::max() || s.size.y == std::numeric_limits<float>::max();
+        const auto effective = use_parent_rect ? rect : bounds;
+
         // 1. 绘制背景
-        backend.draw_rect_fill(bounds, s.background_color);
+        backend.draw_rect_fill(effective, s.background_color);
 
         // 2. 绘制边框
         if (s.border_size > 0.0f) {
-            backend.draw_rect(bounds, s.border_color, static_cast<int>(s.border_size));
+            backend.draw_rect(effective, s.border_color, static_cast<int>(s.border_size));
         }
 
         // 3. 绘制文字（居中）
         if (!text_.empty()) {
             const auto font_size = s.font_size;
-            const auto text_pos = Vec2I{static_cast<int>(bounds.x + static_cast<float>(bounds.z) * 0.1f), static_cast<int>(bounds.y + static_cast<float>(bounds.w) * 0.5f)};
+            const auto text_pos = Vec2I{
+                static_cast<int>(effective.x + static_cast<float>(effective.z) * 0.1f),
+                static_cast<int>(effective.y + static_cast<float>(effective.w) * 0.5f)
+            };
             backend.draw_text(text_, text_pos, s.text_color, font_size);
         }
 
-        return Rect{.x = bounds.x, .y = bounds.y, .width = bounds.z - bounds.x, .height = bounds.w - bounds.y};
+        return Rect{.x = effective.x, .y = effective.y, .width = effective.z - effective.x, .height = effective.w - effective.y};
     }
 
     auto Button::build(engine::Context& context) -> void {}

@@ -9,7 +9,6 @@ namespace neko::widget {
     Column::Column(engine::Context&) {}
 
     auto Column::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
-        // 当 size 为 max 时使用父容器传入的 rect，否则用自身 bounds
         const auto use_parent_rect = style_.size.x == std::numeric_limits<float>::max() || style_.size.y == std::numeric_limits<float>::max();
         const auto effective = use_parent_rect ? rect : bounds;
 
