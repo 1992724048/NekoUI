@@ -17,8 +17,8 @@ namespace neko::engine {
         }
 
         auto render_recursive = [&](auto& self, widget::Widget& w, const type::Vec4I parent_rect) -> type::Rect {
-            w.set_bounds(parent_rect);
             const auto child_rect = w.draw(parent_rect, context, backend);
+            w.set_bounds(type::Vec4I{{child_rect.x, child_rect.y, child_rect.x + child_rect.width, child_rect.y + child_rect.height}});
 
             const auto is_horizontal = w.horizontal_;
             auto offset = is_horizontal ? child_rect.x : child_rect.y;

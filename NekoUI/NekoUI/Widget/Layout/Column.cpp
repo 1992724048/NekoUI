@@ -9,16 +9,17 @@ namespace neko::widget {
     Column::Column(engine::Context&) {}
 
     auto Column::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
+        auto effective = rect;
         if (const auto use_parent = style_.size.x == std::numeric_limits<float>::max() || style_.size.y == std::numeric_limits<float>::max(); !use_parent) {
-            bounds.z = bounds.x + style_.size.x;
-            bounds.w = bounds.y + style_.size.y;
+            effective.z = effective.x + static_cast<int>(style_.size.x);
+            effective.w = effective.y + static_cast<int>(style_.size.y);
         }
 
         if (style_.background_color.value != 0) {
-            backend.draw_rect_fill(bounds, style_.background_color);
+            backend.draw_rect_fill(effective, style_.background_color);
         }
 
-        return Rect{.x = bounds.x, .y = bounds.y, .width = bounds.z - bounds.x, .height = bounds.w - bounds.y};
+        return Rect{.x = effective.x, .y = effective.y, .width = effective.z - effective.x, .height = effective.w - effective.y};
     }
 
     auto Column::build(engine::Context& context) -> void {}
