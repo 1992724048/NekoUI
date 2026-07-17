@@ -29,10 +29,7 @@ namespace neko::widget {
         // 3. 绘制文字（居中）
         if (!text_.empty()) {
             const auto font_size = s.font_size;
-            const auto text_pos = Vec2I{
-                static_cast<int>(effective.x + static_cast<float>(effective.z) * 0.1f),
-                static_cast<int>(effective.y + static_cast<float>(effective.w) * 0.5f)
-            };
+            const auto text_pos = Vec2I{static_cast<int>(effective.x + static_cast<float>(effective.z) * 0.1f), static_cast<int>(effective.y + static_cast<float>(effective.w) * 0.5f)};
             backend.draw_text(text_, text_pos, s.text_color, font_size);
         }
 

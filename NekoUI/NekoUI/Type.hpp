@@ -21,6 +21,7 @@ namespace neko::type {
         }
 
         constexpr auto operator==(const Vec&) const -> bool = default;
+        constexpr auto operator<=>(const Vec&) const = default;
     };
 
     template<typename T>
@@ -36,6 +37,7 @@ namespace neko::type {
         };
 
         constexpr auto operator==(const Vec&) const -> bool = default;
+        constexpr auto operator<=>(const Vec&) const = default;
     };
 
     template<typename T>
@@ -59,6 +61,7 @@ namespace neko::type {
         };
 
         constexpr auto operator==(const Vec&) const -> bool = default;
+        constexpr auto operator<=>(const Vec&) const = default;
     };
 
     using Vec2 = Vec<float, 2>;
