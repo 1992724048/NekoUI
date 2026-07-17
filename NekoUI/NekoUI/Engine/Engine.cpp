@@ -46,10 +46,6 @@ namespace neko::engine {
         event_router_.reset();
     }
 
-    auto Engine::get_native_handle() const -> Handle {
-        return native_handle_;
-    }
-
     auto Engine::clear() -> void {
         if (msg_pump_) {
             msg_pump_->stop();
@@ -79,14 +75,18 @@ namespace neko::engine {
         render_scheduler_->request_frame();
     }
 
+    auto Engine::get_native_handle() const -> Handle {
+        return native_handle_;
+    }
+
     auto Engine::render_frame() -> void {
         if (const auto resize = render_scheduler_->consume_resize()) {
             backend->resize(*resize);
         }
 
         backend->begin();
-        const auto [x, y] = render_scheduler_->pending_size();
-        widget_tree_.render({0, 0, x, y}, *context, *backend);
+        const auto szie = render_scheduler_->pending_size();
+        widget_tree_.render({0, 0, szie.width, szie.height}, *context, *backend);
         backend->end();
         invalidation_.clear();
     }

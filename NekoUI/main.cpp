@@ -70,11 +70,11 @@ auto main(int argc, char* argv[]) -> int try {
     msg_pump = engine->get_msg_pump();
 
     const auto page = engine->set_root_widget<neko::widget::Column>();
-    page->style(neko::widget::ColumnStyle{.background_color = {0xFF1A1A2E}, .size = {400, 300}, .padding = 16.0f, .spacing = 8.0f});
+    page->style(neko::widget::ColumnStyle{.background_color = {0xFF1A1A2E}, .size = {400, 300}, .padding = 16.0F, .spacing = 8.0F});
     page->children([&](auto& col) -> auto {
         col.template build<neko::widget::Button>("Button 1").style(neko::widget::ButtonStyle{.background_color = {0xFFE94560}, .size = {200, 50}});
 
-        col.template build<neko::widget::Button>("Button 2").style(neko::widget::ButtonStyle{.background_color = {0xFF533483}, .size = {200, 50}}).on_click([] {
+        col.template build<neko::widget::Button>("Button 2").style(neko::widget::ButtonStyle{.background_color = {0xFF533483}, .size = {200, 50}}).on_click([] -> auto {
             std::println("Button 2 clicked!");
         });
 

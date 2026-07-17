@@ -121,7 +121,8 @@ namespace neko::engine {
             return;
         }
 
-        auto render_recursive = [&](auto& self, widget::Widget& w, type::Vec4I parent_rect) -> type::Rect {
+        auto render_recursive = [&](auto& self, widget::Widget& w, const type::Vec4I parent_rect) -> type::Rect {
+            w.bounds = parent_rect;
             const auto child_rect = w.draw(parent_rect, context, backend);
 
             auto& children = w.get_children();
