@@ -72,6 +72,11 @@ namespace neko::engine {
         return render_scheduler_;
     }
 
+    auto Engine::rebuild() -> void {
+        widget_tree_.build(*context);
+        render_scheduler_->request_frame();
+    }
+
     auto Engine::render_frame() -> void {
         if (const auto resize = render_scheduler_->consume_resize()) {
             backend->resize(*resize);
@@ -79,7 +84,6 @@ namespace neko::engine {
 
         backend->begin();
         const auto [x, y] = render_scheduler_->pending_size();
-        backend->draw_rect_fill({0, 0, x, y}, context->scheme.primary);
         widget_tree_.render({0, 0, x, y}, *context, *backend);
         backend->end();
         invalidation_.clear();

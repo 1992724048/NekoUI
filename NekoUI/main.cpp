@@ -68,25 +68,19 @@ auto main(int argc, char* argv[]) -> int try {
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
-    // ── Builder API 测试：3 个按钮的 Column 布局 ──
-    auto page = engine->set_root_widget<neko::widget::Column>();
-    page->style(neko::widget::ColumnStyle{
-        .background_color = {0xFF1A1A2E},
-        .size = {400, 300},
-        .padding = 16.0f,
-        .spacing = 8.0f
-    });
-    page->children([&](auto& col) {
-        col.template build<neko::widget::Button>("Button 1")
-            .style(neko::widget::ButtonStyle{.background_color = {0xFFE94560}, .size = {200, 50}});
 
-        col.template build<neko::widget::Button>("Button 2")
-            .style(neko::widget::ButtonStyle{.background_color = {0xFF533483}, .size = {200, 50}})
-            .on_click([] { std::println("Button 2 clicked!"); });
+    const auto page = engine->set_root_widget<neko::widget::Column>();
+    page->style(neko::widget::ColumnStyle{.background_color = {0xFF1A1A2E}, .size = {400, 300}, .padding = 16.0f, .spacing = 8.0f});
+    page->children([&](auto& col) -> auto {
+        col.template build<neko::widget::Button>("Button 1").style(neko::widget::ButtonStyle{.background_color = {0xFFE94560}, .size = {200, 50}});
 
-        col.template build<neko::widget::Button>("Button 3")
-            .style(neko::widget::ButtonStyle{.background_color = {0xFF0F3460}, .size = {200, 50}});
+        col.template build<neko::widget::Button>("Button 2").style(neko::widget::ButtonStyle{.background_color = {0xFF533483}, .size = {200, 50}}).on_click([] {
+            std::println("Button 2 clicked!");
+        });
+
+        col.template build<neko::widget::Button>("Button 3").style(neko::widget::ButtonStyle{.background_color = {0xFF0F3460}, .size = {200, 50}});
     });
+    engine->rebuild();
 
     MSG msg{};
     while (GetMessageW(&msg, nullptr, 0, 0) != 0) {
