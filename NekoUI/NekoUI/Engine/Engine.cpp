@@ -38,7 +38,7 @@ namespace neko::engine {
         context->native_handle = native_handle_;
 
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
-        event_router_ = std::make_unique<EventRouter>(tree_manager_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
+        event_router_ = std::make_unique<EventRouter>(tree_manager_, hit_tester_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
         msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
         msg_pump_->push_msg(platform::Platform::instance().query_theme());
     }

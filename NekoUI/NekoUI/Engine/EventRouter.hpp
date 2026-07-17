@@ -7,6 +7,7 @@
 
 namespace neko::engine {
     class TreeManager;
+    class HitTester;
     class RenderScheduler;
     class InvalidationTracker;
     struct Context;
@@ -24,7 +25,15 @@ namespace neko::backend {
 namespace neko::engine {
     class EventRouter {
     public:
-        EventRouter(TreeManager& tree, device::Mouse& mouse, device::Keyboard& keyboard, Context& context, backend::Backend& backend, const std::shared_ptr<RenderScheduler>& scheduler, std::function<void()> destroy_handler, InvalidationTracker& invalidation);
+        EventRouter(TreeManager& tree,
+                    HitTester& hit_tester,
+                    device::Mouse& mouse,
+                    device::Keyboard& keyboard,
+                    Context& context,
+                    backend::Backend& backend,
+                    const std::shared_ptr<RenderScheduler>& scheduler,
+                    std::function<void()> destroy_handler,
+                    InvalidationTracker& invalidation);
 
         auto dispatch(const platform::Event& event) const -> void;
     private:
@@ -35,6 +44,7 @@ namespace neko::engine {
         auto handle_destroy() const -> void;
 
         TreeManager& tree_;
+        HitTester& hit_tester_;
         device::Mouse& mouse_;
         device::Keyboard& keyboard_;
         Context& context_;

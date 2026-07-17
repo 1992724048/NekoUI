@@ -1,6 +1,7 @@
 #include "EventRouter.hpp"
 
 #include "Context.hpp"
+#include "HitTester.hpp"
 #include "InvalidationTracker.hpp"
 #include "RenderScheduler.hpp"
 #include "TreeManager.hpp"
@@ -11,6 +12,7 @@
 
 namespace neko::engine {
     EventRouter::EventRouter(TreeManager& tree,
+                             HitTester& hit_tester,
                              device::Mouse& mouse,
                              device::Keyboard& keyboard,
                              Context& context,
@@ -19,6 +21,7 @@ namespace neko::engine {
                              std::function<void()> destroy_handler,
                              InvalidationTracker& invalidation) :
         tree_(tree),
+        hit_tester_(hit_tester),
         mouse_(mouse),
         keyboard_(keyboard),
         context_(context),
@@ -70,7 +73,9 @@ namespace neko::engine {
     }
 
     auto EventRouter::handle_input(const platform::Event& event) const -> void {
-        tree_.input(context_, event);
+        if (const auto* target = hit_tester_.hit_test(mouse_)) {
+            const_cast<widget::Widget*>(target)->input(context_, event);
+        }
     }
 
     auto EventRouter::handle_resize(const platform::ResizeEvent& e) const -> void {
