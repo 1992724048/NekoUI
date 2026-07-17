@@ -80,7 +80,6 @@ auto main(int argc, char* argv[]) -> int try {
 
         col.template build<neko::widget::Button>("Button 3").style(neko::widget::ButtonStyle{.background_color = {0xFF0F3460}, .size = {200, 50}});
     });
-    engine->rebuild();
 
     MSG msg{};
     while (GetMessageW(&msg, nullptr, 0, 0) != 0) {

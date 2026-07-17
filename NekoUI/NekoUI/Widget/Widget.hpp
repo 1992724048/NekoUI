@@ -99,6 +99,10 @@ namespace neko::widget {
                    },
                    static_cast<engine::internal::WidgetContainer&>(children_));
 
+        if (context_ && context_->on_widget_tree_changed) {
+            context_->on_widget_tree_changed();
+        }
+
         return ref;
     }
 
