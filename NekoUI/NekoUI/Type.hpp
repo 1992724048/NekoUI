@@ -71,13 +71,7 @@ namespace neko::type {
     using Vec3I = Vec<int, 3>;
     using Vec4I = Vec<int, 4>;
 
-    /// Widget 绘制区域
-    struct Rect {
-        int x = 0;
-        int y = 0;
-        int width = 0;
-        int height = 0;
-    };
+    using Rect = Vec4I;
 
     using Handle = void*;
 
