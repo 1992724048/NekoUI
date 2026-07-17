@@ -14,7 +14,6 @@ namespace neko::widget {
     auto Button::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
         const auto& s = style_;
 
-        // 使用 rect 参数（线程局部），不修改 bounds（避免渲染/输入线程数据竞争）
         auto effective = rect;
         if (const auto use_parent = s.size.x == std::numeric_limits<float>::max() || s.size.y == std::numeric_limits<float>::max(); !use_parent) {
             effective.z = effective.x + static_cast<int>(s.size.x);
@@ -29,10 +28,7 @@ namespace neko::widget {
 
         if (!text_.empty()) {
             const auto font_size = s.font_size;
-            const auto text_pos = Vec2I{
-                .x = static_cast<int>(effective.x + static_cast<float>(effective.z) * 0.1F),
-                .y = static_cast<int>(effective.y + static_cast<float>(effective.w) * 0.5F)
-            };
+            const auto text_pos = Vec2I{.x = static_cast<int>(effective.x + static_cast<float>(effective.z) * 0.1F), .y = static_cast<int>(effective.y + static_cast<float>(effective.w) * 0.5F)};
             backend.draw_text(text_, text_pos, s.text_color, font_size);
         }
 

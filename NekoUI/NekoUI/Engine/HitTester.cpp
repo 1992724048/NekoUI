@@ -11,48 +11,27 @@ namespace neko::engine {
         std::shared_lock _(tree_.mutex_);
 
         const auto root = tree_.root_.load();
-        if (!root) {
-            return false;
-        }
+        if (!root) return false;
 
-        auto test_recursive = [&](auto& self, widget::Widget& w, type::Vec4I parent_rect) -> bool {
-            w.set_bounds(parent_rect);
-
+        // 直接使用 render 阶段写好的 bounds，不做重复布局计算
+        auto test_recursive = [&](auto& self, widget::Widget& w) -> bool {
             auto& children = w.get_children();
-            auto offset_y = parent_rect.y;
 
             if (children.is_widget()) {
-                if (const auto& child = children.as_widget()) {
-                    type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + (parent_rect.w - parent_rect.y)}}}};
-                    if (self(self, *child, child_rect)) {
-                        return true;
-                    }
-                }
+                if (children.as_widget() && self(self, *children.as_widget())) return true;
             } else if (children.is_list()) {
                 for (auto& mw : children.as_list()) {
-                    if (mw.is_widget() && mw.as_widget()) {
-                        type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                        if (self(self, *mw.as_widget(), child_rect)) {
-                            return true;
-                        }
-                        offset_y += 50;
-                    }
+                    if (mw.is_widget() && mw.as_widget() && self(self, *mw.as_widget())) return true;
                 }
             } else if (children.is_vector()) {
                 for (auto& mw : children.as_vector()) {
-                    if (mw.is_widget() && mw.as_widget()) {
-                        type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                        if (self(self, *mw.as_widget(), child_rect)) {
-                            return true;
-                        }
-                        offset_y += 50;
-                    }
+                    if (mw.is_widget() && mw.as_widget() && self(self, *mw.as_widget())) return true;
                 }
             }
 
             return w.hit_test(mouse);
         };
 
-        return test_recursive(test_recursive, *root, {});
+        return test_recursive(test_recursive, *root);
     }
 }
