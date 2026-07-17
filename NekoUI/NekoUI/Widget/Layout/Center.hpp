@@ -4,6 +4,6 @@
 namespace neko::widget {
     class Center final : public Widget {
     public:
-        auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> void override;
+        auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
     };
 }

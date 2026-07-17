@@ -114,30 +114,76 @@ namespace neko::engine {
     }
 
     auto WidgetTree::render(const type::Vec4I rect, Context& context, backend::Backend& backend) const -> void {
-        for_each([&](widget::Widget& widget) -> void {
-            widget.draw(rect, context, backend);
-        });
+        std::shared_lock _(mutex_);
+
+        const auto root = root_.load();
+        if (!root) {
+            return;
+        }
+
+        auto render_recursive = [&](auto& self, widget::Widget& w, type::Vec4I parent_rect) -> type::Rect {
+            const auto child_rect = w.draw(parent_rect, context, backend);
+
+            auto& children = w.get_children();
+            auto offset_y = child_rect.y;
+
+            if (children.is_widget()) {
+                if (const auto& child = children.as_widget()) {
+                    type::Vec4I next_rect{child_rect.x, offset_y, child_rect.x + child_rect.width, offset_y + child_rect.height};
+                    self(self, *child, next_rect);
+                }
+            } else if (children.is_list()) {
+                for (auto& mw : children.as_list()) {
+                    if (mw.is_widget()) {
+                        if (auto& child = mw.as_widget()) {
+                            type::Vec4I next_rect{child_rect.x, offset_y, child_rect.x + child_rect.width, offset_y + child_rect.height};
+                            auto used = self(self, *child, next_rect);
+                            offset_y += used.height;
+                        }
+                    }
+                }
+            } else if (children.is_vector()) {
+                for (auto& mw : children.as_vector()) {
+                    if (mw.is_widget()) {
+                        if (auto& child = mw.as_widget()) {
+                            type::Vec4I next_rect{child_rect.x, offset_y, child_rect.x + child_rect.width, offset_y + child_rect.height};
+                            auto used = self(self, *child, next_rect);
+                            offset_y += used.height;
+                        }
+                    }
+                }
+            }
+
+            return child_rect;
+        };
+
+        render_recursive(render_recursive, *root, rect);
     }
 
     auto WidgetTree::hit_test(const device::Mouse& mouse) const -> bool {
         std::shared_lock _(mutex_);
 
         const auto root = root_.load();
-        if (!root) return false;
+        if (!root) {
+            return false;
+        }
 
-        // 从下往上（高 z_index = 顶层 → 低 z_index = 底层），命中即短路返回
         auto test_recursive = [&](auto& self, widget::Widget& w) -> bool {
-            auto& children = w.get_children();
-
-            if (children.is_widget()) {
-                if (children.as_widget() && self(self, *children.as_widget())) return true;
+            if (auto& children = w.get_children(); children.is_widget()) {
+                if (children.as_widget() && self(self, *children.as_widget())) {
+                    return true;
+                }
             } else if (children.is_list()) {
                 for (auto it = children.as_list().rbegin(); it != children.as_list().rend(); ++it) {
-                    if (it->is_widget() && it->as_widget() && self(self, *it->as_widget())) return true;
+                    if (it->is_widget() && it->as_widget() && self(self, *it->as_widget())) {
+                        return true;
+                    }
                 }
             } else if (children.is_vector()) {
                 for (auto it = children.as_vector().rbegin(); it != children.as_vector().rend(); ++it) {
-                    if (it->is_widget() && it->as_widget() && self(self, *it->as_widget())) return true;
+                    if (it->is_widget() && it->as_widget() && self(self, *it->as_widget())) {
+                        return true;
+                    }
                 }
             }
 
