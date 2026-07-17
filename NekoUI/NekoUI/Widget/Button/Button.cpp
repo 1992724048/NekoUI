@@ -5,30 +5,28 @@
 #include "../../Platform/Event.hpp"
 
 namespace neko::widget {
-    Button::Button(std::string text, std::function<void()> on_click)
+    Button::Button(engine::Context&, std::string text, std::function<void()> on_click)
         : text_(std::move(text)), on_click_(std::move(on_click)) {}
 
     auto Button::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> void {
-        // 1. 绘制背景
-        const auto bg_color = background_.color.value != 0 ? background_.color : type::Color{0xFF1E1E1E};
+        const auto& s = style_;
 
-        backend.draw_rect_fill(bounds, bg_color);
+        // 1. 绘制背景
+        backend.draw_rect_fill(bounds, s.background_color);
 
         // 2. 绘制边框
-        if (border_.size > 0.0f) {
-            backend.draw_rect(bounds, border_.color, static_cast<int>(border_.size));
+        if (s.border_size > 0.0f) {
+            backend.draw_rect(bounds, s.border_color, static_cast<int>(s.border_size));
         }
 
         // 3. 绘制文字（居中）
         if (!text_.empty()) {
-            const auto font_size = size_.size.x > 0.0f ? size_.size.x : 16.0f;
+            const auto font_size = s.font_size;
             const auto text_pos = type::Vec2I{
                 static_cast<int>(bounds.x + static_cast<float>(bounds.z) * 0.1f),
                 static_cast<int>(bounds.y + static_cast<float>(bounds.w) * 0.5f)
             };
-            // 反转 RGB 但保持 alpha 不透明
-            const auto text_color = type::Color{bg_color.value ^ 0x00FFFFFFu};
-            backend.draw_text(text_, text_pos, text_color, font_size);
+            backend.draw_text(text_, text_pos, s.text_color, font_size);
         }
     }
 

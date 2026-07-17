@@ -9,6 +9,7 @@
 #include "NekoUI/Platform/Platform.hpp"
 #include "NekoUI/Platform/Win32/Win32.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
+#include "NekoUI/Widget/Layout/Column.hpp"
 
 using namespace neko::type;
 
@@ -67,7 +68,25 @@ auto main(int argc, char* argv[]) -> int try {
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
-    [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");
+    // ── Builder API 测试：3 个按钮的 Column 布局 ──
+    auto page = engine->set_root_widget<neko::widget::Column>();
+    page->style(neko::widget::ColumnStyle{
+        .background_color = {0xFF1A1A2E},
+        .size = {400, 300},
+        .padding = 16.0f,
+        .spacing = 8.0f
+    });
+    page->children([&](auto& col) {
+        col.build<neko::widget::Button>("Button 1")
+            .style(neko::widget::ButtonStyle{.background_color = {0xFFE94560}, .size = {200, 50}});
+
+        col.build<neko::widget::Button>("Button 2")
+            .style(neko::widget::ButtonStyle{.background_color = {0xFF533483}, .size = {200, 50}})
+            .on_click([] { std::println("Button 2 clicked!"); });
+
+        col.build<neko::widget::Button>("Button 3")
+            .style(neko::widget::ButtonStyle{.background_color = {0xFF0F3460}, .size = {200, 50}});
+    });
 
     MSG msg{};
     while (GetMessageW(&msg, nullptr, 0, 0) != 0) {
