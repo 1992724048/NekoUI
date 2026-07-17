@@ -35,9 +35,9 @@ namespace neko::engine {
                     std::function<void()> destroy_handler,
                     InvalidationTracker& invalidation);
 
-        auto dispatch(const platform::Event& event) const -> void;
+        auto dispatch(const platform::Event& event) -> void;
     private:
-        auto handle_input(const platform::Event& event) const -> void;
+        auto handle_input(const platform::Event& event) -> void;
         auto handle_resize(const platform::ResizeEvent& e) const -> void;
         auto handle_dpi_change(const platform::DpiChangeEvent& e) const -> void;
         auto handle_theme_change(const platform::ThemeChangedEvent& e) const -> void;

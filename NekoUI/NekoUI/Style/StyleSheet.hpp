@@ -9,7 +9,6 @@
 namespace neko::style {
     using namespace neko::type;
 
-    /// 统一的 Widget 样式属性（所有 Widget 类型共用）
     struct WidgetStyle {
         std::optional<Background> background;
         std::optional<Size> size;
@@ -20,21 +19,19 @@ namespace neko::style {
         std::optional<float> spacing;
     };
 
-    /// 全局样式表，按 class_name 索引
     class StyleSheet {
     public:
-        auto add(std::string name, WidgetStyle style) -> StyleSheet& {
-            rules_[std::move(name)] = std::move(style);
+        auto add(std::string name, const WidgetStyle& style) -> StyleSheet& {
+            rules_[std::move(name)] = style;
             return *this;
         }
 
-        [[nodiscard]] auto get(std::string_view name) const -> const WidgetStyle* {
-            if (auto it = rules_.find(std::string(name)); it != rules_.end()) {
+        [[nodiscard]] auto get(const std::string_view name) const -> const WidgetStyle* {
+            if (const auto it = rules_.find(std::string(name)); it != rules_.end()) {
                 return &it->second;
             }
             return nullptr;
         }
-
     private:
         std::unordered_map<std::string, WidgetStyle> rules_;
     };

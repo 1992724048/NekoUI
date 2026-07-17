@@ -249,10 +249,10 @@
     <ClInclude Include="NekoUI\Engine\MsgPump.hpp" />
     <ClInclude Include="NekoUI\Platform\Platform.hpp" />
     <ClInclude Include="NekoUI\Style\ColorScheme.hpp" />
+    <ClInclude Include="NekoUI\Style\CSS.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />
-    <ClInclude Include="NekoUI\Style\CSS.hpp" />
     <ClInclude Include="NekoUI\Style\StyleSheet.hpp" />
     <ClInclude Include="NekoUI\Device\keyboard.hpp" />
     <ClInclude Include="NekoUI\Device\mouse.hpp" />

@@ -81,6 +81,10 @@ namespace neko::engine {
         return native_handle_;
     }
 
+    auto Engine::get_context() const -> Context& {
+        return *context;
+    }
+
     auto Engine::render_frame() -> void {
         if (const auto resize = render_scheduler_->consume_resize()) {
             backend->resize(*resize);
