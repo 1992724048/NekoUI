@@ -126,20 +126,31 @@ namespace neko::engine {
             const auto child_rect = w.draw(parent_rect, context, backend);
 
             auto& children = w.get_children();
-            auto offset_y = child_rect.y;
+            const auto is_horizontal = w.horizontal_;
+            auto offset = is_horizontal ? child_rect.x : child_rect.y;
 
             if (children.is_widget()) {
                 if (const auto& child = children.as_widget()) {
-                    type::Vec4I next_rect{{{child_rect.x, offset_y, {child_rect.x + child_rect.width}, {offset_y + child_rect.height}}}};
+                    type::Vec4I next_rect;
+                    if (is_horizontal) {
+                        next_rect = type::Vec4I{{{offset, child_rect.y, {offset + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
+                    } else {
+                        next_rect = type::Vec4I{{{child_rect.x, offset, {child_rect.z}, {offset + (child_rect.w - child_rect.y)}}}};
+                    }
                     self(self, *child, next_rect);
                 }
             } else if (children.is_list()) {
                 for (auto& mw : children.as_list()) {
                     if (mw.is_widget()) {
                         if (auto& child = mw.as_widget()) {
-                            type::Vec4I next_rect{{{child_rect.x, offset_y, {child_rect.x + child_rect.width}, {offset_y + child_rect.height}}}};
+                            type::Vec4I next_rect;
+                            if (is_horizontal) {
+                                next_rect = type::Vec4I{{{offset, child_rect.y, {offset + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
+                            } else {
+                                next_rect = type::Vec4I{{{child_rect.x, offset, {child_rect.z}, {offset + (child_rect.w - child_rect.y)}}}};
+                            }
                             auto used = self(self, *child, next_rect);
-                            offset_y += used.height;
+                            offset += is_horizontal ? used.width : used.height;
                         }
                     }
                 }
@@ -147,9 +158,14 @@ namespace neko::engine {
                 for (auto& mw : children.as_vector()) {
                     if (mw.is_widget()) {
                         if (auto& child = mw.as_widget()) {
-                            type::Vec4I next_rect{{{child_rect.x, offset_y, {child_rect.x + child_rect.width}, {offset_y + child_rect.height}}}};
+                            type::Vec4I next_rect;
+                            if (is_horizontal) {
+                                next_rect = type::Vec4I{{{offset, child_rect.y, {offset + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
+                            } else {
+                                next_rect = type::Vec4I{{{child_rect.x, offset, {child_rect.z}, {offset + (child_rect.w - child_rect.y)}}}};
+                            }
                             auto used = self(self, *child, next_rect);
-                            offset_y += used.height;
+                            offset += is_horizontal ? used.width : used.height;
                         }
                     }
                 }
@@ -165,9 +181,10 @@ namespace neko::engine {
         std::shared_lock _(mutex_);
 
         const auto root = root_.load();
-        if (!root) return false;
+        if (!root) {
+            return false;
+        }
 
-        // 递归命中测试：与 render_recursive 相同布局逻辑，命中即短路
         auto test_recursive = [&](auto& self, widget::Widget& w, type::Vec4I parent_rect) -> bool {
             w.bounds = parent_rect;
 
@@ -177,14 +194,18 @@ namespace neko::engine {
             if (children.is_widget()) {
                 if (const auto& child = children.as_widget()) {
                     type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + (parent_rect.w - parent_rect.y)}}}};
-                    if (self(self, *child, child_rect)) return true;
+                    if (self(self, *child, child_rect)) {
+                        return true;
+                    }
                 }
             } else if (children.is_list()) {
                 for (auto it = children.as_list().rbegin(); it != children.as_list().rend(); ++it) {
                     if (it->is_widget()) {
                         if (const auto& child = it->as_widget()) {
                             type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                            if (self(self, *child, child_rect)) return true;
+                            if (self(self, *child, child_rect)) {
+                                return true;
+                            }
                             offset_y += 50;
                         }
                     }
@@ -194,7 +215,9 @@ namespace neko::engine {
                     if (it->is_widget()) {
                         if (const auto& child = it->as_widget()) {
                             type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                            if (self(self, *child, child_rect)) return true;
+                            if (self(self, *child, child_rect)) {
+                                return true;
+                            }
                             offset_y += 50;
                         }
                     }

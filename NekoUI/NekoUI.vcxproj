@@ -222,6 +222,7 @@
     <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
     <ClCompile Include="NekoUI\Widget\Layout\Center.cpp" />
     <ClCompile Include="NekoUI\Widget\Layout\Column.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\Row.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -249,6 +250,7 @@
     <ClInclude Include="NekoUI\Device\mouse.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Column.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\Row.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

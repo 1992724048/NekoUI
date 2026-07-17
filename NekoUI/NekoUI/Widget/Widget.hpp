@@ -60,14 +60,8 @@ namespace neko::widget {
 
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
-    private:
-        friend engine::WidgetTree;
 
-        engine::MutableWidget children_{};
-
-        int z_index_{0};
-        std::string id_;
-        std::string path_;
+        bool horizontal_{false}; // Row 设为 true
 
         [[nodiscard]] auto get_children() -> engine::MutableWidget& {
             return children_;
@@ -76,6 +70,15 @@ namespace neko::widget {
         [[nodiscard]] auto get_children() const -> const engine::MutableWidget& {
             return children_;
         }
+
+    private:
+        friend engine::WidgetTree;
+
+        engine::MutableWidget children_{};
+
+        int z_index_{0};
+        std::string id_;
+        std::string path_;
     };
 }
 
