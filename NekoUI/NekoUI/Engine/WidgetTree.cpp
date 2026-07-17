@@ -52,7 +52,7 @@ namespace neko::engine {
         focused_ = std::weak_ptr<widget::Widget>{};
         std::unique_lock _(mutex_);
         id_widgets_.clear();
-        widgets.clear();
+        index_widgets_.clear();
     }
 
     auto WidgetTree::build(Context& context) -> void {
@@ -61,48 +61,36 @@ namespace neko::engine {
         index_widgets_.clear();
         index_count = 0;
 
-        traverse_impl([&](MutableWidget& mw) -> void {
-            const auto& sp = mw.as_widget();
-            if (!sp) {
-                return;
-            }
-            register_widget(sp, context);
-        });
-
         const auto root = root_.load();
-        if (root) {
-            auto build_recursive = [&](auto& self, widget::Widget& w) -> void {
-                auto& children = w.get_children();
-                if (children.is_null()) {
-                    return;
-                }
+        if (!root) return;
 
-                auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) -> void {
-                    if (!child) {
-                        return;
-                    }
-                    register_widget(child, context);
-                    self(self, *child);
-                };
+        // 注册 root Widget
+        register_widget(root, context);
 
-                if (children.is_widget()) {
-                    visit_child(children.as_widget());
-                } else if (children.is_list()) {
-                    for (auto& mw : children.as_list()) {
-                        if (mw.is_widget()) {
-                            visit_child(mw.as_widget());
-                        }
-                    }
-                } else if (children.is_vector()) {
-                    for (auto& mw : children.as_vector()) {
-                        if (mw.is_widget()) {
-                            visit_child(mw.as_widget());
-                        }
-                    }
-                }
+        // 递归注册子 Widget
+        auto build_recursive = [&](auto& self, widget::Widget& w) -> void {
+            auto& children = w.get_children();
+            if (children.is_null()) return;
+
+            auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
+                if (!child) return;
+                register_widget(child, context);
+                self(self, *child);
             };
-            build_recursive(build_recursive, *root);
-        }
+
+            if (children.is_widget()) {
+                visit_child(children.as_widget());
+            } else if (children.is_list()) {
+                for (auto& mw : children.as_list()) {
+                    if (mw.is_widget()) visit_child(mw.as_widget());
+                }
+            } else if (children.is_vector()) {
+                for (auto& mw : children.as_vector()) {
+                    if (mw.is_widget()) visit_child(mw.as_widget());
+                }
+            }
+        };
+        build_recursive(build_recursive, *root);
     }
 
     auto WidgetTree::event(Context& context) -> void {
@@ -136,60 +124,35 @@ namespace neko::engine {
     auto WidgetTree::for_each(const std::function<void(widget::Widget&)>& callback) -> void {
         std::shared_lock _(mutex_);
 
-        // 旧路径：遍历 widgets 列表（含 root）
-        traverse_impl([&](MutableWidget& mw) -> void {
-            if (const auto& sp = mw.as_widget()) {
-                callback(*sp);
-            }
-        });
-
-        // Phase 1：也遍历 Widget::children_（build<T>() 创建的子节点）
         const auto root = root_.load();
-        if (root) {
-            auto for_each_recursive = [&](auto& self, widget::Widget& w) -> void {
-                auto& children = w.get_children();
-                if (children.is_null()) return;
+        if (!root) return;
 
-                auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
-                    if (!child) return;
-                    callback(*child);
-                    self(self, *child);
-                };
+        // 先回调 root，再递归遍历 children_
+        callback(*root);
 
-                if (children.is_widget()) {
-                    visit_child(children.as_widget());
-                } else if (children.is_list()) {
-                    for (auto& mw : children.as_list()) {
-                        if (mw.is_widget()) visit_child(mw.as_widget());
-                    }
-                } else if (children.is_vector()) {
-                    for (auto& mw : children.as_vector()) {
-                        if (mw.is_widget()) visit_child(mw.as_widget());
-                    }
-                }
+        auto for_each_recursive = [&](auto& self, widget::Widget& w) -> void {
+            auto& children = w.get_children();
+            if (children.is_null()) return;
+
+            auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
+                if (!child) return;
+                callback(*child);
+                self(self, *child);
             };
-            for_each_recursive(for_each_recursive, *root);
-        }
-    }
 
-    auto WidgetTree::traverse_impl(const std::function<void(MutableWidget&)>& callback) -> void {
-        auto traverse = [&](auto& self, MutableWidget& mw) -> void {
-            if (mw.is_widget()) {
-                callback(mw);
-            } else if (mw.is_list()) {
-                for (auto& child : mw.as_list()) {
-                    self(self, child);
+            if (children.is_widget()) {
+                visit_child(children.as_widget());
+            } else if (children.is_list()) {
+                for (auto& mw : children.as_list()) {
+                    if (mw.is_widget()) visit_child(mw.as_widget());
                 }
-            } else if (mw.is_vector()) {
-                for (auto& child : mw.as_vector()) {
-                    self(self, child);
+            } else if (children.is_vector()) {
+                for (auto& mw : children.as_vector()) {
+                    if (mw.is_widget()) visit_child(mw.as_widget());
                 }
             }
         };
-
-        for (auto& mw : widgets) {
-            traverse(traverse, mw);
-        }
+        for_each_recursive(for_each_recursive, *root);
     }
 
     auto WidgetTree::register_widget(const std::shared_ptr<widget::Widget>& sp, Context& context) -> void {

@@ -6,7 +6,6 @@
 #include <memory>
 #include <shared_mutex>
 #include <string>
-#include <vector>
 
 #include "MutableWidget.hpp"
 
@@ -49,8 +48,6 @@ namespace neko::engine {
         auto hit_test(const device::Mouse& mouse) -> bool;
         auto for_each(const std::function<void(widget::Widget&)>& callback) -> void;
     private:
-        std::list<MutableWidget> widgets;
-
         int focus_index{0};
         std::atomic_int index_count{0};
 
@@ -59,7 +56,6 @@ namespace neko::engine {
 
         std::map<std::string, std::weak_ptr<widget::Widget>> id_widgets_;
         std::map<int, std::weak_ptr<widget::Widget>> index_widgets_;
-        auto traverse_impl(const std::function<void(MutableWidget&)>& callback) -> void;
         auto register_widget(const std::shared_ptr<widget::Widget>& sp, Context& context) -> void;
 
         mutable std::shared_mutex mutex_;
