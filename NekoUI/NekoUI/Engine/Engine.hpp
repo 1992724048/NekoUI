@@ -45,6 +45,7 @@ namespace neko::engine {
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
         auto rebuild() -> void;
         [[nodiscard]] auto get_native_handle() const -> Handle;
+        [[nodiscard]] auto get_context() -> Context& { return *context; }
     private:
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};

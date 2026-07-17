@@ -37,6 +37,14 @@ namespace neko::widget {
 
         [[nodiscard]] auto parent() const -> Widget*;
 
+        /// 设置 CSS 类名（用于 StyleSheet 查找）
+        auto class_name(std::string_view name) -> Widget& {
+            class_name_ = name;
+            return *this;
+        }
+
+        [[nodiscard]] auto get_class_name() const -> const std::string& { return class_name_; }
+
         virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
             return {};
         }
@@ -73,6 +81,8 @@ namespace neko::widget {
 
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
+
+        std::string class_name_;
     private:
         friend engine::TreeManager;
 

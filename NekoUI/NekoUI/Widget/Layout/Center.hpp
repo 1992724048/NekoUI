@@ -4,9 +4,6 @@
 #include "../../Style/CSS.hpp"
 
 namespace neko::widget {
-    struct CenterStyle {
-        Color background_color{0x00000000};
-    };
 
     class Center final : public Widget {
     public:
@@ -15,8 +12,10 @@ namespace neko::widget {
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
         auto hit_test(const device::Mouse& mouse) const -> bool override;
 
-        auto style(const CenterStyle& s) -> Center&;
+        auto background(style::Background bg) -> Center& { background_ = bg; return *this; }
+
     private:
-        CenterStyle style_{};
+        style::Background background_;
     };
+
 } // namespace neko::widget

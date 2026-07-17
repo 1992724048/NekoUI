@@ -70,19 +70,41 @@ auto main(int argc, char* argv[]) -> int try {
     msg_pump = engine->get_msg_pump();
 
     const auto page = engine->set_root_widget<neko::widget::Column>();
-    page->style(neko::widget::ColumnStyle{.background_color = {0xFF1A1A2E}, .size = {400, 300}, .padding = 16.0F, .spacing = 8.0F});
+    page->class_name("page");
+
+    // 定义全局样式表
+    auto& sheet = engine->get_context().stylesheet;
+    sheet.add("page", neko::style::WidgetStyle{
+        .background = neko::style::Background{{0xFF1A1A2E}},
+        .size = neko::style::Size{{400, 300}},
+        .padding = 16.0f,
+        .spacing = 8.0f
+    });
+    sheet.add("btn1", neko::style::WidgetStyle{
+        .background = neko::style::Background{{0xFFE945FF}},
+        .size = neko::style::Size{{200, 50}}
+    });
+    sheet.add("btn2", neko::style::WidgetStyle{
+        .background = neko::style::Background{{0xFF5334FF}},
+        .size = neko::style::Size{{200, 50}}
+    });
+    sheet.add("btn3", neko::style::WidgetStyle{
+        .background = neko::style::Background{{0xFF0F34FF}},
+        .size = neko::style::Size{{200, 50}}
+    });
+
     page->children([&](auto& col) -> auto {
-        col.template build<neko::widget::Button>("Button 1").style(neko::widget::ButtonStyle{.background_color = {0xFFE945FF}, .size = {200, 50}}).on_click([] -> auto {
-            std::println("Button 1 clicked!");
-        });
+        col.template build<neko::widget::Button>("Button 1")
+            .class_name("btn1")
+            .on_click([] { std::println("Button 1 clicked!"); });
 
-        col.template build<neko::widget::Button>("Button 2").style(neko::widget::ButtonStyle{.background_color = {0xFF5334FF}, .size = {200, 50}}).on_click([] -> auto {
-            std::println("Button 2 clicked!");
-        });
+        col.template build<neko::widget::Button>("Button 2")
+            .class_name("btn2")
+            .on_click([] { std::println("Button 2 clicked!"); });
 
-        col.template build<neko::widget::Button>("Button 3").style(neko::widget::ButtonStyle{.background_color = {0xFF0F34FF}, .size = {200, 50}}).on_click([] -> auto {
-            std::println("Button 3 clicked!");
-        });
+        col.template build<neko::widget::Button>("Button 3")
+            .class_name("btn3")
+            .on_click([] { std::println("Button 3 clicked!"); });
     });
 
     MSG msg{};

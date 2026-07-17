@@ -253,6 +253,7 @@
     <ClInclude Include="NekoUI\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />
     <ClInclude Include="NekoUI\Style\CSS.hpp" />
+    <ClInclude Include="NekoUI\Style\StyleSheet.hpp" />
     <ClInclude Include="NekoUI\Device\keyboard.hpp" />
     <ClInclude Include="NekoUI\Device\mouse.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />

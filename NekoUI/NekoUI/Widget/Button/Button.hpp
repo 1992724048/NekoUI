@@ -5,16 +5,9 @@
 #include <string>
 
 #include "../../Component/Animation.hpp"
+#include "../../Style/CSS.hpp"
 
 namespace neko::widget {
-    struct ButtonStyle {
-        Color background_color{0xFF1E1E1E};
-        Color text_color{0xFFFFFFFF};
-        float font_size{16.0F};
-        Size size{.x = std::numeric_limits<int>::max(), .y = std::numeric_limits<int>::max()};
-        float border_size{0.0F};
-        Color border_color{};
-    };
 
     class Button final : public Widget {
     public:
@@ -26,15 +19,23 @@ namespace neko::widget {
         auto input(engine::Context& context, const platform::Event& event) -> void override;
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
 
-        auto style(const ButtonStyle& s) -> Button&;
-
         auto on_click(std::function<void()> cb) -> Button&;
-
         auto text(std::string t) -> Button&;
+
+        auto background(style::Background bg) -> Button& { background_ = bg; return *this; }
+        auto widget_size(style::Size sz) -> Button& { size_ = sz; return *this; }
+        auto border(style::Border bd) -> Button& { border_ = bd; return *this; }
+        auto font_size(float fs) -> Button& { font_size_ = fs; return *this; }
+        auto text_color(type::Color tc) -> Button& { text_color_ = tc; return *this; }
+
     private:
         std::string text_;
         std::function<void()> on_click_;
-        ButtonStyle style_{};
+        style::Background background_;
+        style::Size size_{{100, 40}};
+        style::Border border_;
+        float font_size_ = 16.0f;
+        type::Color text_color_{0xFFFFFFFF};
     };
 
 } // namespace neko::widget

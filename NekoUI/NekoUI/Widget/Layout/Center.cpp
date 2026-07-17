@@ -7,8 +7,16 @@ namespace neko::widget {
     Center::Center(engine::Context&) {}
 
     auto Center::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
-        if (style_.background_color.value != 0) {
-            backend.draw_rect_fill(bounds, style_.background_color);
+        // 1. 从全局样式表查找，合并到本地属性
+        if (const auto* rule = context.stylesheet.get(class_name_)) {
+            if (rule->background) background_ = *rule->background;
+        }
+
+        // 2. 无样式表规则时使用 ColorScheme 默认值
+        auto bg = background_.color.value != 0 ? background_ : style::Background{context.scheme.surface};
+
+        if (bg.color.value != 0) {
+            backend.draw_rect_fill(bounds, bg.color);
         }
 
         if (auto& children = get_children(); children.is_widget()) {
@@ -27,10 +35,5 @@ namespace neko::widget {
 
     auto Center::hit_test(const device::Mouse& mouse) const -> bool {
         return mouse.is_inside(bounds);
-    }
-
-    auto Center::style(const CenterStyle& s) -> Center& {
-        style_ = s;
-        return *this;
     }
 } // namespace neko::widget

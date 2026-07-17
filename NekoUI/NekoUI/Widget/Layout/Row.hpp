@@ -1,30 +1,23 @@
 #pragma once
 #include "../Widget.hpp"
 
+#include "../../Style/CSS.hpp"
+
 namespace neko::widget {
 
-struct RowStyle {
-    type::Color background_color{0x00000000};
-    type::Vec2 size{400, 50};
-    float padding{8.0f};
-    float spacing{4.0f};
-};
+    class Row final : public Widget {
+    public:
+        explicit Row(engine::Context&);
 
-/// 水平布局：子 Widget 沿 X 轴依次排列
-class Row final : public Widget {
-public:
-    explicit Row(engine::Context&);
+        auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
+        auto hit_test(const device::Mouse& mouse) const -> bool override;
 
-    auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
-    auto hit_test(const device::Mouse& mouse) const -> bool override;
+        auto background(style::Background bg) -> Row& { background_ = bg; return *this; }
+        auto widget_size(style::Size sz) -> Row& { size_ = sz; return *this; }
 
-    auto style(const RowStyle& s) -> Row& {
-        style_ = s;
-        return *this;
-    }
-
-private:
-    RowStyle style_{};
-};
+    private:
+        style::Background background_;
+        style::Size size_{{400, 50}};
+    };
 
 } // namespace neko::widget

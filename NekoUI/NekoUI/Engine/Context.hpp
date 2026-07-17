@@ -6,6 +6,7 @@
 #include "../Device/Mouse.hpp"
 #include "../Platform/Event.hpp"
 #include "../Style/ColorScheme.hpp"
+#include "../Style/StyleSheet.hpp"
 
 namespace neko::backend {
     class Backend;
@@ -32,6 +33,7 @@ namespace neko::engine {
         std::weak_ptr<widget::Widget> root;
 
         style::ColorScheme scheme;
+        style::StyleSheet stylesheet;
         type::Handle native_handle;
     };
 } // namespace neko::engine
