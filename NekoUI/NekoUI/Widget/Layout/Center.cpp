@@ -15,12 +15,12 @@ namespace neko::widget {
         auto& children = get_children();
         if (children.is_widget()) {
             if (const auto& child = children.as_widget()) {
-                const auto cw = child->bounds.z - child->bounds.x;
-                const auto ch = child->bounds.w - child->bounds.y;
+                const auto cw = child->get_bounds().z - child->get_bounds().x;
+                const auto ch = child->get_bounds().w - child->get_bounds().y;
                 const auto cx = bounds.x + (bounds.z - bounds.x - cw) / 2;
                 const auto cy = bounds.y + (bounds.w - bounds.y - ch) / 2;
-                child->bounds = type::Vec4I{cx, cy, cx + cw, cy + ch};
-                child->draw(type::Vec4I{cx, cy, cx + cw, cy + ch}, context, backend);
+                child->set_bounds({cx, cy, cx + cw, cy + ch});
+                child->draw({cx, cy, cx + cw, cy + ch}, context, backend);
             }
         }
 

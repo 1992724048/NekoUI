@@ -52,6 +52,10 @@ namespace neko::widget {
         [[nodiscard]] auto id() const -> const std::string&;
         [[nodiscard]] auto index() const -> int;
         [[nodiscard]] auto path() const -> const std::string&;
+
+        /// 获取/设置绘制区域（供布局容器使用）
+        [[nodiscard]] auto get_bounds() const -> const Vec4I& { return bounds; }
+        auto set_bounds(Vec4I b) -> void { bounds = b; }
     protected:
         Vec4I bounds{.width = std::numeric_limits<int>::max(), .height = std::numeric_limits<int>::max()};
 
