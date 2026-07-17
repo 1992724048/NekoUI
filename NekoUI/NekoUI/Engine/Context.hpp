@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "../Device/Keyboard.hpp"
-#include "../Device/mouse.hpp"
+#include "../Device/Mouse.hpp"
 #include "../Platform/Event.hpp"
 #include "../Style/ColorScheme.hpp"
 

@@ -77,14 +77,14 @@ auto main(int argc, char* argv[]) -> int try {
         .spacing = 8.0f
     });
     page->children([&](auto& col) {
-        col.build<neko::widget::Button>("Button 1")
+        col.template build<neko::widget::Button>("Button 1")
             .style(neko::widget::ButtonStyle{.background_color = {0xFFE94560}, .size = {200, 50}});
 
-        col.build<neko::widget::Button>("Button 2")
+        col.template build<neko::widget::Button>("Button 2")
             .style(neko::widget::ButtonStyle{.background_color = {0xFF533483}, .size = {200, 50}})
             .on_click([] { std::println("Button 2 clicked!"); });
 
-        col.build<neko::widget::Button>("Button 3")
+        col.template build<neko::widget::Button>("Button 3")
             .style(neko::widget::ButtonStyle{.background_color = {0xFF0F3460}, .size = {200, 50}});
     });
 

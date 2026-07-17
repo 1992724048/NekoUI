@@ -10,6 +10,7 @@ namespace neko::engine {
     WidgetTree::WidgetTree() = default;
 
     auto WidgetTree::set_root(Context& context, std::shared_ptr<widget::Widget> w) -> void {
+        w->context_ = &context;
         root_ = std::move(w);
         build(context);
     }
@@ -163,6 +164,7 @@ namespace neko::engine {
     }
 
     auto WidgetTree::register_widget(const std::shared_ptr<widget::Widget>& sp, Context& context) -> void {
+        sp->context_ = &context;
         sp->z_index_ = index_count++;
         index_widgets_[sp->z_index_] = sp;
 

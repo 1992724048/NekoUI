@@ -53,6 +53,7 @@ namespace neko::widget {
         Vec4I bounds{.width = std::numeric_limits<int>::max(), .height = std::numeric_limits<int>::max()};
 
         Widget* parent_ = nullptr;
+        engine::Context* context_ = nullptr;
 
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
@@ -78,7 +79,7 @@ namespace neko::widget {
 namespace neko::widget {
     template<std::derived_from<Widget> T, typename... Args>
     auto Widget::build(Args&&... args) -> T& {
-        auto child = std::make_shared<T>(std::forward<Args>(args)...);
+        auto child = std::make_shared<T>(*context_, std::forward<Args>(args)...);
         child->parent_ = this;
         auto& ref = *child;
 
