@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <compare>
 #include <cstdint>
 
 namespace neko::type {
@@ -20,9 +21,14 @@ namespace neko::type {
             return {.x = x - other.x, .y = y - other.y};
         }
 
-        constexpr auto operator==(const Vec&) const -> bool = default;
+        constexpr auto operator==(const Vec& other) const -> bool {
+            return x == other.x && y == other.y;
+        }
+
         constexpr auto operator<=>(const Vec& other) const {
-            if (auto c = x <=> other.x; c != 0) return c;
+            if (auto c = x <=> other.x; c != 0) {
+                return c;
+            }
             return y <=> other.y;
         }
     };
@@ -39,10 +45,17 @@ namespace neko::type {
             };
         };
 
-        constexpr auto operator==(const Vec&) const -> bool = default;
+        constexpr auto operator==(const Vec& other) const -> bool {
+            return x == other.x && y == other.y && z == other.z;
+        }
+
         constexpr auto operator<=>(const Vec& other) const {
-            if (auto c = x <=> other.x; c != 0) return c;
-            if (auto c = y <=> other.y; c != 0) return c;
+            if (auto c = x <=> other.x; c != 0) {
+                return c;
+            }
+            if (auto c = y <=> other.y; c != 0) {
+                return c;
+            }
             return z <=> other.z;
         }
     };
@@ -67,11 +80,20 @@ namespace neko::type {
             };
         };
 
-        constexpr auto operator==(const Vec&) const -> bool = default;
+        constexpr auto operator==(const Vec& other) const -> bool {
+            return x == other.x && y == other.y && z == other.z && w == other.w;
+        }
+
         constexpr auto operator<=>(const Vec& other) const {
-            if (auto c = x <=> other.x; c != 0) return c;
-            if (auto c = y <=> other.y; c != 0) return c;
-            if (auto c = z <=> other.z; c != 0) return c;
+            if (auto c = x <=> other.x; c != 0) {
+                return c;
+            }
+            if (auto c = y <=> other.y; c != 0) {
+                return c;
+            }
+            if (auto c = z <=> other.z; c != 0) {
+                return c;
+            }
             return w <=> other.w;
         }
     };
