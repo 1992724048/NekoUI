@@ -37,8 +37,10 @@ namespace neko::widget {
 
         [[nodiscard]] auto parent() const -> Widget*;
 
-        /// 绘制自身并返回占据的区域，供父容器布局下一个子控件
-        virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect { return {}; }
+        virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
+            return {};
+        }
+
         virtual auto build(engine::Context& context) -> void {}
         virtual auto event(engine::Context& context) -> void {}
         virtual auto input(engine::Context& context, const platform::Event& event) -> void {}

@@ -27,12 +27,7 @@ namespace neko::widget {
             backend.draw_text(text_, text_pos, s.text_color, font_size);
         }
 
-        return type::Rect{
-            .x = bounds.x,
-            .y = bounds.y,
-            .width = bounds.z - bounds.x,
-            .height = bounds.w - bounds.y
-        };
+        return Rect{.x = bounds.x, .y = bounds.y, .width = bounds.z - bounds.x, .height = bounds.w - bounds.y};
     }
 
     auto Button::build(engine::Context& context) -> void {}

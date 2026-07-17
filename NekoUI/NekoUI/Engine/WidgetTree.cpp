@@ -129,14 +129,14 @@ namespace neko::engine {
 
             if (children.is_widget()) {
                 if (const auto& child = children.as_widget()) {
-                    type::Vec4I next_rect{child_rect.x, offset_y, child_rect.x + child_rect.width, offset_y + child_rect.height};
+                    type::Vec4I next_rect{{{child_rect.x, offset_y, {child_rect.x + child_rect.width}, {offset_y + child_rect.height}}}};
                     self(self, *child, next_rect);
                 }
             } else if (children.is_list()) {
                 for (auto& mw : children.as_list()) {
                     if (mw.is_widget()) {
                         if (auto& child = mw.as_widget()) {
-                            type::Vec4I next_rect{child_rect.x, offset_y, child_rect.x + child_rect.width, offset_y + child_rect.height};
+                            type::Vec4I next_rect{{{child_rect.x, offset_y, {child_rect.x + child_rect.width}, {offset_y + child_rect.height}}}};
                             auto used = self(self, *child, next_rect);
                             offset_y += used.height;
                         }
@@ -146,7 +146,7 @@ namespace neko::engine {
                 for (auto& mw : children.as_vector()) {
                     if (mw.is_widget()) {
                         if (auto& child = mw.as_widget()) {
-                            type::Vec4I next_rect{child_rect.x, offset_y, child_rect.x + child_rect.width, offset_y + child_rect.height};
+                            type::Vec4I next_rect{{{child_rect.x, offset_y, {child_rect.x + child_rect.width}, {offset_y + child_rect.height}}}};
                             auto used = self(self, *child, next_rect);
                             offset_y += used.height;
                         }

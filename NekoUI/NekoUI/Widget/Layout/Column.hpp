@@ -4,14 +4,14 @@
 namespace neko::widget {
     struct ColumnStyle {
         Color background_color{};
-        Vec2 size{.x = 400, .y = 300};
+        Vec2 size{.x = std::numeric_limits<float>::max(), .y = std::numeric_limits<float>::max()};
         float padding{8.0F};
         float spacing{4.0F};
     };
 
     class Column final : public Widget {
     public:
-        explicit Column(engine::Context&);
+        explicit Column(engine::Context& /*unused*/);
 
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
         auto build(engine::Context& context) -> void override;
