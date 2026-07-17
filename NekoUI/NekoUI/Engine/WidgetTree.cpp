@@ -136,11 +136,40 @@ namespace neko::engine {
     auto WidgetTree::for_each(const std::function<void(widget::Widget&)>& callback) -> void {
         std::shared_lock _(mutex_);
 
+        // 旧路径：遍历 widgets 列表（含 root）
         traverse_impl([&](MutableWidget& mw) -> void {
             if (const auto& sp = mw.as_widget()) {
                 callback(*sp);
             }
         });
+
+        // Phase 1：也遍历 Widget::children_（build<T>() 创建的子节点）
+        const auto root = root_.load();
+        if (root) {
+            auto for_each_recursive = [&](auto& self, widget::Widget& w) -> void {
+                auto& children = w.get_children();
+                if (children.is_null()) return;
+
+                auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
+                    if (!child) return;
+                    callback(*child);
+                    self(self, *child);
+                };
+
+                if (children.is_widget()) {
+                    visit_child(children.as_widget());
+                } else if (children.is_list()) {
+                    for (auto& mw : children.as_list()) {
+                        if (mw.is_widget()) visit_child(mw.as_widget());
+                    }
+                } else if (children.is_vector()) {
+                    for (auto& mw : children.as_vector()) {
+                        if (mw.is_widget()) visit_child(mw.as_widget());
+                    }
+                }
+            };
+            for_each_recursive(for_each_recursive, *root);
+        }
     }
 
     auto WidgetTree::traverse_impl(const std::function<void(MutableWidget&)>& callback) -> void {

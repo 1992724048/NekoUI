@@ -39,9 +39,8 @@ namespace neko::engine {
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
-        [[nodiscard]] auto get_native_handle() const -> Handle;
-        /// 重建 Widget 树（用于动态添加子 Widget 后刷新）
         auto rebuild() -> void;
+        [[nodiscard]] auto get_native_handle() const -> Handle;
     private:
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::Backend> backend{};
