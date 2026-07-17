@@ -87,7 +87,8 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
   - **Builder API**（Phase 1）：`build<T>(Args...) -> T&`（创建子 Widget 并链式配置）、`children(fn)`（lambda 作用域批量创建子节点）、`parent()`（获取父 Widget）
   - **子节点存储**：`children_`（`MutableWidget`），通过 `std::visit` + auto-conversion 管理 monostate → shared_ptr → list 的自动转换
   - **StyledWidget\<Derived\>**：CRTP 中间层，提供 `set_background/set_size/set_border` 链式 setter（返回 `Derived&`）
-- **Button**（空存根）：继承 Widget，所有虚函数已声明但为空实现
+- **Button**：继承 `StyledWidget<Button>`，实现 `draw`（背景/边框/文字居中）、`input`（左键点击→on_click 回调）、`hit_test`。构造函数 `Button(text, on_click)`，链式 setter `on_click()`/`text()`
+- **Column**：继承 `StyledWidget<Column>`，垂直布局容器。子节点遍历由 `WidgetTree::traverse_impl` 处理
 - **Center**（空存根）：继承 Widget，仅覆盖 `draw()`
 
 ### 7. 样式系统 (`neko::style`)
@@ -178,9 +179,11 @@ NekoUI/                          # Git 仓库根
 │           ├── Button/
 │           │   ├── Button.hpp    # Button 声明（空存根）
 │           │   └── Button.cpp    # Button 空实现（16 行）
-│           └── Layout/
+│           ├── Layout/
 │               ├── Center.hpp    # Center 布局声明（空存根）
-│               └── Center.cpp    # Center 空实现（4 行）
+│               ├── Center.cpp    # Center 空实现（4 行）
+│               ├── Column.hpp    # Column 垂直布局声明
+│               └── Column.cpp    # Column 实现（draw/hit_test）
 ```
 
 ## Build
