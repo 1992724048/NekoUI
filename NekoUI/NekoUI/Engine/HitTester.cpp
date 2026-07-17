@@ -25,17 +25,17 @@ namespace neko::engine {
                     }
                 }
             } else if (children.is_list()) {
-                for (auto& mw : children.as_list()) {
-                    if (mw.is_widget() && mw.as_widget()) {
-                        if (auto* hit = self(self, *mw.as_widget())) {
+                for (auto it = children.as_list().rbegin(); it != children.as_list().rend(); ++it) {
+                    if (it->is_widget() && it->as_widget()) {
+                        if (auto* hit = self(self, *it->as_widget())) {
                             return hit;
                         }
                     }
                 }
             } else if (children.is_vector()) {
-                for (auto& mw : children.as_vector()) {
-                    if (mw.is_widget() && mw.as_widget()) {
-                        if (auto* hit = self(self, *mw.as_widget())) {
+                for (auto it = children.as_vector().rbegin(); it != children.as_vector().rend(); ++it) {
+                    if (it->is_widget() && it->as_widget()) {
+                        if (auto* hit = self(self, *it->as_widget())) {
                             return hit;
                         }
                     }
