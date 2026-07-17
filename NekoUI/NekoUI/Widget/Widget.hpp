@@ -18,7 +18,7 @@
 #include "../Platform/Event.hpp"
 
 namespace neko::engine {
-    class WidgetTree;
+    class TreeManager;
 }
 
 namespace neko::widget {
@@ -55,14 +55,6 @@ namespace neko::widget {
 
         [[nodiscard]] auto get_bounds() const -> const Vec4I&;
         auto set_bounds(Vec4I b) -> void;
-    protected:
-        Vec4I bounds{.width = std::numeric_limits<int>::max(), .height = std::numeric_limits<int>::max()};
-
-        Widget* parent_ = nullptr;
-        engine::Context* context_ = nullptr;
-
-        std::atomic_bool isFocus{true};
-        std::atomic_bool isDirty{true};
 
         bool horizontal_{false};
 
@@ -73,8 +65,16 @@ namespace neko::widget {
         [[nodiscard]] auto get_children() const -> const engine::MutableWidget& {
             return children_;
         }
+    protected:
+        Vec4I bounds{.width = std::numeric_limits<int>::max(), .height = std::numeric_limits<int>::max()};
+
+        Widget* parent_ = nullptr;
+        engine::Context* context_ = nullptr;
+
+        std::atomic_bool isFocus{true};
+        std::atomic_bool isDirty{true};
     private:
-        friend engine::WidgetTree;
+        friend engine::TreeManager;
 
         engine::MutableWidget children_{};
 

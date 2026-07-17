@@ -4,10 +4,13 @@
 
 #include "Context.hpp"
 #include "EventRouter.hpp"
+#include "HitTester.hpp"
 #include "InvalidationTracker.hpp"
 #include "MsgPump.hpp"
 #include "RenderScheduler.hpp"
-#include "WidgetTree.hpp"
+#include "Renderer.hpp"
+#include "TreeManager.hpp"
+#include "WidgetBuilder.hpp"
 
 #include "../Type.hpp"
 
@@ -30,7 +33,8 @@ namespace neko::engine {
         template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
         auto set_root_widget(Args&&... args) -> std::shared_ptr<T> {
             const std::shared_ptr<T> widget = std::make_shared<T>(*context, std::forward<Args>(args)...);
-            widget_tree_.set_root(*context, widget);
+            tree_manager_.set_root(*context, widget);
+            widget_builder_.build(*context);
             context->root = widget;
             render_scheduler_->request_frame();
             return widget;
@@ -51,7 +55,10 @@ namespace neko::engine {
         auto render_frame() -> void;
 
         InvalidationTracker invalidation_;
-        WidgetTree widget_tree_;
+        TreeManager tree_manager_;
+        WidgetBuilder widget_builder_{tree_manager_};
+        Renderer renderer_{tree_manager_};
+        HitTester hit_tester_{tree_manager_};
         std::shared_ptr<RenderScheduler> render_scheduler_{};
         std::shared_ptr<MsgPump> msg_pump_{};
         std::unique_ptr<EventRouter> event_router_{};

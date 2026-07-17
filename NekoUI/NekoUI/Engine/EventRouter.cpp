@@ -3,14 +3,14 @@
 #include "Context.hpp"
 #include "InvalidationTracker.hpp"
 #include "RenderScheduler.hpp"
-#include "WidgetTree.hpp"
+#include "TreeManager.hpp"
 
 #include "../Backend/Backend.hpp"
 #include "../Style/ColorScheme.hpp"
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {
-    EventRouter::EventRouter(WidgetTree& tree,
+    EventRouter::EventRouter(TreeManager& tree,
                              device::Mouse& mouse,
                              device::Keyboard& keyboard,
                              Context& context,

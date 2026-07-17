@@ -3,7 +3,9 @@
 #include "InvalidationTracker.hpp"
 #include "MsgPump.hpp"
 #include "RenderScheduler.hpp"
-#include "WidgetTree.hpp"
+#include "Renderer.hpp"
+#include "TreeManager.hpp"
+#include "WidgetBuilder.hpp"
 
 #include <cmath>
 #include <optional>
@@ -36,7 +38,7 @@ namespace neko::engine {
         context->native_handle = native_handle_;
 
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
-        event_router_ = std::make_unique<EventRouter>(widget_tree_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
+        event_router_ = std::make_unique<EventRouter>(tree_manager_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
         msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
         msg_pump_->push_msg(platform::Platform::instance().query_theme());
     }
@@ -58,7 +60,7 @@ namespace neko::engine {
         context.reset();
         mouse.reset();
         keyboard.reset();
-        widget_tree_.clear();
+        tree_manager_.clear();
         invalidation_.clear();
     }
 
@@ -71,7 +73,7 @@ namespace neko::engine {
     }
 
     auto Engine::rebuild() -> void {
-        widget_tree_.build(*context);
+        widget_builder_.build(*context);
         render_scheduler_->request_frame();
     }
 
@@ -86,7 +88,7 @@ namespace neko::engine {
 
         backend->begin();
         const auto szie = render_scheduler_->pending_size();
-        widget_tree_.render({0, 0, szie.width, szie.height}, *context, *backend);
+        renderer_.render({0, 0, szie.width, szie.height}, *context, *backend);
         backend->end();
         invalidation_.clear();
     }
