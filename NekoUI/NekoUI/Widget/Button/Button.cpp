@@ -15,16 +15,26 @@ namespace neko::widget {
     auto Button::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
         // 1. 从全局样式表查找，合并到本地属性
         if (const auto* rule = context.stylesheet.get(class_name_)) {
-            if (rule->background) background_ = *rule->background;
-            if (rule->size) size_ = *rule->size;
-            if (rule->border) border_ = *rule->border;
-            if (rule->font_size) font_size_ = *rule->font_size;
-            if (rule->text_color) text_color_ = *rule->text_color;
+            if (rule->background) {
+                background_ = *rule->background;
+            }
+            if (rule->size) {
+                size_ = *rule->size;
+            }
+            if (rule->border) {
+                border_ = *rule->border;
+            }
+            if (rule->font_size) {
+                font_size_ = *rule->font_size;
+            }
+            if (rule->text_color) {
+                text_color_ = *rule->text_color;
+            }
         }
 
         // 2. 无样式表规则时使用 ColorScheme 默认值
         auto bg = background_.color.value != 0 ? background_ : style::Background{context.scheme.primary};
-        auto tc = text_color_.value != 0 ? text_color_ : type::Color{0xFFFFFFFF};
+        auto tc = text_color_.value != 0 ? text_color_ : Color{0xFFFFFFFF};
 
         // 3. 用 rect 参数计算有效区域（不修改 bounds）
         auto effective = rect;
@@ -41,10 +51,7 @@ namespace neko::widget {
         }
 
         if (!text_.empty()) {
-            const auto text_pos = Vec2I{
-                .x = static_cast<int>(effective.x + static_cast<float>(effective.z) * 0.1F),
-                .y = static_cast<int>(effective.y + static_cast<float>(effective.w) * 0.5F)
-            };
+            const auto text_pos = Vec2I{.x = static_cast<int>(effective.x + static_cast<float>(effective.z) * 0.1F), .y = static_cast<int>(effective.y + static_cast<float>(effective.w) * 0.5F)};
             backend.draw_text(text_, text_pos, tc, font_size_);
         }
 

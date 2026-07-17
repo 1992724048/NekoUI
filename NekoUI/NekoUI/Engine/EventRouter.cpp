@@ -30,7 +30,7 @@ namespace neko::engine {
         destroy_handler_(std::move(destroy_handler)),
         invalidation_(invalidation) {}
 
-    auto EventRouter::dispatch(const platform::Event& event) -> void {
+    auto EventRouter::dispatch(const platform::Event& event) const -> void {
         std::visit(platform::Overloaded{
                        [&](const device::MouseMoveEvent& e) -> void {
                            mouse_.handle(e);
@@ -72,8 +72,8 @@ namespace neko::engine {
         }
     }
 
-    auto EventRouter::handle_input(const platform::Event& event) -> void {
-        if (auto target = hit_tester_.hit_test(mouse_)) {
+    auto EventRouter::handle_input(const platform::Event& event) const -> void {
+        if (const auto target = hit_tester_.hit_test(mouse_)) {
             target->input(context_, event);
         }
     }

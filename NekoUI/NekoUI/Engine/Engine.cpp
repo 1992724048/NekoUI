@@ -92,7 +92,7 @@ namespace neko::engine {
 
         backend->begin();
         const auto szie = render_scheduler_->pending_size();
-        renderer_.render({0, 0, szie.width, szie.height}, *context, *backend);
+        renderer_.render({{0, 0, szie.width, szie.height}}, *context, *backend);
         backend->end();
         invalidation_.clear();
     }

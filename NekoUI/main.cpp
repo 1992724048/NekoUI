@@ -70,41 +70,26 @@ auto main(int argc, char* argv[]) -> int try {
     msg_pump = engine->get_msg_pump();
 
     const auto page = engine->set_root_widget<neko::widget::Column>();
-    page->class_name("page");
 
-    // 定义全局样式表
     auto& sheet = engine->get_context().stylesheet;
-    sheet.add("page", neko::style::WidgetStyle{
-        .background = neko::style::Background{{0xFF1A1A2E}},
-        .size = neko::style::Size{{400, 300}},
-        .padding = 16.0f,
-        .spacing = 8.0f
-    });
-    sheet.add("btn1", neko::style::WidgetStyle{
-        .background = neko::style::Background{{0xFFE945FF}},
-        .size = neko::style::Size{{200, 50}}
-    });
-    sheet.add("btn2", neko::style::WidgetStyle{
-        .background = neko::style::Background{{0xFF5334FF}},
-        .size = neko::style::Size{{200, 50}}
-    });
-    sheet.add("btn3", neko::style::WidgetStyle{
-        .background = neko::style::Background{{0xFF0F34FF}},
-        .size = neko::style::Size{{200, 50}}
-    });
+    sheet.add("page", neko::style::WidgetStyle{.background = neko::style::Background{{0xFF1A1A2E}}, .size = neko::style::Size{{400, 300}}, .padding = 16.0f, .spacing = 8.0f});
+    sheet.add("btn1", neko::style::WidgetStyle{.background = neko::style::Background{{0xFFE945FF}}, .size = neko::style::Size{{200, 50}}});
+    sheet.add("btn2", neko::style::WidgetStyle{.background = neko::style::Background{{0xFF5334FF}}, .size = neko::style::Size{{200, 50}}});
+    sheet.add("btn3", neko::style::WidgetStyle{.background = neko::style::Background{{0xFF0F34FF}}, .size = neko::style::Size{{200, 50}}});
 
+    page->class_name("page");
     page->children([&](auto& col) -> auto {
         col.template build<neko::widget::Button>("Button 1")
-            .class_name("btn1")
-            .on_click([] { std::println("Button 1 clicked!"); });
+            .on_click([] { std::println("Button 1 clicked!"); })
+            .class_name("btn1");
 
         col.template build<neko::widget::Button>("Button 2")
-            .class_name("btn2")
-            .on_click([] { std::println("Button 2 clicked!"); });
+            .on_click([] { std::println("Button 2 clicked!"); })
+            .class_name("btn2");
 
         col.template build<neko::widget::Button>("Button 3")
-            .class_name("btn3")
-            .on_click([] { std::println("Button 3 clicked!"); });
+            .on_click([] { std::println("Button 3 clicked!"); })
+            .class_name("btn3");
     });
 
     MSG msg{};

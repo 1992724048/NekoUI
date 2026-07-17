@@ -26,4 +26,13 @@ namespace neko::widget {
     auto Widget::parent() const -> Widget* {
         return parent_;
     }
+
+    auto Widget::style(const std::string_view name) -> Widget& {
+        class_name_ = name;
+        return *this;
+    }
+
+    auto Widget::get_class_name() const -> const std::string& {
+        return class_name_;
+    }
 }
