@@ -61,7 +61,7 @@ namespace neko::engine {
         index_count = 0;
 
         traverse_impl([&](MutableWidget& mw) -> void {
-            const auto sp = mw.as_widget().lock();
+            const auto& sp = mw.as_widget();
             if (!sp) {
                 return;
             }
@@ -79,6 +79,75 @@ namespace neko::engine {
 
             sp->build(context);
         });
+
+        // Phase 1: 也遍历 Widget::children_ 中的子 Widget
+        auto root = root_.load();
+        if (root) {
+            auto build_recursive = [&](auto& self, widget::Widget& w) -> void {
+                auto& children = w.get_children();
+                if (children.is_null()) {
+                    return;
+                }
+                if (children.is_widget()) {
+                    auto& child = children.as_widget();
+                    if (child) {
+                        child->z_index_ = index_count++;
+                        index_widgets_[child->z_index_] = child;
+
+                        std::ostringstream oss;
+                        oss << "/" << child->id_ << "#0x" << std::hex
+                            << reinterpret_cast<uintptr_t>(child.get());
+                        child->path_ = oss.str();
+
+                        if (!child->id_.empty()) {
+                            id_widgets_[child->id_] = child;
+                        }
+
+                        child->build(context);
+                        self(self, *child);
+                    }
+                } else if (children.is_list()) {
+                    for (auto& mw : children.as_list()) {
+                        if (mw.is_widget()) {
+                            auto& child = mw.as_widget();
+                            if (child) {
+                                child->z_index_ = index_count++;
+                                index_widgets_[child->z_index_] = child;
+                                std::ostringstream oss;
+                                oss << "/" << child->id_ << "#0x" << std::hex
+                                    << reinterpret_cast<uintptr_t>(child.get());
+                                child->path_ = oss.str();
+                                if (!child->id_.empty()) {
+                                    id_widgets_[child->id_] = child;
+                                }
+                                child->build(context);
+                                self(self, *child);
+                            }
+                        }
+                    }
+                } else if (children.is_vector()) {
+                    for (auto& mw : children.as_vector()) {
+                        if (mw.is_widget()) {
+                            auto& child = mw.as_widget();
+                            if (child) {
+                                child->z_index_ = index_count++;
+                                index_widgets_[child->z_index_] = child;
+                                std::ostringstream oss;
+                                oss << "/" << child->id_ << "#0x" << std::hex
+                                    << reinterpret_cast<uintptr_t>(child.get());
+                                child->path_ = oss.str();
+                                if (!child->id_.empty()) {
+                                    id_widgets_[child->id_] = child;
+                                }
+                                child->build(context);
+                                self(self, *child);
+                            }
+                        }
+                    }
+                }
+            };
+            build_recursive(build_recursive, *root);
+        }
     }
 
     auto WidgetTree::event(Context& context) -> void {
@@ -113,7 +182,7 @@ namespace neko::engine {
         std::shared_lock _(mutex_);
 
         traverse_impl([&](MutableWidget& mw) -> void {
-            const auto sp = mw.as_widget().lock();
+            const auto& sp = mw.as_widget();
             if (sp) {
                 callback(*sp);
             }
