@@ -76,7 +76,7 @@ namespace neko::engine {
                     return;
                 }
 
-                auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
+                auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) -> void {
                     if (!child) {
                         return;
                     }

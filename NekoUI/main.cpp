@@ -67,7 +67,7 @@ auto main(int argc, char* argv[]) -> int try {
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
-    // [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");
+    [[maybe_unused]] auto btn = engine->set_root_widget<neko::widget::Button>(Vec4I{{{.x = 100, .y = 100, .z = 200, .w = 50}}}, "点我");
 
     MSG msg{};
     while (GetMessageW(&msg, nullptr, 0, 0) != 0) {
