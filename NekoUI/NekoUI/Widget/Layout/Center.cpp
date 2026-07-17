@@ -11,16 +11,14 @@ namespace neko::widget {
             backend.draw_rect_fill(bounds, style_.background_color);
         }
 
-        // 居中放置子控件
-        auto& children = get_children();
-        if (children.is_widget()) {
+        if (auto& children = get_children(); children.is_widget()) {
             if (const auto& child = children.as_widget()) {
                 const auto cw = child->get_bounds().z - child->get_bounds().x;
                 const auto ch = child->get_bounds().w - child->get_bounds().y;
                 const auto cx = bounds.x + (bounds.z - bounds.x - cw) / 2;
                 const auto cy = bounds.y + (bounds.w - bounds.y - ch) / 2;
-                child->set_bounds({cx, cy, cx + cw, cy + ch});
-                child->draw({cx, cy, cx + cw, cy + ch}, context, backend);
+                child->set_bounds({{cx, cy, {cx + cw}, {cy + ch}}});
+                child->draw({{{cx, cy, {cx + cw}, {cy + ch}}}}, context, backend);
             }
         }
 
@@ -29,5 +27,10 @@ namespace neko::widget {
 
     auto Center::hit_test(const device::Mouse& mouse) const -> bool {
         return mouse.is_inside(bounds);
+    }
+
+    auto Center::style(const CenterStyle& s) -> Center& {
+        style_ = s;
+        return *this;
     }
 } // namespace neko::widget

@@ -14,28 +14,20 @@ namespace neko::widget {
     auto Button::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
         const auto& s = style_;
 
-        // 当 size 为 max 时撑满父容器，否则裁剪 bounds
-        const auto use_parent = s.size.x == std::numeric_limits<float>::max() || s.size.y == std::numeric_limits<float>::max();
-        if (!use_parent) {
+        if (const auto use_parent = s.size.x == std::numeric_limits<float>::max() || s.size.y == std::numeric_limits<float>::max(); !use_parent) {
             bounds.z = bounds.x + static_cast<int>(s.size.x);
             bounds.w = bounds.y + static_cast<int>(s.size.y);
         }
 
-        // 1. 绘制背景
         backend.draw_rect_fill(bounds, s.background_color);
 
-        // 2. 绘制边框
         if (s.border_size > 0.0f) {
             backend.draw_rect(bounds, s.border_color, static_cast<int>(s.border_size));
         }
 
-        // 3. 绘制文字（居中）
         if (!text_.empty()) {
             const auto font_size = s.font_size;
-            const auto text_pos = Vec2I{
-                static_cast<int>(bounds.x + static_cast<float>(bounds.z) * 0.1f),
-                static_cast<int>(bounds.y + static_cast<float>(bounds.w) * 0.5f)
-            };
+            const auto text_pos = Vec2I{static_cast<int>(bounds.x + static_cast<float>(bounds.z) * 0.1f), static_cast<int>(bounds.y + static_cast<float>(bounds.w) * 0.5f)};
             backend.draw_text(text_, text_pos, s.text_color, font_size);
         }
 

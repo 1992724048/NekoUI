@@ -15,6 +15,14 @@ namespace neko::widget {
         return path_;
     }
 
+    auto Widget::get_bounds() const -> const Vec4I& {
+        return bounds;
+    }
+
+    auto Widget::set_bounds(const Vec4I b) -> void {
+        bounds = b;
+    }
+
     auto Widget::parent() const -> Widget* {
         return parent_;
     }

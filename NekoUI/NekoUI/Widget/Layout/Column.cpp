@@ -9,10 +9,9 @@ namespace neko::widget {
     Column::Column(engine::Context&) {}
 
     auto Column::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
-        const auto use_parent = style_.size.x == std::numeric_limits<float>::max() || style_.size.y == std::numeric_limits<float>::max();
-        if (!use_parent) {
-            bounds.z = bounds.x + static_cast<int>(style_.size.x);
-            bounds.w = bounds.y + static_cast<int>(style_.size.y);
+        if (const auto use_parent = style_.size.x == std::numeric_limits<float>::max() || style_.size.y == std::numeric_limits<float>::max(); !use_parent) {
+            bounds.z = bounds.x + style_.size.x;
+            bounds.w = bounds.y + style_.size.y;
         }
 
         if (style_.background_color.value != 0) {

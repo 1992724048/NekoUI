@@ -62,41 +62,15 @@ namespace neko::engine {
         index_count = 0;
 
         const auto root = root_.load();
-        if (!root) {
-            return;
-        }
+        if (!root) return;
 
         register_widget(root, context);
 
         auto build_recursive = [&](auto& self, widget::Widget& w) -> void {
-            auto& children = w.get_children();
-            if (children.is_null()) {
-                return;
-            }
-
-            auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
-                if (!child) {
-                    return;
-                }
+            for_each_child(w, [&](const std::shared_ptr<widget::Widget>& child) {
                 register_widget(child, context);
                 self(self, *child);
-            };
-
-            if (children.is_widget()) {
-                visit_child(children.as_widget());
-            } else if (children.is_list()) {
-                for (auto& mw : children.as_list()) {
-                    if (mw.is_widget()) {
-                        visit_child(mw.as_widget());
-                    }
-                }
-            } else if (children.is_vector()) {
-                for (auto& mw : children.as_vector()) {
-                    if (mw.is_widget()) {
-                        visit_child(mw.as_widget());
-                    }
-                }
-            }
+            });
         };
         build_recursive(build_recursive, *root);
     }
@@ -117,59 +91,27 @@ namespace neko::engine {
         std::shared_lock _(mutex_);
 
         const auto root = root_.load();
-        if (!root) {
-            return;
-        }
+        if (!root) return;
 
         auto render_recursive = [&](auto& self, widget::Widget& w, const type::Vec4I parent_rect) -> type::Rect {
             w.bounds = parent_rect;
             const auto child_rect = w.draw(parent_rect, context, backend);
 
-            auto& children = w.get_children();
             const auto is_horizontal = w.horizontal_;
             auto offset = is_horizontal ? child_rect.x : child_rect.y;
 
-            if (children.is_widget()) {
-                if (const auto& child = children.as_widget()) {
-                    type::Vec4I next_rect;
-                    if (is_horizontal) {
-                        next_rect = type::Vec4I{{{offset, child_rect.y, {offset + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
-                    } else {
-                        next_rect = type::Vec4I{{{child_rect.x, offset, {child_rect.z}, {offset + (child_rect.w - child_rect.y)}}}};
-                    }
-                    self(self, *child, next_rect);
+            // 构造下一个子控件的 rect
+            auto next_rect_for = [&](int off) -> type::Vec4I {
+                if (is_horizontal) {
+                    return {{{off, child_rect.y, {off + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
                 }
-            } else if (children.is_list()) {
-                for (auto& mw : children.as_list()) {
-                    if (mw.is_widget()) {
-                        if (auto& child = mw.as_widget()) {
-                            type::Vec4I next_rect;
-                            if (is_horizontal) {
-                                next_rect = type::Vec4I{{{offset, child_rect.y, {offset + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
-                            } else {
-                                next_rect = type::Vec4I{{{child_rect.x, offset, {child_rect.z}, {offset + (child_rect.w - child_rect.y)}}}};
-                            }
-                            auto used = self(self, *child, next_rect);
-                            offset += is_horizontal ? used.width : used.height;
-                        }
-                    }
-                }
-            } else if (children.is_vector()) {
-                for (auto& mw : children.as_vector()) {
-                    if (mw.is_widget()) {
-                        if (auto& child = mw.as_widget()) {
-                            type::Vec4I next_rect;
-                            if (is_horizontal) {
-                                next_rect = type::Vec4I{{{offset, child_rect.y, {offset + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
-                            } else {
-                                next_rect = type::Vec4I{{{child_rect.x, offset, {child_rect.z}, {offset + (child_rect.w - child_rect.y)}}}};
-                            }
-                            auto used = self(self, *child, next_rect);
-                            offset += is_horizontal ? used.width : used.height;
-                        }
-                    }
-                }
-            }
+                return {{{child_rect.x, off, {child_rect.z}, {off + (child_rect.w - child_rect.y)}}}};
+            };
+
+            for_each_child(w, [&](const std::shared_ptr<widget::Widget>& child) {
+                auto used = self(self, *child, next_rect_for(offset));
+                offset += is_horizontal ? used.width : used.height;
+            });
 
             return child_rect;
         };
@@ -181,9 +123,7 @@ namespace neko::engine {
         std::shared_lock _(mutex_);
 
         const auto root = root_.load();
-        if (!root) {
-            return false;
-        }
+        if (!root) return false;
 
         auto test_recursive = [&](auto& self, widget::Widget& w, type::Vec4I parent_rect) -> bool {
             w.bounds = parent_rect;
@@ -191,35 +131,26 @@ namespace neko::engine {
             auto& children = w.get_children();
             auto offset_y = parent_rect.y;
 
+            // 从下往上（高 z_index 优先），命中即短路
             if (children.is_widget()) {
                 if (const auto& child = children.as_widget()) {
                     type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + (parent_rect.w - parent_rect.y)}}}};
-                    if (self(self, *child, child_rect)) {
-                        return true;
-                    }
+                    if (self(self, *child, child_rect)) return true;
                 }
             } else if (children.is_list()) {
                 for (auto it = children.as_list().rbegin(); it != children.as_list().rend(); ++it) {
-                    if (it->is_widget()) {
-                        if (const auto& child = it->as_widget()) {
-                            type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                            if (self(self, *child, child_rect)) {
-                                return true;
-                            }
-                            offset_y += 50;
-                        }
+                    if (it->is_widget() && it->as_widget()) {
+                        type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
+                        if (self(self, *it->as_widget(), child_rect)) return true;
+                        offset_y += 50;
                     }
                 }
             } else if (children.is_vector()) {
                 for (auto it = children.as_vector().rbegin(); it != children.as_vector().rend(); ++it) {
-                    if (it->is_widget()) {
-                        if (const auto& child = it->as_widget()) {
-                            type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                            if (self(self, *child, child_rect)) {
-                                return true;
-                            }
-                            offset_y += 50;
-                        }
+                    if (it->is_widget() && it->as_widget()) {
+                        type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
+                        if (self(self, *it->as_widget(), child_rect)) return true;
+                        offset_y += 50;
                     }
                 }
             }
@@ -234,41 +165,15 @@ namespace neko::engine {
         std::shared_lock _(mutex_);
 
         const auto root = root_.load();
-        if (!root) {
-            return;
-        }
+        if (!root) return;
 
         callback(*root);
 
         auto for_each_recursive = [&](auto& self, widget::Widget& w) -> void {
-            auto& children = w.get_children();
-            if (children.is_null()) {
-                return;
-            }
-
-            auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
-                if (!child) {
-                    return;
-                }
+            for_each_child(w, [&](const std::shared_ptr<widget::Widget>& child) {
                 callback(*child);
                 self(self, *child);
-            };
-
-            if (children.is_widget()) {
-                visit_child(children.as_widget());
-            } else if (children.is_list()) {
-                for (auto& mw : children.as_list()) {
-                    if (mw.is_widget()) {
-                        visit_child(mw.as_widget());
-                    }
-                }
-            } else if (children.is_vector()) {
-                for (auto& mw : children.as_vector()) {
-                    if (mw.is_widget()) {
-                        visit_child(mw.as_widget());
-                    }
-                }
-            }
+            });
         };
         for_each_recursive(for_each_recursive, *root);
     }

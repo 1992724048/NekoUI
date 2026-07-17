@@ -58,6 +58,30 @@ namespace neko::engine {
         std::map<int, std::weak_ptr<widget::Widget>> index_widgets_;
         auto register_widget(const std::shared_ptr<widget::Widget>& sp, Context& context) -> void;
 
+        template<typename Visitor>
+        static auto for_each_child(widget::Widget& w, Visitor&& visit) -> void {
+            auto& children = w.get_children();
+            if (children.is_null()) {
+                return;
+            }
+
+            if (children.is_widget()) {
+                visit(children.as_widget());
+            } else if (children.is_list()) {
+                for (auto& mw : children.as_list()) {
+                    if (mw.is_widget()) {
+                        visit(mw.as_widget());
+                    }
+                }
+            } else if (children.is_vector()) {
+                for (auto& mw : children.as_vector()) {
+                    if (mw.is_widget()) {
+                        visit(mw.as_widget());
+                    }
+                }
+            }
+        }
+
         mutable std::shared_mutex mutex_;
     };
 }

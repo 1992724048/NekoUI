@@ -53,9 +53,8 @@ namespace neko::widget {
         [[nodiscard]] auto index() const -> int;
         [[nodiscard]] auto path() const -> const std::string&;
 
-        /// 获取/设置绘制区域（供布局容器使用）
-        [[nodiscard]] auto get_bounds() const -> const Vec4I& { return bounds; }
-        auto set_bounds(Vec4I b) -> void { bounds = b; }
+        [[nodiscard]] auto get_bounds() const -> const Vec4I&;
+        auto set_bounds(Vec4I b) -> void;
     protected:
         Vec4I bounds{.width = std::numeric_limits<int>::max(), .height = std::numeric_limits<int>::max()};
 
@@ -65,7 +64,7 @@ namespace neko::widget {
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
 
-        bool horizontal_{false}; // Row 设为 true
+        bool horizontal_{false};
 
         [[nodiscard]] auto get_children() -> engine::MutableWidget& {
             return children_;
@@ -74,7 +73,6 @@ namespace neko::widget {
         [[nodiscard]] auto get_children() const -> const engine::MutableWidget& {
             return children_;
         }
-
     private:
         friend engine::WidgetTree;
 
