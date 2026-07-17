@@ -14,4 +14,8 @@ namespace neko::widget {
     auto Widget::path() const -> const std::string& {
         return path_;
     }
+
+    auto Widget::parent() const -> Widget* {
+        return parent_;
+    }
 }

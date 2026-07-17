@@ -65,83 +65,37 @@ namespace neko::engine {
             if (!sp) {
                 return;
             }
-
-            sp->z_index_ = index_count++;
-            index_widgets_[sp->z_index_] = sp;
-
-            std::ostringstream oss;
-            oss << "/" << sp->id_ << "#0x" << std::hex << reinterpret_cast<uintptr_t>(sp.get());
-            sp->path_ = oss.str();
-
-            if (!sp->id_.empty()) {
-                id_widgets_[sp->id_] = sp;
-            }
-
-            sp->build(context);
+            register_widget(sp, context);
         });
 
-        // Phase 1: 也遍历 Widget::children_ 中的子 Widget
-        auto root = root_.load();
+        const auto root = root_.load();
         if (root) {
             auto build_recursive = [&](auto& self, widget::Widget& w) -> void {
                 auto& children = w.get_children();
                 if (children.is_null()) {
                     return;
                 }
-                if (children.is_widget()) {
-                    auto& child = children.as_widget();
-                    if (child) {
-                        child->z_index_ = index_count++;
-                        index_widgets_[child->z_index_] = child;
 
-                        std::ostringstream oss;
-                        oss << "/" << child->id_ << "#0x" << std::hex
-                            << reinterpret_cast<uintptr_t>(child.get());
-                        child->path_ = oss.str();
-
-                        if (!child->id_.empty()) {
-                            id_widgets_[child->id_] = child;
-                        }
-
-                        child->build(context);
-                        self(self, *child);
+                auto visit_child = [&](const std::shared_ptr<widget::Widget>& child) {
+                    if (!child) {
+                        return;
                     }
+                    register_widget(child, context);
+                    self(self, *child);
+                };
+
+                if (children.is_widget()) {
+                    visit_child(children.as_widget());
                 } else if (children.is_list()) {
                     for (auto& mw : children.as_list()) {
                         if (mw.is_widget()) {
-                            auto& child = mw.as_widget();
-                            if (child) {
-                                child->z_index_ = index_count++;
-                                index_widgets_[child->z_index_] = child;
-                                std::ostringstream oss;
-                                oss << "/" << child->id_ << "#0x" << std::hex
-                                    << reinterpret_cast<uintptr_t>(child.get());
-                                child->path_ = oss.str();
-                                if (!child->id_.empty()) {
-                                    id_widgets_[child->id_] = child;
-                                }
-                                child->build(context);
-                                self(self, *child);
-                            }
+                            visit_child(mw.as_widget());
                         }
                     }
                 } else if (children.is_vector()) {
                     for (auto& mw : children.as_vector()) {
                         if (mw.is_widget()) {
-                            auto& child = mw.as_widget();
-                            if (child) {
-                                child->z_index_ = index_count++;
-                                index_widgets_[child->z_index_] = child;
-                                std::ostringstream oss;
-                                oss << "/" << child->id_ << "#0x" << std::hex
-                                    << reinterpret_cast<uintptr_t>(child.get());
-                                child->path_ = oss.str();
-                                if (!child->id_.empty()) {
-                                    id_widgets_[child->id_] = child;
-                                }
-                                child->build(context);
-                                self(self, *child);
-                            }
+                            visit_child(mw.as_widget());
                         }
                     }
                 }
@@ -182,8 +136,7 @@ namespace neko::engine {
         std::shared_lock _(mutex_);
 
         traverse_impl([&](MutableWidget& mw) -> void {
-            const auto& sp = mw.as_widget();
-            if (sp) {
+            if (const auto& sp = mw.as_widget()) {
                 callback(*sp);
             }
         });
@@ -207,5 +160,20 @@ namespace neko::engine {
         for (auto& mw : widgets) {
             traverse(traverse, mw);
         }
+    }
+
+    auto WidgetTree::register_widget(const std::shared_ptr<widget::Widget>& sp, Context& context) -> void {
+        sp->z_index_ = index_count++;
+        index_widgets_[sp->z_index_] = sp;
+
+        std::ostringstream oss;
+        oss << "/" << sp->id_ << "#0x" << std::hex << reinterpret_cast<uintptr_t>(sp.get());
+        sp->path_ = oss.str();
+
+        if (!sp->id_.empty()) {
+            id_widgets_[sp->id_] = sp;
+        }
+
+        sp->build(context);
     }
 }

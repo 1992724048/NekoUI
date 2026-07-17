@@ -60,6 +60,7 @@ namespace neko::engine {
         std::map<std::string, std::weak_ptr<widget::Widget>> id_widgets_;
         std::map<int, std::weak_ptr<widget::Widget>> index_widgets_;
         auto traverse_impl(const std::function<void(MutableWidget&)>& callback) -> void;
+        auto register_widget(const std::shared_ptr<widget::Widget>& sp, Context& context) -> void;
 
         mutable std::shared_mutex mutex_;
     };
