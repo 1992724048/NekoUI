@@ -86,9 +86,8 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
 - **Widget** 基类：虚方法 `draw(Vec4I, Context&, Backend&)`、`build(Context&)`、`event(Context&)`、`input(Context&, Event)`、`hit_test(Mouse)`。Protected 成员：`bounds`（`Vec4I`）、`z_index`（`int32_t`）、`dirty`、`isFocus`
   - **Builder API**（Phase 1）：`build<T>(Args...) -> T&`（创建子 Widget 并链式配置）、`children(fn)`（lambda 作用域批量创建子节点）、`parent()`（获取父 Widget）
   - **子节点存储**：`children_`（`MutableWidget`），通过 `std::visit` + auto-conversion 管理 monostate → shared_ptr → list 的自动转换
-  - **StyledWidget\<Derived\>**：CRTP 中间层，提供 `set_background/set_size/set_border` 链式 setter（返回 `Derived&`）
-- **Button**：继承 `StyledWidget<Button>`，实现 `draw`（背景/边框/文字居中）、`input`（左键点击→on_click 回调）、`hit_test`。构造函数 `Button(text, on_click)`，链式 setter `on_click()`/`text()`
-- **Column**：继承 `StyledWidget<Column>`，垂直布局容器。子节点遍历由 `WidgetTree::traverse_impl` 处理
+- **Button**：继承 `Widget`，实现 `draw`（背景/边框/文字居中）、`input`（左键点击→on_click 回调）、`hit_test`。构造函数 `Button(Context&, text, on_click)`，链式 setter `style(ButtonStyle)`/`on_click()`/`text()`
+- **Column**：继承 `Widget`，垂直布局容器。构造函数 `Column(Context&)`，链式 setter `style(ColumnStyle)`。子节点遍历由 `WidgetTree::traverse_impl` 处理
 - **Center**（空存根）：继承 Widget，仅覆盖 `draw()`
 
 ### 7. 样式系统 (`neko::style`)
@@ -174,8 +173,7 @@ NekoUI/                          # Git 仓库根
 │       │   └── CSS.hpp           # 基础样式结构体（Background/Size/Border）
 │       └── Widget/
 │           ├── Widget.hpp        # Widget 基类声明（含 Builder API）
-│           ├── Widget.cpp        # Widget 默认实现（13 行）
-│           ├── StyledWidget.hpp  # CRTP 中间层（set_background/set_size/set_border）
+│           ├── Widget.cpp        # Widget 默认实现
 │           ├── Button/
 │           │   ├── Button.hpp    # Button 声明（空存根）
 │           │   └── Button.cpp    # Button 空实现（16 行）
