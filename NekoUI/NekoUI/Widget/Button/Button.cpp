@@ -21,13 +21,13 @@ namespace neko::widget {
 
         backend.draw_rect_fill(bounds, s.background_color);
 
-        if (s.border_size > 0.0f) {
+        if (s.border_size > 0.0F) {
             backend.draw_rect(bounds, s.border_color, static_cast<int>(s.border_size));
         }
 
         if (!text_.empty()) {
             const auto font_size = s.font_size;
-            const auto text_pos = Vec2I{static_cast<int>(bounds.x + static_cast<float>(bounds.z) * 0.1f), static_cast<int>(bounds.y + static_cast<float>(bounds.w) * 0.5f)};
+            const auto text_pos = Vec2I{.x = static_cast<int>(bounds.x + static_cast<float>(bounds.z) * 0.1F), .y = static_cast<int>(bounds.y + static_cast<float>(bounds.w) * 0.5F)};
             backend.draw_text(text_, text_pos, s.text_color, font_size);
         }
 

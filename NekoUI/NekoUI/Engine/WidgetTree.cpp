@@ -7,25 +7,6 @@
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {
-
-    template<typename Visitor>
-    auto WidgetTree::for_each_child(widget::Widget& w, Visitor&& visit) -> void {
-        auto& children = w.get_children();
-        if (children.is_null()) return;
-
-        if (children.is_widget()) {
-            visit(children.as_widget());
-        } else if (children.is_list()) {
-            for (auto& mw : children.as_list()) {
-                if (mw.is_widget()) visit(mw.as_widget());
-            }
-        } else if (children.is_vector()) {
-            for (auto& mw : children.as_vector()) {
-                if (mw.is_widget()) visit(mw.as_widget());
-            }
-        }
-    }
-
     WidgetTree::WidgetTree() = default;
 
     auto WidgetTree::set_root(Context& context, std::shared_ptr<widget::Widget> w) -> void {
@@ -147,10 +128,9 @@ namespace neko::engine {
         std::shared_lock _(mutex_);
 
         const auto root = root_.load();
-        if (!root) {
-            return false;
-        }
+        if (!root) return false;
 
+        // 遍历顺序与 render 匹配：offset_y 从 parent_rect.y 正序累加
         auto test_recursive = [&](auto& self, widget::Widget& w, type::Vec4I parent_rect) -> bool {
             w.bounds = parent_rect;
 
@@ -160,27 +140,21 @@ namespace neko::engine {
             if (children.is_widget()) {
                 if (const auto& child = children.as_widget()) {
                     type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + (parent_rect.w - parent_rect.y)}}}};
-                    if (self(self, *child, child_rect)) {
-                        return true;
-                    }
+                    if (self(self, *child, child_rect)) return true;
                 }
             } else if (children.is_list()) {
-                for (auto it = children.as_list().rbegin(); it != children.as_list().rend(); ++it) {
-                    if (it->is_widget() && it->as_widget()) {
+                for (auto& mw : children.as_list()) {
+                    if (mw.is_widget() && mw.as_widget()) {
                         type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                        if (self(self, *it->as_widget(), child_rect)) {
-                            return true;
-                        }
+                        if (self(self, *mw.as_widget(), child_rect)) return true;
                         offset_y += 50;
                     }
                 }
             } else if (children.is_vector()) {
-                for (auto it = children.as_vector().rbegin(); it != children.as_vector().rend(); ++it) {
-                    if (it->is_widget() && it->as_widget()) {
+                for (auto& mw : children.as_vector()) {
+                    if (mw.is_widget() && mw.as_widget()) {
                         type::Vec4I child_rect{{{parent_rect.x, offset_y, {parent_rect.z}, {offset_y + 50}}}};
-                        if (self(self, *it->as_widget(), child_rect)) {
-                            return true;
-                        }
+                        if (self(self, *mw.as_widget(), child_rect)) return true;
                         offset_y += 50;
                     }
                 }
@@ -226,5 +200,29 @@ namespace neko::engine {
         }
 
         sp->build(context);
+    }
+
+    template<typename Visitor>
+    auto WidgetTree::for_each_child(widget::Widget& w, Visitor&& visit) -> void {
+        auto& children = w.get_children();
+        if (children.is_null()) {
+            return;
+        }
+
+        if (children.is_widget()) {
+            visit(children.as_widget());
+        } else if (children.is_list()) {
+            for (auto& mw : children.as_list()) {
+                if (mw.is_widget()) {
+                    visit(mw.as_widget());
+                }
+            }
+        } else if (children.is_vector()) {
+            for (auto& mw : children.as_vector()) {
+                if (mw.is_widget()) {
+                    visit(mw.as_widget());
+                }
+            }
+        }
     }
 }
