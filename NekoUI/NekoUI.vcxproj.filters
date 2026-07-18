@@ -158,16 +158,10 @@
     <ClInclude Include="NekoUI\Engine\WidgetVisitor.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Style\StyleSheet.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="NekoUI\Widget\Layout\Column.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Widget\Layout\Row.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Style\Stylable.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

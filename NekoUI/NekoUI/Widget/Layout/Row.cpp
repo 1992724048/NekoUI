@@ -11,17 +11,7 @@ namespace neko::widget {
     }
 
     auto Row::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
-        // 1. 从全局样式表查找，合并到本地属性
-        if (const auto* rule = context.stylesheet.get(class_name_)) {
-            if (rule->background) {
-                background_ = *rule->background;
-            }
-            if (rule->size) {
-                size_ = *rule->size;
-            }
-        }
-
-        // 2. 无样式表规则时使用 ColorScheme 默认值
+        // 使用 ColorScheme 默认值
         auto bg = background_.color.value != 0 ? background_ : style::Background{context.scheme.surface};
 
         auto effective = rect;

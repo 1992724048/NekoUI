@@ -1,9 +1,10 @@
 ﻿#pragma once
 #include "../Widget.hpp"
-#include "../../Style/Stylable.hpp"
+#include "../../Style/CSS.hpp"
 
 namespace neko::widget {
-    class Center final : public Widget, public Stylable<Center> {
+    class Center final : public Widget,
+                         public style::BackgroundStyle {
     public:
         explicit Center(engine::Context& /*unused*/);
 

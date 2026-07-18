@@ -13,26 +13,7 @@ namespace neko::widget {
         on_click_(std::move(on_click)) {}
 
     auto Button::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
-        // 1. 从全局样式表查找，合并到本地属性
-        if (const auto* rule = context.stylesheet.get(class_name_)) {
-            if (rule->background) {
-                background_ = *rule->background;
-            }
-            if (rule->size) {
-                size_ = *rule->size;
-            }
-            if (rule->border) {
-                border_ = *rule->border;
-            }
-            if (rule->font_size) {
-                font_size_ = *rule->font_size;
-            }
-            if (rule->text_color) {
-                text_color_ = *rule->text_color;
-            }
-        }
-
-        // 2. 无样式表规则时使用 ColorScheme 默认值
+        // 使用 ColorScheme 默认值
         auto bg = background_.color.value != 0 ? background_ : style::Background{context.scheme.primary};
         auto tc = text_color_.value != 0 ? text_color_ : Color{0xFFFFFFFF};
 
@@ -79,11 +60,6 @@ namespace neko::widget {
 
     auto Button::on_click(std::function<void()> cb) -> Button& {
         on_click_ = std::move(cb);
-        return *this;
-    }
-
-    auto Button::text(std::string t) -> Button& {
-        text_ = std::move(t);
         return *this;
     }
 } // namespace neko::widget

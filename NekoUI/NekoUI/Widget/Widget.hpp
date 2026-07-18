@@ -73,8 +73,6 @@ namespace neko::widget {
 
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
-
-        std::string class_name_;
     private:
         friend engine::TreeManager;
 

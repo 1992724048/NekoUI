@@ -1,9 +1,11 @@
 ﻿#pragma once
 #include "../Widget.hpp"
-#include "../../Style/Stylable.hpp"
+#include "../../Style/CSS.hpp"
 
 namespace neko::widget {
-    class Column final : public Widget, public Stylable<Column> {
+    class Column final : public Widget,
+                         public style::BackgroundStyle,
+                         public style::SizeStyle {
     public:
         explicit Column(engine::Context&);
 

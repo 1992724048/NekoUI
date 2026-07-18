@@ -1,14 +1,12 @@
 ﻿#pragma once
 #include "../Widget.hpp"
-#include "../../Style/Stylable.hpp"
+#include "../../Style/CSS.hpp"
 
 #include <functional>
 #include <string>
 
-#include "../../Component/Animation.hpp"
-
 namespace neko::widget {
-    class Button final : public Widget, public Stylable<Button> {
+    class Button final : public Widget, public style::BackgroundStyle, public style::SizeStyle, public style::BorderStyle, public style::TextStyle {
     public:
         explicit Button(engine::Context& /*unused*/, std::string text = {}, std::function<void()> on_click = {});
 
