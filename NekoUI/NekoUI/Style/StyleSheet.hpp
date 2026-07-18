@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <optional>
 #include <string>
 #include <string_view>
@@ -11,12 +11,8 @@ namespace neko::style {
 
     struct WidgetStyle {
         std::optional<Background> background;
-        std::optional<Size> size;
         std::optional<Border> border;
-        std::optional<float> font_size;
         std::optional<Color> text_color;
-        std::optional<float> padding;
-        std::optional<float> spacing;
     };
 
     class StyleSheet {

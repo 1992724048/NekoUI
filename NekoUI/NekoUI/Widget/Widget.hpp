@@ -37,9 +37,6 @@ namespace neko::widget {
 
         [[nodiscard]] auto parent() const -> Widget*;
 
-        auto style(std::string_view name) -> Widget&;
-        [[nodiscard]] auto get_style() const -> const std::string&;
-
         virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
             return {};
         }

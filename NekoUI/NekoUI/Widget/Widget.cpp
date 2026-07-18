@@ -1,7 +1,11 @@
-#include "Widget.hpp"
+﻿#include "Widget.hpp"
 
 namespace neko::widget {
     Widget::~Widget() = default;
+
+    auto Widget::parent() const -> Widget* {
+        return parent_;
+    }
 
     auto Widget::id() const -> const std::string& {
         return id_;
@@ -21,18 +25,5 @@ namespace neko::widget {
 
     auto Widget::set_bounds(const Vec4I b) -> void {
         bounds = b;
-    }
-
-    auto Widget::parent() const -> Widget* {
-        return parent_;
-    }
-
-    auto Widget::style(const std::string_view name) -> Widget& {
-        class_name_ = name;
-        return *this;
-    }
-
-    auto Widget::get_style() const -> const std::string& {
-        return class_name_;
     }
 }

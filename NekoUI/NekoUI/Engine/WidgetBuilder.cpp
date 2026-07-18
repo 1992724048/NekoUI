@@ -1,4 +1,4 @@
-#include "WidgetBuilder.hpp"
+﻿#include "WidgetBuilder.hpp"
 #include "Context.hpp"
 #include "WidgetVisitor.hpp"
 
@@ -21,7 +21,7 @@ namespace neko::engine {
 
         auto build_recursive = [&](auto& self, widget::Widget& w) -> void {
             visit_children(w,
-                           [&](const std::shared_ptr<widget::Widget>& child) {
+                           [&](const std::shared_ptr<widget::Widget>& child) -> void {
                                tree_.register_widget(child, context);
                                self(self, *child);
                            });

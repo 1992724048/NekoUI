@@ -1,4 +1,4 @@
-#include "Center.hpp"
+﻿#include "Center.hpp"
 
 #include "../../Backend/Backend.hpp"
 #include "../../Device/Mouse.hpp"
@@ -9,7 +9,9 @@ namespace neko::widget {
     auto Center::draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
         // 1. 从全局样式表查找，合并到本地属性
         if (const auto* rule = context.stylesheet.get(class_name_)) {
-            if (rule->background) background_ = *rule->background;
+            if (rule->background) {
+                background_ = *rule->background;
+            }
         }
 
         // 2. 无样式表规则时使用 ColorScheme 默认值

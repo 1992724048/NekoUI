@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 #include "../Widget.hpp"
-#include "../Stylable.hpp"
+#include "../../Style/Stylable.hpp"
 
 namespace neko::widget {
     class Row final : public Widget, public Stylable<Row> {

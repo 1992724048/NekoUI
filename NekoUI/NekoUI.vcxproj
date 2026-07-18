@@ -259,7 +259,7 @@
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Column.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Row.hpp" />
-    <ClInclude Include="NekoUI\Widget\Stylable.hpp" />
+    <ClInclude Include="NekoUI\Style\Stylable.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

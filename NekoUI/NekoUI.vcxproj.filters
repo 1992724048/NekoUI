@@ -167,7 +167,7 @@
     <ClInclude Include="NekoUI\Widget\Layout\Row.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NekoUI\Widget\Stylable.hpp">
+    <ClInclude Include="NekoUI\Style\Stylable.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
