@@ -378,3 +378,7 @@ docs
 !docs/superpowers/specs/
 
 !docs/superpowers/plans/
+
+
+# D2 rendered SVG output
+/d2out/

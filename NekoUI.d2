@@ -1,17 +1,7 @@
 # NekoUI Architecture
-# Render: d2 NekoUI.d2 NekoUI.svg
+# Render: d2 NekoUI.d2 d2out/NekoUI-arch.svg
 
 direction: right
-
-# ==================== Layers ====================
-Layers: {
-  Platform: {shape: package; label: 平台抽象层 (neko::platform)}
-  Backend: {shape: package; label: 渲染后端 (neko::backend)}
-  Device: {shape: package; label: 输入设备 (neko::device)}
-  Engine: {shape: package; label: 引擎核心 (neko::engine)}
-  Widget: {shape: package; label: Widget 系统 (neko::widget)}
-  Style: {shape: package; label: 样式系统 (neko::style)}
-}
 
 # ==================== Platform Layer ====================
 Layers.Platform: {
@@ -67,18 +57,18 @@ Layers.Engine: {
 
 # ==================== Widget Layer ====================
 Layers.Widget: {
-  Widget: {shape: class; label: Widget (abstract)\n+ layout(rect,context)\n+ draw(rect,context,backend)\n+ build/event/input\n+ hit_test(mouse)\n# bounds\n- children(MutableWidget)}
-  Button: {shape: class; label: Button\n+ layout:尺寸计算\n+ draw:背景+边框+文字\n+ input:on_click}
-  Column: {shape: class; label: Column\n+ layout:垂直栈式}
-  Row: {shape: class; label: Row\n+ layout:水平排列}
-  Center: {shape: class; label: Center\n+ layout:居中放置}
-  MutableWidget: {shape: class; label: MutableWidget\n<variant>\nmonostate|shared_ptr\nlist|vector}
+  Widget: {shape: class; label: "Widget (abstract)"}
+  Button: {shape: class; label: "Button"}
+  Column: {shape: class; label: "Column"}
+  Row: {shape: class; label: "Row"}
+  Center: {shape: class; label: "Center"}
+  MutableWidget: {shape: class; label: "MutableWidget (variant)"}
 
   Button -> Widget: extends
   Column -> Widget: extends
   Row -> Widget: extends
   Center -> Widget: extends
-  Widget -> MutableWidget: 有子节点
+  Widget -> MutableWidget: 子节点
 }
 
 # ==================== Style Layer ====================
