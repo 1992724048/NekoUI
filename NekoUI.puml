@@ -11,7 +11,7 @@ title "NekoUI 架构总览"
 
 ' ========== 分层架构总览 ==========
 
-package "1. 平台抽象层\nneko::platform" as PlatformLayer #DCEEF9 {
+package "1. 平台抽象层<br/>neko::platform" as PlatformLayer #DCEEF9 {
   [Platform] <<singleton>>
   [Event] <<variant>>
   [Win32]
@@ -19,17 +19,17 @@ package "1. 平台抽象层\nneko::platform" as PlatformLayer #DCEEF9 {
   [Win32] -up-|> [Platform] : 模板方法
 }
 
-package "2. 渲染后端\nneko::backend" as BackendLayer #E8F5E9 {
+package "2. 渲染后端<br/>neko::backend" as BackendLayer #E8F5E9 {
   [Backend] <<abstract>>
   [DirectX11] -up-|> [Backend] : 策略模式
 }
 
-package "3. 输入设备\nneko::device" as DeviceLayer #FFF3E0 {
+package "3. 输入设备<br/>neko::device" as DeviceLayer #FFF3E0 {
   [Mouse]
   [Keyboard]
 }
 
-package "4. 引擎核心\nneko::engine" as EngineLayer #F3E5F5 {
+package "4. 引擎核心<br/>neko::engine" as EngineLayer #F3E5F5 {
   [Engine] <<facade>>
   [Context]
   [Renderer]
@@ -56,7 +56,7 @@ package "4. 引擎核心\nneko::engine" as EngineLayer #F3E5F5 {
   [Engine] o-- [Backend]
 }
 
-package "5. Widget 系统\nneko::widget" as WidgetLayer #E0F2FE {
+package "5. Widget 系统<br/>neko::widget" as WidgetLayer #E0F2FE {
   class Widget <<abstract>> {
     + layout(rect, context)
     + draw(rect, context, backend)
@@ -87,7 +87,7 @@ package "5. Widget 系统\nneko::widget" as WidgetLayer #E0F2FE {
   MutableWidget --> Widget : 子节点
 }
 
-package "6. 样式系统\nneko::style" as StyleLayer #FCE4EC {
+package "6. 样式系统<br/>neko::style" as StyleLayer #FCE4EC {
   class ColorScheme {
     HCT -> sRGB
     light(seed)
