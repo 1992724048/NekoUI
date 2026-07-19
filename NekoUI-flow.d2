@@ -1,0 +1,120 @@
+# NekoUI Core Flows
+# Render: d2 NekoUI-flow.d2 NekoUI-flow.svg
+
+# ==================== Flow 1: Frame Cycle ====================
+FrameCycle: {
+  direction: right
+  label: 帧循环 (事件处理 + 渲染帧)
+
+  Event: {
+    label: 事件处理阶段
+
+    Win32: WM_* 消息
+    Platform: Platform::translate_event()
+    MsgPump: MsgPump\ndispatch (SPSC)
+    EventRouter: EventRouter\nstd::visit 分派
+
+    Win32 -> Platform: WM_* → Event
+    Platform -> MsgPump: push_msg(event)
+    MsgPump -> EventRouter: dispatch(event)
+  }
+
+  Dispatch: {
+    label: 事件分派
+
+    Input: 鼠标/键盘事件
+    Resize: ResizeEvent
+    Dpi: DpiChangeEvent
+    Theme: ThemeChangedEvent
+    Destroy: DestroyEvent
+
+    Input -> HitTest: HitTester\nhit_test(mouse)
+    HitTest -> WidgetInput: Widget::input()
+
+    Resize -> SetSize: RenderScheduler\nset_pending_size
+    Dpi -> SetDpi: Backend::set_dpi\nMouse::set_dpi
+    Theme -> UpdateScheme: ColorScheme\nlight/dark(accent)
+    Destroy -> Clear: Engine::clear()
+  }
+
+  Render: {
+    label: 渲染帧阶段
+
+    Begin: Backend::begin()
+    Layout: Phase 1: 全树布局\nroot->layout(viewport)
+    Draw: Phase 2: 递归绘制\nvisit_children + draw()
+    End: Backend::end()
+    Clear: InvalidationTracker\n.clear()
+
+    Begin -> Layout
+    Layout -> Draw
+    Draw -> End
+    End -> Clear
+  }
+
+  # Trigger
+  EventRouter -> Invalidation: InvalidationTracker\nmark_dirty()
+  Invalidation -> RenderScheduler: RenderScheduler\nrequest_frame()
+  RenderScheduler -> Render: render_frame()
+}
+
+# ==================== Flow 2: Widget Lifecycle ====================
+Lifecycle: {
+  direction: right
+  label: Widget 生命周期 (创建 + 重建)
+
+  Init: {
+    label: 创建阶段
+
+    SetRoot: Engine::set_root_widget<T>()
+    NewWidget: make_shared<T>(context)
+    SetRoot -> NewWidget
+
+    TreeSetRoot: TreeManager::set_root(context, widget)
+    Build: WidgetBuilder::build(context)
+    RegisterLoop: 递归注册子 Widget\nregister_widget(child)\nchild->build(context)
+
+    NewWidget -> TreeSetRoot
+    TreeSetRoot -> Build
+    Build -> RegisterLoop
+  }
+
+  Runtime: {
+    label: 运行时 - 动态重建
+
+    BuildChild: build<T>() 创建子 Widget
+    CheckChildren: children_ 检查
+    IfEmpty: 直接设为 shared_ptr
+    IfHas: 转为 list 追加
+    TriggerRebuild: widget_tree_changed\n→ Engine::rebuild()
+
+    BuildChild -> CheckChildren
+    CheckChildren -> IfEmpty: monostate
+    CheckChildren -> IfHas: 已有子节点
+    IfEmpty -> TriggerRebuild
+    IfHas -> TriggerRebuild
+  }
+
+  Rebuild: {
+    label: 重建阶段
+
+    ClearMaps: TreeManager::clear()\n清空 id/index 映射
+    ReRegister: 重新注册全树\nregister_widget(root)
+    ReBuildLoop: 递归重建\nregister_widget(child)\nchild->build(context)
+
+    ClearMaps -> ReRegister
+    ReRegister -> ReBuildLoop
+  }
+
+  Done: {
+    label: 就绪
+
+    RequestFrame: RenderScheduler::request_frame()
+    Note: "渲染线程唤醒后\n执行 layout() + draw()"
+
+    RequestFrame -> Note
+  }
+
+  TriggerRebuild -> ClearMaps
+  ReBuildLoop -> RequestFrame
+}

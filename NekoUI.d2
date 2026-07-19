@@ -1,0 +1,124 @@
+# NekoUI Architecture
+# Render: d2 NekoUI.d2 NekoUI.svg
+
+direction: right
+
+# ==================== Layers ====================
+Layers: {
+  Platform: {shape: package; label: 平台抽象层 (neko::platform)}
+  Backend: {shape: package; label: 渲染后端 (neko::backend)}
+  Device: {shape: package; label: 输入设备 (neko::device)}
+  Engine: {shape: package; label: 引擎核心 (neko::engine)}
+  Widget: {shape: package; label: Widget 系统 (neko::widget)}
+  Style: {shape: package; label: 样式系统 (neko::style)}
+}
+
+# ==================== Platform Layer ====================
+Layers.Platform: {
+  Platform: {shape: hexagon; label: Platform\n(单例/模板方法)}
+  Event: {shape: hexagon; label: Event\n(variant)}
+  Win32: {shape: hexagon; label: Win32\n(具体实现)}
+
+  Platform -> Event: translate WM_*
+  Win32 -> Platform: 继承/实现
+}
+
+# ==================== Backend Layer ====================
+Layers.Backend: {
+  Backend: {shape: hexagon; label: Backend\n(抽象/策略模式)}
+  DirectX11: {shape: hexagon; label: DirectX11\n(具体实现)}
+
+  DirectX11 -> Backend: 继承/实现
+}
+
+# ==================== Device Layer ====================
+Layers.Device: {
+  Mouse: {shape: class; label: Mouse\nDPI感知命中测试}
+  Keyboard: {shape: class; label: Keyboard\n修饰键+边沿检测}
+}
+
+# ==================== Engine Layer ====================
+Layers.Engine: {
+  Engine: {shape: class; label: Engine (外观模式)\n- set_root_widget\n- render_frame\n- rebuild}
+  Context: {shape: class; label: Context\n- mark_dirty/widget_dirty\n- anim_inc/anim_dec\n- root/mouse/keyboard(weak)\n- scheme: ColorScheme}
+  Renderer: {shape: class; label: Renderer\n两阶段渲染:\n1. root->layout()\n2. 递归 draw()}
+  TreeManager: {shape: class; label: TreeManager\n- root_/focused_\n- id_widgets_映射\n- index_widgets_映射\n- next/prev_focus}
+  HitTester: {shape: class; label: HitTester\n- hit_test(mouse)\n- 递归反向遍历}
+  WidgetBuilder: {shape: class; label: WidgetBuilder\n- build(context)\n- 全树注册}
+  EventRouter: {shape: class; label: EventRouter\n- std::visit 分派\n- 5种事件处理器}
+  InvalidationTracker: {shape: class; label: InvalidationTracker\n- dirty_标志\n- animation_计数\n- needs_frame}
+  MsgPump: {shape: class; label: MsgPump\n- SPSC环形缓冲区(32槽)\n- semaphore驱动}
+  RenderScheduler: {shape: class; label: RenderScheduler\n- jthread渲染线程\n- request_frame\n- set_pending_size}
+  WidgetVisitor: {shape: class; label: WidgetVisitor\n<template>\n- visit_children\n- 4种变体分发}
+
+  # 组合关系
+  Engine -> Context: 拥有
+  Engine -> Renderer: 拥有
+  Engine -> TreeManager: 拥有
+  Engine -> HitTester: 拥有
+  Engine -> WidgetBuilder: 拥有
+  Engine -> EventRouter: 拥有
+  Engine -> InvalidationTracker: 拥有
+  Engine -> MsgPump: 拥有
+  Engine -> RenderScheduler: 拥有
+  Engine -> Mouse: 引用
+  Engine -> Keyboard: 引用
+}
+
+# ==================== Widget Layer ====================
+Layers.Widget: {
+  Widget: {shape: class; label: Widget (abstract)\n+ layout(rect,context)\n+ draw(rect,context,backend)\n+ build/event/input\n+ hit_test(mouse)\n# bounds\n- children(MutableWidget)}
+  Button: {shape: class; label: Button\n+ layout:尺寸计算\n+ draw:背景+边框+文字\n+ input:on_click}
+  Column: {shape: class; label: Column\n+ layout:垂直栈式}
+  Row: {shape: class; label: Row\n+ layout:水平排列}
+  Center: {shape: class; label: Center\n+ layout:居中放置}
+  MutableWidget: {shape: class; label: MutableWidget\n<variant>\nmonostate|shared_ptr\nlist|vector}
+
+  Button -> Widget: extends
+  Column -> Widget: extends
+  Row -> Widget: extends
+  Center -> Widget: extends
+  Widget -> MutableWidget: 有子节点
+}
+
+# ==================== Style Layer ====================
+Layers.Style: {
+  ColorScheme: {shape: class; label: ColorScheme\nHCT色彩引擎\n36色调色板\nlight(seed)/dark(seed)}
+  BackgroundStyle: {shape: class; label: BackgroundStyle\n<mixin>\nbackground_}
+  SizeStyle: {shape: class; label: SizeStyle\n<mixin>\nsize_/margin_/padding_}
+  BorderStyle: {shape: class; label: BorderStyle\n<mixin>\nborder_}
+  TextStyle: {shape: class; label: TextStyle\n<mixin>\ntext_color_/font_size_}
+}
+
+# ==================== Cross-layer Relations ====================
+# 渲染链路
+Layers.Engine.RenderScheduler -> Layers.Engine.Renderer: render_frame()
+Layers.Engine.Renderer -> Layers.Widget.Widget: layout + draw
+Layers.Engine.Renderer -> Layers.Backend.Backend: draw primitives
+
+# 事件链路
+Layers.Platform.Platform -> Layers.Engine.MsgPump: push_msg
+Layers.Engine.MsgPump -> Layers.Engine.EventRouter: dispatch
+Layers.Engine.EventRouter -> Layers.Engine.HitTester: hit_test
+Layers.Engine.HitTester -> Layers.Widget.Widget: input()
+Layers.Engine.EventRouter -> Layers.Backend.Backend: resize/dpi
+Layers.Engine.EventRouter -> Layers.Engine.RenderScheduler: set_pending_size
+
+# 构建链路
+Layers.Engine.WidgetBuilder -> Layers.Engine.TreeManager: register_widget
+Layers.Engine.WidgetBuilder -> Layers.Widget.Widget: build()
+
+# 脏标记
+Layers.Engine.InvalidationTracker -> Layers.Engine.Context: needs_frame
+Layers.Engine.Context -> Layers.Engine.Engine: request_frame
+
+# 样式继承
+Button -> Layers.Style.BackgroundStyle: <<mixin>>
+Button -> Layers.Style.SizeStyle: <<mixin>>
+Button -> Layers.Style.BorderStyle: <<mixin>>
+Button -> Layers.Style.TextStyle: <<mixin>>
+Column -> Layers.Style.BackgroundStyle: <<mixin>>
+Column -> Layers.Style.SizeStyle: <<mixin>>
+Row -> Layers.Style.BackgroundStyle: <<mixin>>
+Row -> Layers.Style.SizeStyle: <<mixin>>
+Center -> Layers.Style.BackgroundStyle: <<mixin>>
