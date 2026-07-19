@@ -3,67 +3,19 @@ skinparam backgroundColor #FEFEFE
 skinparam defaultFontName Consolas
 skinparam defaultFontSize 11
 
-title NekoUI 核心流程图
-caption 理解关键流程，方便重新设计 UI 库
+title 帧循环流程 (渲染 + 事件)
 
-' ============================================
-' Flow 1: 渲染帧流程
-' ============================================
-
-|#F3E5F5| 渲染帧流程 |
+|#FFF3E0| 事件处理 |
 start
-:Engine::render_frame() \n(由 RenderScheduler 驱动);
-:RenderScheduler::consume_resize();
-if (有 pending resize?) then (是)
-  :Backend::resize(width, height);
-else (否)
-endif
-:Backend::begin() \n(清空帧缓冲区);
-
-|#E8F5E9| Phase 1: 全树布局 |
-:root->layout(viewport, context);
-:Widget::layout() \n根据 SizeStyle 计算 bounds;
-
-if (Widget 是 Column/Row?) then (是)
-  :遍历子节点\n给每个子节点分配位置\n调用子节点的 layout();
-else (否)
-endif
-if (Widget 是 Center?) then (否)
-else (是)
-  :先让子节点计算自然尺寸\n再居中设置子节点 bounds;
-endif
-|#E0F2FE| Phase 2: 递归绘制 |
-:root->draw(bounds, context, backend);
-:visit_children(widget, visitor);
-repeat
-  :child->draw(child_bounds, context, backend);
-  :visit_children(child, ...);
-repeat while (还有子节点?) is (是)
-->no;
-
-|#F5F5F5| 收尾 |
-:Backend::end() \n(交换链 Present);
-:InvalidationTracker::clear();
-stop
-
-' ============================================
-' Flow 2: 事件处理流程
-' ============================================
-
-newpage
-
-|#FFF3E0| 事件处理流程 |
-
-start
-:Win32 消息循环 \nGetMessageW / DispatchMessageW;
+:Win32 消息循环 GetMessageW;
 :Win32::handle_message(msg);
-:Platform::translate_event() \nWM_* -> Event variant;
-:MsgPump::push_msg(event) \n(SPSC 环形缓冲区);
-:MsgPump::msg_loop() \n(独立线程);
+:Platform::translate_event() WM_* -> Event;
+:MsgPump::push_msg(event) (SPSC);
+:MsgPump::msg_loop() (独立线程);
 :EventRouter::dispatch(event);
 :std::visit 按事件类型分派;
 if (事件类型) then (鼠标/键盘)
-  :Mouse::handle(event) \n或 Keyboard::handle(event);
+  :Mouse::handle 或 Keyboard::handle;
   :HitTester::hit_test(mouse);
   if (命中 Widget?) then (是)
     :Widget::input(context, event);
@@ -78,107 +30,84 @@ else (ThemeChangedEvent)
   :ColorScheme::light/dark(accent);
   :更新 Context::scheme;
 else (DestroyEvent)
-  :Engine::clear()\n停止渲染线程\n清空 Widget 树;
+  :Engine::clear();
+endif
+:InvalidationTracker::mark_dirty();
+:RenderScheduler::request_frame();
+
+|#F3E5F5| 渲染帧 |
+:Engine::render_frame();
+:RenderScheduler::consume_resize();
+if (有 pending resize?) then (是)
+  :Backend::resize(width, height);
+else (否)
+endif
+:Backend::begin();
+
+|#E8F5E9| Phase 1: 全树布局 |
+:root->layout(viewport, context);
+:Widget 根据 SizeStyle 计算 bounds;
+if (容器 Widget?) then (是)
+  :遍历子节点分配位置\n并递归调用 layout();
+else (否)
+endif
+if (Center?) then (是)
+  :子节点自然尺寸 -> 居中放置;
 endif
 
-:InvalidationTracker::mark_dirty();
-:RenderScheduler::request_frame() \n触发下一帧渲染;
+|#E0F2FE| Phase 2: 递归绘制 |
+:root->draw(bounds, context, backend);
+:visit_children 递归;
+repeat
+  :child->draw(child_bounds, context, backend);
+repeat while (还有子节点?) is (是)
+->no;
+
+|#F5F5F5| 收尾 |
+:Backend::end() Present;
+:InvalidationTracker::clear();
 stop
+@enduml
 
-' ============================================
-' Flow 3: Widget 生命周期
-' ============================================
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Consolas
+skinparam defaultFontSize 11
 
-newpage
+title Widget 生命周期 (创建 + 重建)
 
-|#E0F2FE| Widget 生命周期 |
-
+|#E0F2FE| 初始化 |
 start
 :Engine::set_root_widget<T>(args...);
 :make_shared<T>(context, args...);
 :TreeManager::set_root(context, widget);
 :WidgetBuilder::build(context);
+note right: 注册所有 Widget\n到 TreeManager 映射
 
-|#F3E5F5| 构建阶段 |
-repeat
-  :TreeManager::register_widget(child, context);
-  :分配 z_index、path;
-  :child->build(context);
-  :visit_children(child, visitor);
-repeat while (还有子 Widget 需要注册?) is (是)
-->no;
-
-|#F5F5F5| 就绪 |
-:Context::root = widget;
-:RenderScheduler::request_frame();
-note right
-  TreeManager 维护:
-  - root_ (atomic shared_ptr)
-  - focused_ (atomic weak_ptr)
-  - id_widgets_ 映射
-  - index_widgets_ 映射
-  - next_focus / prev_focus
-end note
-
-:等待帧渲染;
-:Renderer::render(viewport, context, backend);
-
-|#E8F5E9| 布局 |
-:root->layout(viewport, context);
-note right
-  bounds 已计算完毕
-  Widget 树各节点
-  位置已确定
-end note
-
-|#E0F2FE| 绘制 |
-:root->draw(bounds, context, backend);
-stop
-
-' ============================================
-' Flow 4: 重建流程 (Rebuild)
-' ============================================
-
-newpage
-
-|#FCE4EC| 重建流程 (Rebuild) |
-
-start
-:Widget::build<T>(args...) \n创建子 Widget;
-
-if (children_ 是 monostate?) then (是)
+|#F3E5F5| 运行时 - 子节点变动 |
+:build<T>() 创建子 Widget;
+if (children_ 是空的?) then (是)
   :直接设为 shared_ptr;
-else (是 shared_ptr)
-  :转为 list;
+else (已有子节点)
+  :转为 list 追加;
 endif
-:追加新子节点;
+:widget_tree_changed 回调;
+:Engine::rebuild();
+note right: 清空 id/index 映射\n重新注册全树
 
-if (有 context_->widget_tree_changed?) then (是)
-  :Engine::rebuild();
-else (否)
-endif
-
-|#F3E5F5| TreeManager 重建 |
-:tree_manager_.clear();
-:清空 id_widgets_ 映射;
-:清空 index_widgets_ 映射;
+|#FCE4EC| 重建阶段 |
+:TreeManager::clear();
+:清空 id_widgets_、index_widgets_;
 :index_count = 0;
-
-:register_widget(root, context);
+:register_widget(root);
 repeat
-  :TreeManager::register_widget(child);
+  :register_widget(child);
   :child->build(context);
 repeat while (还有子 Widget?) is (是)
 ->no;
 
-|#F5F5F5| 触发渲染 |
+|#F5F5F5| 就绪 |
 :RenderScheduler::request_frame();
-note right
-  rebuild 不会立即渲染，
-  只是标记脏并通过
-  request_frame 唤醒
-  渲染线程
-end note
+note right: 渲染线程唤醒\n执行 layout + draw
 stop
-
 @enduml
