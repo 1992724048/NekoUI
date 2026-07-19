@@ -294,26 +294,26 @@ Center ..> BackgroundStyle
 ' ==================== 设计模式标注 ====================
 
 note right of "4. 引擎核心"
-  **外观模式**: Engine 统一调度全部子系统
-  **观察者模式**: InvalidationTracker 脏标记推送
-  **代理模式**: MsgPump 线程安全事件代理
-  **工厂方法**: set_root_widget<T>()
-  **访问者模式**: WidgetVisitor::visit_children
-  **组合模式**: Widget 树 + MutableWidget
+  <b>外观模式</b>: Engine 统一调度全部子系统
+  <b>观察者模式</b>: InvalidationTracker 脏标记推送
+  <b>代理模式</b>: MsgPump 线程安全事件代理
+  <b>工厂方法</b>: set_root_widget<T>()
+  <b>访问者模式</b>: WidgetVisitor::visit_children
+  <b>组合模式</b>: Widget 树 + MutableWidget
 end note
 
 note right of Backend
-  **策略模式**: Backend 抽象接口，
+  <b>策略模式</b>: Backend 抽象接口，
   DirectX11 具体实现
 end note
 
 note right of Platform
-  **模板方法**: Platform 基类定义，
+  <b>模板方法</b>: Platform 基类定义，
   Win32 具体实现
 end note
 
 note right of Center
-  **布局下放架构**:
+  <b>布局下放架构</b>:
   Widget 通过 layout() 自己计算 bounds
   Renderer 两阶段: layout + draw
   Center 不再绕过 Renderer
@@ -321,7 +321,7 @@ note right of Center
 end note
 
 note right of ColorScheme
-  **Material You HCT**
+  <b>Material You HCT</b>
   sRGB <-> XYZ <-> CAM16 <-> HCT
   牛顿迭代求解
   36 色调色板
