@@ -2,40 +2,156 @@
 skinparam backgroundColor #FEFEFE
 skinparam defaultFontName Consolas
 skinparam defaultFontSize 11
+skinparam packageBorderColor #999999
 
 title NekoUI 架构总览
 
-package "1. 平台抽象层" {
-  class Platform <<singleton>>
-  class Event <<value>>
-  class Win32
+package "1. 平台抽象层\nneko::platform" {
+  class Platform <<singleton>> {
+    + translate_event() -> Event
+    + query_theme() -> Event
+    + ime_*
+    + show/hide/close...
+  }
+  class Event <<variant>> {
+    MouseMoveEvent
+    MouseButtonEvent
+    KeyEvent
+    CharEvent
+    ResizeEvent
+    DpiChangeEvent
+    ThemeChangedEvent
+    DestroyEvent
+  }
+  class Win32 {
+    - WNDCLASS
+    - HWND
+    + handle_message()
+    + get_theme_from_registry()
+  }
+
   Platform --> Event : translate
   Win32 -up-|> Platform
 }
 
-package "2. 渲染后端" {
-  class Backend <<abstract>>
-  class DirectX11
+package "2. 渲染后端\nneko::backend" {
+  class Backend <<abstract>> {
+    + {abstract} begin() / end()
+    + {abstract} draw_rect_fill()
+    + {abstract} draw_rect()
+    + {abstract} draw_line()
+    + {abstract} draw_circle_fill()
+    + {abstract} draw_text()
+    + {abstract} resize()
+    + {abstract} set_dpi()
+  }
+  class DirectX11 {
+    - D3D11Device / Context / SwapChain
+    - ID3D11VertexShader
+    - ID3D11PixelShader
+    - stb_truetype 图集
+    + 完整实现所有 Backend 接口
+  }
+
   DirectX11 -up-|> Backend
 }
 
-package "3. 输入设备" {
-  class Mouse
-  class Keyboard
+package "3. 输入设备\nneko::device" {
+  class Mouse {
+    - DPI scale
+    + is_inside(rect) : bool
+    + is_inside(circle) : bool
+    + is_inside(rrect) : bool
+    + is_inside(polygon) : bool
+    + left_clicked() / released()
+  }
+  class Keyboard {
+    - modifier state
+    + just_pressed(key) : bool
+    + just_released(key) : bool
+    + char_buffer[16]
+  }
 }
 
-package "4. 引擎核心" {
-  class Engine <<facade>>
-  class Context
-  class Renderer
-  class TreeManager
-  class HitTester
-  class WidgetBuilder
-  class EventRouter
-  class InvalidationTracker
-  class MsgPump
-  class RenderScheduler
-  class WidgetVisitor <<template>>
+package "4. 引擎核心\nneko::engine" {
+  class Engine <<facade>> {
+    + set_root_widget<T>()
+    + render_frame()
+    + rebuild()
+    - clear()
+  }
+
+  class Context {
+    + mark_dirty / widget_dirty
+    + anim_inc / anim_dec
+    + widget_tree_changed
+    + mouse / keyboard (weak)
+    + root (weak)
+    + scheme : ColorScheme
+    + native_handle
+  }
+
+  class Renderer {
+    + render(rect, context, backend)
+    - tree_ : TreeManager&
+  }
+
+  class TreeManager {
+    + root_ : atomic<shared_ptr>
+    + focused_ : atomic<weak_ptr>
+    + mutex_ : shared_mutex
+    + register_widget()
+    + next_focus() / prev_focus()
+  }
+
+  class HitTester {
+    + hit_test(mouse) -> shared_ptr
+    - tree_ : TreeManager&
+    - test_recursive()
+  }
+
+  class WidgetBuilder {
+    + build(context)
+    - tree_ : TreeManager&
+    - register_widget()
+  }
+
+  class EventRouter {
+    + dispatch(event)
+    - handle_input()
+    - handle_resize()
+    - handle_dpi_change()
+    - handle_theme_change()
+    - handle_destroy()
+  }
+
+  class InvalidationTracker {
+    + dirty_ : atomic<bool>
+    + animation_ : atomic<int>
+    + mark_dirty()
+    + needs_frame() -> bool
+    + consume_dirty_list()
+  }
+
+  class MsgPump {
+    - ring_buffer[32] : SPSC
+    + push_msg(event)
+    + msg_loop()
+    + stop()
+  }
+
+  class RenderScheduler {
+    + request_frame()
+    + set_pending_size()
+    + pending_size() -> Size
+    + consume_resize() -> optional
+    - render_thread : jthread
+  }
+
+  class WidgetVisitor <<template>> {
+    + visit_children(widget, visitor)
+    - 分发四种 MutableWidget 变体
+  }
 
   Engine *-- Context
   Engine *-- Renderer
@@ -51,67 +167,164 @@ package "4. 引擎核心" {
   Engine o-- Backend
 }
 
-package "5. Widget 系统" {
+package "5. Widget 系统\nneko::widget" {
   abstract class Widget {
-    + layout()
-    + draw()
-    + build()
-    + event()
-    + input()
-    + hit_test()
+    + {abstract} layout(rect, context)
+    + {abstract} draw(rect, context, backend)
+    + {abstract} build(context)
+    + {abstract} event(context)
+    + {abstract} input(context, event)
+    + {abstract} hit_test(mouse) : bool
+    # bounds : Vec4I
+    # context_ : Context*
+    - children_ : MutableWidget
+    - z_index_ / id_ / path_
+    + build<T>(args...) -> T&
+    + children(fn)
+    + parent() -> Widget*
   }
-  class Button
-  class Column
-  class Row
-  class Center
+
+  class Button {
+    + layout() : SizeStyle -> 固定/填充
+    + draw() : 背景 + 边框 + 文字
+    + input() : 点击 -> on_click
+    + hit_test() : is_inside
+    - text_ : string
+    - on_click_ : function
+  }
+
+  class Column {
+    + layout() : 垂直栈式排列子节点
+    + draw() : 背景
+    + hit_test() : is_inside
+  }
+
+  class Row {
+    + layout() : 水平排列子节点
+    + draw() : 背景
+    + hit_test() : is_inside
+  }
+
+  class Center {
+    + layout() : 子 Widget 居中放置
+    + draw() : 背景
+    + hit_test() : is_inside
+  }
+
+  class MutableWidget <<variant>> {
+    monostate
+    shared_ptr<Widget>
+    list<MutableWidget>
+    vector<MutableWidget>
+  }
 
   Button -up-|> Widget
   Column -up-|> Widget
   Row -up-|> Widget
   Center -up-|> Widget
+  Widget *-- MutableWidget
+  MutableWidget --> Widget : children
 }
 
-package "6. 样式系统" {
-  class ColorScheme
-  class BackgroundStyle
-  class SizeStyle
-  class BorderStyle
-  class TextStyle
+package "6. 样式系统\nneko::style" {
+  class ColorScheme {
+    + {static} light(seed) -> 36-tone
+    + {static} dark(seed) -> 36-tone
+    - primary / on_primary / ...
+    - surface / background / ...
+    - error / on_error / ...
+    - HCT 色彩引擎
+  }
+
+  class BackgroundStyle <<mixin>> {
+    # background_ : Background
+  }
+  class SizeStyle <<mixin>> {
+    # size_ : Size (size/margin/padding)
+  }
+  class BorderStyle <<mixin>> {
+    # border_ : Border (size/color)
+  }
+  class TextStyle <<mixin>> {
+    # text_color_ : Color
+    # font_size_ : float
+  }
 }
 
-' 组件间关系
-Engine --> Platform : 获取事件
-Engine --> MsgPump : 推送事件
+' ==================== 跨层关系 ====================
+
+' 引擎 → 外部
+Engine --> Platform : get event
+Engine --> MsgPump : push_msg
+
+' 帧循环
 Engine --> RenderScheduler : request_frame
 RenderScheduler --> Renderer : render_frame()
-Renderer --> Widget : layout + draw
-Renderer --> Backend : draw
+Renderer --> Widget : layout() + draw()
+Renderer --> Backend : draw primitives
+
+' 事件分发
 MsgPump --> EventRouter : dispatch
 EventRouter --> HitTester : hit_test
-HitTester --> Widget : input()
-WidgetBuilder --> TreeManager : register
-WidgetBuilder --> Widget : build()
-InvalidationTracker --> Context : needs_frame
+HitTester --> Widget : input() 命中分发
+EventRouter --> Mouse : handle event
+EventRouter --> Keyboard : handle event
+EventRouter --> Backend : resize / dpi
+EventRouter --> RenderScheduler : set_pending_size
 
-' 设计模式标注
-note right of "4. 引擎核心"
-  **外观模式**: Engine 统一调度
+' 构建
+WidgetBuilder --> TreeManager : register_widget
+WidgetBuilder --> Widget : build() 递归
+
+' 脏标记
+InvalidationTracker --> Context : needs_frame -> request_frame
+Widget --> Context : mark_dirty (via callback)
+
+' Widget -> 样式 mixin
+Button ..> BackgroundStyle : <<mixin>>
+Button ..> SizeStyle : <<mixin>>
+Button ..> BorderStyle : <<mixin>>
+Button ..> TextStyle : <<mixin>>
+Column ..> BackgroundStyle
+Column ..> SizeStyle
+Row ..> BackgroundStyle
+Row ..> SizeStyle
+Center ..> BackgroundStyle
+
+' ==================== 设计模式标注 ====================
+
+note right of "4. 引擎核心" as EngineNote
+  **外观模式**: Engine 统一调度全部子系统
+  **观察者模式**: InvalidationTracker 脏标记推送
+  **代理模式**: MsgPump 线程安全事件代理
+  **工厂方法**: set_root_widget<T>()
+  **访问者模式**: WidgetVisitor::visit_children
+  **组合模式**: Widget 树 + MutableWidget
 end note
 
-note right of EventRouter
-  **访问者模式**: std::visit 分派事件
+note right of Backend
+  **策略模式**: Backend 抽象接口，
+  DirectX11 具体实现
 end note
 
-note right of InvalidationTracker
-  **观察者模式**: 脏标记通知
+note right of Platform
+  **模板方法**: Platform 基类定义，
+  Win32 具体实现
 end note
 
-note right of MsgPump
-  **代理模式**: 线程安全事件代理
+note right of Center
+  **布局下放架构**:
+  Widget 通过 layout() 自己计算 bounds
+  Renderer 两阶段: layout + draw
+  Center 不再绕过 Renderer
+  消除双重绘制
 end note
 
-note right of Renderer
-  **两阶段渲染**: layout() + draw()
+note right of ColorScheme
+  **Material You HCT**
+  sRGB <-> XYZ <-> CAM16 <-> HCT
+  牛顿迭代求解
+  36 色调色板
 end note
 
 @enduml
