@@ -17,14 +17,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 classDiagram
     direction TB
 
-    class Widget {
-        <<abstract>>
-        +layout(rect, Context)
-        +draw(rect, Context, Backend)
-        +build(Context)
-        +input(Context, Event)
-        +hit_test(Mouse)
-    }
+    class Widget {<<abstract>>}
     class Button
     class Column
     class Row
