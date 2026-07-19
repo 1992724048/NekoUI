@@ -1,0 +1,285 @@
+---
+title: NekoUI Class Diagram
+---
+classDiagram
+    direction TB
+
+    %% ========== enums & types ==========
+    class Vec4I {
+        +int x, y, z, w
+        +int r, g, b, a
+    }
+    class Color {
+        +uint32 value
+    }
+    class Handle {
+        +void* ptr
+    }
+    Vec4I <|-- Rect : alias
+
+    %% ========== Platform Layer ==========
+    namespace Platform {
+        class Event {
+            <<variant>>
+            MouseMoveEvent
+            MouseButtonEvent
+            MouseWheelEvent
+            KeyEvent
+            CharEvent
+            ResizeEvent
+            DpiChangeEvent
+            ThemeChangedEvent
+            DestroyEvent
+        }
+        class Platform {
+            <<singleton>>
+            +translate_event() Event
+            +query_theme() Event
+            +ime_control()
+            +show/hide/close() void
+        }
+        class Win32 {
+            +handle_message() void
+            -get_theme_from_registry() ColorScheme
+            -WNDCLASS hwnd
+        }
+    }
+
+    Platform <|-- Win32 : template method
+    Platform --> Event : produces
+
+    %% ========== Backend Layer ==========
+    namespace Backend {
+        class Backend {
+            <<abstract>>
+            +begin() void*
+            +end() void
+            +draw_rect_fill() void
+            +draw_rect() void
+            +draw_line() void
+            +draw_circle_fill() void
+            +draw_text() void
+            +resize() void
+            +set_dpi() void
+        }
+        class DirectX11 {
+            -D3D11Device device
+            -ID3D11VertexShader vs
+            -ID3D11PixelShader ps
+            -stb_truetype font_atlas
+            +begin() void*
+            +end() void
+        }
+    }
+
+    Backend <|-- DirectX11 : implements
+
+    %% ========== Device Layer ==========
+    namespace Device {
+        class Mouse {
+            +is_inside(rect) bool
+            +is_inside(circle) bool
+            +is_inside(polygon) bool
+            +left_clicked() bool
+            +set_dpi() void
+        }
+        class Keyboard {
+            +just_pressed(key) bool
+            +just_released(key) bool
+            +char_buffer char[16]
+        }
+    }
+
+    %% ========== Engine Core ==========
+    namespace Engine {
+        class Context {
+            +mark_dirty function
+            +widget_dirty function
+            +anim_inc function
+            +anim_dec function
+            +widget_tree_changed function
+            +mouse weak_ptr~Mouse~
+            +keyboard weak_ptr~Keyboard~
+            +root weak_ptr~Widget~
+            +scheme ColorScheme
+            +native_handle Handle
+        }
+        class Engine {
+            <<facade>>
+            +set_root_widget~T~() shared_ptr~T~
+            +render_frame() void
+            +rebuild() void
+            -clear() void
+        }
+        class Renderer {
+            +render(rect, Context, Backend) void
+            -Phase 1: root->layout()
+            -Phase 2: recursive draw()
+        }
+        class TreeManager {
+            +root_ atomic~shared_ptr~
+            +focused_ atomic~weak_ptr~
+            +mutex_ shared_mutex
+            +register_widget() void
+            +next_focus() Widget*
+            +prev_focus() Widget*
+        }
+        class HitTester {
+            +hit_test(Mouse) shared_ptr~Widget~
+            -test_recursive() shared_ptr~Widget~
+        }
+        class EventRouter {
+            +dispatch(Event) void
+            -handle_input() void
+            -handle_resize() void
+            -handle_dpi_change() void
+            -handle_theme_change() void
+            -handle_destroy() void
+        }
+        class InvalidationTracker {
+            +dirty_ atomic~bool~
+            +animation_ atomic~int~
+            +mark_dirty() void
+            +needs_frame() bool
+            +consume_dirty_list() void
+        }
+        class MsgPump {
+            -ring_buffer[32]
+            +push_msg(Event) void
+            +msg_loop() void
+            +stop() void
+        }
+        class RenderScheduler {
+            +request_frame() void
+            +set_pending_size() void
+            +pending_size() Size
+            -render_thread jthread
+        }
+        class WidgetBuilder {
+            +build(Context) void
+            -register_widget() void
+        }
+        class WidgetVisitor {
+            <<template>>
+            +visit_children(Widget, Visitor) void
+        }
+    }
+
+    Engine *-- Context : owns
+    Engine *-- Renderer
+    Engine *-- TreeManager
+    Engine *-- HitTester
+    Engine *-- EventRouter
+    Engine *-- InvalidationTracker
+    Engine *-- MsgPump
+    Engine *-- RenderScheduler
+    Engine *-- WidgetBuilder
+    Engine o-- Mouse
+    Engine o-- Keyboard
+    Engine o-- Backend
+
+    %% ========== Widget System ==========
+    namespace Widget {
+        class MutableWidget {
+            <<variant>>
+            monostate
+            shared_ptr~Widget~
+            list~MutableWidget~
+            vector~MutableWidget~
+        }
+        class Widget {
+            <<abstract>>
+            +layout(rect, Context) void
+            +draw(rect, Context, Backend) Rect
+            +build(Context) void
+            +event(Context) void
+            +input(Context, Event) void
+            +hit_test(Mouse) bool
+            #bounds Vec4I
+            #context_ Context*
+            -children_ MutableWidget
+            -z_index_ int
+            +build~T~(args) T&
+        }
+        class Button {
+            +layout() void
+            +draw() Rect
+            +input() void
+            -text_ string
+            -on_click_ function
+        }
+        class Column {
+            +layout() void
+            +draw() Rect
+        }
+        class Row {
+            +layout() void
+            +draw() Rect
+        }
+        class Center {
+            +layout() void
+            +draw() Rect
+        }
+    }
+
+    Widget <|-- Button : extends
+    Widget <|-- Column
+    Widget <|-- Row
+    Widget <|-- Center
+    Widget *-- MutableWidget
+    MutableWidget --> Widget : holds
+
+    %% ========== Style System ==========
+    namespace Style {
+        class ColorScheme {
+            +static light(seed) ColorScheme
+            +static dark(seed) ColorScheme
+            -primary Color
+            -on_primary Color
+            -surface Color
+            -background Color
+            -error Color
+        }
+        class BackgroundStyle {
+            <<mixin>>
+            #background_ Background
+        }
+        class SizeStyle {
+            <<mixin>>
+            #size_ Size
+        }
+        class BorderStyle {
+            <<mixin>>
+            #border_ Border
+        }
+        class TextStyle {
+            <<mixin>>
+            #text_color_ Color
+            #font_size_ float
+        }
+    }
+
+    Button ..> BackgroundStyle : mixin
+    Button ..> SizeStyle
+    Button ..> BorderStyle
+    Button ..> TextStyle
+    Column ..> BackgroundStyle
+    Column ..> SizeStyle
+    Row ..> BackgroundStyle
+    Row ..> SizeStyle
+    Center ..> BackgroundStyle
+
+    %% ========== Cross-layer relationships ==========
+    Renderer --> Widget : layout + draw
+    Renderer --> Backend : draw primitives
+    EventRouter --> HitTester : hit_test
+    EventRouter --> Mouse : handle
+    EventRouter --> Keyboard : handle
+    EventRouter --> Backend : resize / dpi
+    HitTester --> Widget : input()
+    WidgetBuilder --> TreeManager : register
+    WidgetBuilder --> Widget : build()
+    MsgPump --> EventRouter : dispatch
+    InvalidationTracker --> Context : mark dirty
+    Context --> Engine : request_frame
+    Widget --> Context : mark_dirty callback
