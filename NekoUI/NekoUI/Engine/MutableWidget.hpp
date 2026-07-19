@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <list>
 #include <memory>
 #include <variant>
@@ -14,7 +14,7 @@ namespace neko::engine {
     namespace internal {
         using MutableWidgetList = std::list<MutableWidget>;
         using MutableWidgetVector = std::vector<MutableWidget>;
-        using WidgetContainer = std::variant<std::monostate, MutableWidgetList, MutableWidgetVector, std::shared_ptr<widget::Widget>>;
+        using WidgetContainer = std::variant<std::monostate, MutableWidgetList, MutableWidgetVector, std::weak_ptr<widget::Widget>>;
     }
 
     class MutableWidget : public internal::WidgetContainer {
@@ -30,7 +30,7 @@ namespace neko::engine {
         }
 
         [[nodiscard]] auto is_widget() const -> bool {
-            return std::holds_alternative<std::shared_ptr<widget::Widget>>(*this);
+            return std::holds_alternative<std::weak_ptr<widget::Widget>>(*this);
         }
 
         [[nodiscard]] auto is_list() const -> bool {
@@ -56,12 +56,12 @@ namespace neko::engine {
             return std::get_if<T>(static_cast<Super*>(this));
         }
 
-        [[nodiscard]] auto as_widget() const -> const std::shared_ptr<widget::Widget>& {
-            return get<std::shared_ptr<widget::Widget>>();
+        [[nodiscard]] auto as_widget() const -> const std::weak_ptr<widget::Widget>& {
+            return get<std::weak_ptr<widget::Widget>>();
         }
 
-        [[nodiscard]] auto as_widget() -> std::shared_ptr<widget::Widget>& {
-            return get<std::shared_ptr<widget::Widget>>();
+        [[nodiscard]] auto as_widget() -> std::weak_ptr<widget::Widget>& {
+            return get<std::weak_ptr<widget::Widget>>();
         }
 
         [[nodiscard]] auto as_list() const -> const internal::MutableWidgetList& {

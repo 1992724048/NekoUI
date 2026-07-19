@@ -54,9 +54,6 @@
     <ClCompile Include="NekoUI\Engine\TreeManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Engine\WidgetBuilder.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="NekoUI\Engine\Renderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -144,9 +141,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\TreeManager.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NekoUI\Engine\WidgetBuilder.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Engine\Renderer.hpp">

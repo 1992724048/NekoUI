@@ -216,7 +216,6 @@
     <ClCompile Include="NekoUI\Engine\InvalidationTracker.cpp" />
     <ClCompile Include="NekoUI\Platform\Win32\Win32.cpp" />
     <ClCompile Include="NekoUI\Engine\TreeManager.cpp" />
-    <ClCompile Include="NekoUI\Engine\WidgetBuilder.cpp" />
     <ClCompile Include="NekoUI\Engine\Renderer.cpp" />
     <ClCompile Include="NekoUI\Engine\HitTester.cpp" />
     <ClCompile Include="NekoUI\Engine\RenderScheduler.cpp" />
@@ -241,7 +240,6 @@
     <ClInclude Include="NekoUI\Platform\Event.hpp" />
     <ClInclude Include="NekoUI\Platform\Win32\Win32.hpp" />
     <ClInclude Include="NekoUI\Engine\TreeManager.hpp" />
-    <ClInclude Include="NekoUI\Engine\WidgetBuilder.hpp" />
     <ClInclude Include="NekoUI\Engine\Renderer.hpp" />
     <ClInclude Include="NekoUI\Engine\HitTester.hpp" />
     <ClInclude Include="NekoUI\Engine\WidgetVisitor.hpp" />

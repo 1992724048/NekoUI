@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <atomic>
 #include <functional>
@@ -49,6 +49,8 @@ namespace neko::engine {
 
         int focus_index{0};
         std::atomic_int index_count{0};
+
+        MutableWidget children_{};
 
         std::atomic<std::shared_ptr<widget::Widget>> root_;
         std::atomic<std::weak_ptr<widget::Widget>> focused_;

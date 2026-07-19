@@ -16,10 +16,8 @@ namespace neko::engine {
             return;
         }
 
-        // Phase 1: Layout — calculate all widget bounds
         root->layout(rect, context);
 
-        // Phase 2: Draw — render all widgets using stored bounds
         auto draw_recursive = [&](auto& self, widget::Widget& w) -> void {
             w.draw(w.get_bounds(), context, backend);
             visit_children(w,

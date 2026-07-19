@@ -1,4 +1,6 @@
-﻿#include <Windows.h>
+﻿// 2026-07-20 02:12:35
+
+#include <Windows.h>
 #include <iostream>
 #include <print>
 #include <string>
@@ -6,7 +8,6 @@
 #include "NekoUI/Type.hpp"
 #include "NekoUI/Backend/DirectX11/DirectX11.hpp"
 #include "NekoUI/Engine/Engine.hpp"
-#include "NekoUI/Platform/Platform.hpp"
 #include "NekoUI/Platform/Win32/Win32.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
 #include "NekoUI/Widget/Layout/Column.hpp"
@@ -42,7 +43,7 @@ namespace {
 } // namespace
 
 auto main(int argc, char* argv[]) -> int try {
-    std::wstring class_name = L"NekoUI";
+    const std::wstring class_name = L"NekoUI";
 
     WNDCLASSW win_class{};
     win_class.lpszClassName = class_name.data();

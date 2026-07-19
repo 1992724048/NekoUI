@@ -1,0 +1,169 @@
+@startuml NekoUI Architecture
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+skinparam defaultFontName Consolas
+skinparam defaultFontSize 11
+skinparam packageBorderColor #666666
+skinparam arrowColor #444444
+skinparam classBorderColor #555555
+
+title "NekoUI 架构总览"
+
+' ========== 分层架构总览 ==========
+
+package "1. 平台抽象层\nneko::platform" as PlatformLayer #DCEEF9 {
+  [Platform] <<singleton>>
+  [Event] <<variant>>
+  [Win32]
+  [Platform] --> [Event] : translate
+  [Win32] -up-|> [Platform] : 模板方法
+}
+
+package "2. 渲染后端\nneko::backend" as BackendLayer #E8F5E9 {
+  [Backend] <<abstract>>
+  [DirectX11] -up-|> [Backend] : 策略模式
+}
+
+package "3. 输入设备\nneko::device" as DeviceLayer #FFF3E0 {
+  [Mouse]
+  [Keyboard]
+}
+
+package "4. 引擎核心\nneko::engine" as EngineLayer #F3E5F5 {
+  [Engine] <<facade>>
+  [Context]
+  [Renderer]
+  [TreeManager]
+  [HitTester]
+  [WidgetBuilder]
+  [EventRouter]
+  [InvalidationTracker]
+  [MsgPump]
+  [RenderScheduler]
+  [WidgetVisitor] <<template>>
+
+  [Engine] *-- [Context]
+  [Engine] *-- [Renderer]
+  [Engine] *-- [TreeManager]
+  [Engine] *-- [HitTester]
+  [Engine] *-- [WidgetBuilder]
+  [Engine] *-- [EventRouter]
+  [Engine] *-- [InvalidationTracker]
+  [Engine] *-- [MsgPump]
+  [Engine] *-- [RenderScheduler]
+  [Engine] o-- [Mouse]
+  [Engine] o-- [Keyboard]
+  [Engine] o-- [Backend]
+}
+
+package "5. Widget 系统\nneko::widget" as WidgetLayer #E0F2FE {
+  class Widget <<abstract>> {
+    + layout(rect, context)
+    + draw(rect, context, backend)
+    + build(context)
+    + event(context)
+    + input(context, event)
+    + hit_test(mouse)
+    # bounds
+    # children_
+    # context_
+  }
+  class Button
+  class Column
+  class Row
+  class Center
+  class MutableWidget <<variant>> {
+    monostate
+    shared_ptr<Widget>
+    list<MutableWidget>
+    vector<MutableWidget>
+  }
+
+  Button -up-|> Widget
+  Column -up-|> Widget
+  Row -up-|> Widget
+  Center -up-|> Widget
+  Widget *-- MutableWidget
+  MutableWidget --> Widget : 子节点
+}
+
+package "6. 样式系统\nneko::style" as StyleLayer #FCE4EC {
+  class ColorScheme {
+    HCT -> sRGB
+    light(seed)
+    dark(seed)
+    36 色调色板
+  }
+  class BackgroundStyle
+  class SizeStyle
+  class BorderStyle
+  class TextStyle
+}
+
+' ========== 组件间关系 ==========
+
+' 引擎 → 平台
+[Engine] --> [Platform] : 获取事件
+[Engine] --> [MsgPump] : 推送事件
+
+' 引擎 → 渲染
+[Engine] --> [RenderScheduler] : request_frame
+[RenderScheduler] --> [Renderer] : render_frame()
+[Renderer] --> [Widget] : layout + draw 遍历
+[Renderer] --> [Backend] : draw_rect_fill / draw_text
+
+' 事件路由
+[MsgPump] --> [EventRouter] : dispatch
+[EventRouter] --> [HitTester] : hit_test
+[EventRouter] --> [Backend] : resize/dpi
+[EventRouter] --> [Mouse] : handle
+[EventRouter] --> [Keyboard] : handle
+[HitTester] --> [Widget] : input()
+
+' 构建
+[WidgetBuilder] --> [TreeManager] : register_widget
+[WidgetBuilder] --> [Widget] : build() 遍历
+
+' 脏标记
+[InvalidationTracker] --> [Context] : needs_frame
+[Context] --> [Widget] : mark_dirty 回调
+
+' Widget → 样式
+Button ..> BackgroundStyle : mixin
+Button ..> SizeStyle : mixin
+Button ..> BorderStyle : mixin
+Button ..> TextStyle : mixin
+
+' ========== 设计模式标注 ==========
+
+note right of [BackendLayer]
+  **策略模式**: Backend 抽象 + DirectX11 实现
+end note
+
+note right of [PlatformLayer]
+  **模板方法**: Platform 基类 + Win32 实现
+end note
+
+note right of [Engine]
+  **外观模式**: 统一调度所有子系统
+end note
+
+note right of [EventRouter]
+  **访问者模式**: std::visit 分派事件
+end note
+
+note right of [InvalidationTracker]
+  **观察者模式**: 脏标记 + 动画跟踪
+end note
+
+note right of [MsgPump]
+  **代理模式**: 线程安全事件代理
+end note
+
+note right of [Renderer]
+  **两阶段渲染**:
+  Phase 1: root->layout() 全树布局
+  Phase 2: 递归 draw() 渲染
+end note
+
+@enduml

@@ -1,4 +1,4 @@
-#include "HitTester.hpp"
+﻿#include "HitTester.hpp"
 #include "TreeManager.hpp"
 #include "../Device/Mouse.hpp"
 #include "../Widget/Widget.hpp"
@@ -7,12 +7,12 @@ namespace neko::engine {
     HitTester::HitTester(TreeManager& tree) :
         tree_(tree) {}
 
-    auto HitTester::hit_test(const device::Mouse& mouse) const -> std::shared_ptr<widget::Widget> {
+    auto HitTester::hit_test(const device::Mouse& mouse) const -> std::optional<std::weak_ptr<widget::Widget>> {
         std::shared_lock _(tree_.mutex_);
 
         const auto root = tree_.root_.load();
         if (!root) {
-            return nullptr;
+            return std::nullopt;
         }
 
         auto test_recursive = [&](auto& self, const std::shared_ptr<widget::Widget>& w_ptr) -> std::shared_ptr<widget::Widget> {

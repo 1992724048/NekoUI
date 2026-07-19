@@ -37,7 +37,7 @@ namespace neko::widget {
 
         [[nodiscard]] auto parent() const -> Widget*;
 
-        virtual auto layout(Vec4I available, engine::Context& /*context*/) -> void {
+        virtual auto layout(const Vec4I available, engine::Context& /*context*/) -> void {
             set_bounds(available);
         }
 
@@ -77,8 +77,6 @@ namespace neko::widget {
         std::atomic_bool isDirty{true};
     private:
         friend engine::TreeManager;
-
-        engine::MutableWidget children_{};
 
         int z_index_{0};
         std::string id_;

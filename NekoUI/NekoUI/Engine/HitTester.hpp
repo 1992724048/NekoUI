@@ -1,9 +1,16 @@
+﻿// 2026-07-20 02:16:37
+
 #pragma once
 #include <memory>
-#include "../Type.hpp"
+#include <optional>
 
-namespace neko::device { struct Mouse; }
-namespace neko::widget { class Widget; }
+namespace neko::device {
+    struct Mouse;
+}
+
+namespace neko::widget {
+    class Widget;
+}
 
 namespace neko::engine {
     class TreeManager;
@@ -11,8 +18,7 @@ namespace neko::engine {
     class HitTester {
     public:
         explicit HitTester(TreeManager& tree);
-        /// 返回命中的最上层 Widget（shared_ptr 保证生命周期），无命中返回 nullptr
-        [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> std::shared_ptr<widget::Widget>;
+        [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> std::optional<std::weak_ptr<widget::Widget>>;
     private:
         TreeManager& tree_;
     };
