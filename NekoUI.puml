@@ -293,7 +293,7 @@ Center ..> BackgroundStyle
 
 ' ==================== 设计模式标注 ====================
 
-note right of "4. 引擎核心" as EngineNote
+note right of "4. 引擎核心"
   **外观模式**: Engine 统一调度全部子系统
   **观察者模式**: InvalidationTracker 脏标记推送
   **代理模式**: MsgPump 线程安全事件代理
