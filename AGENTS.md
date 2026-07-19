@@ -14,47 +14,40 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 > 架构可视化图见项目根目录 [`NekoUI.mmd`](NekoUI.mmd)（Mermaid 格式，GitHub 原生渲染）。Doxygen 文档（含类图）运行 `doxygen Doxyfile` 后在 `docs/doxygen/html/index.html` 查看。
 
 ```mermaid
-classDiagram
-    direction TB
+graph TB
+    subgraph Engine[引擎核心]
+        Engine-->Renderer
+        Engine-->TreeManager
+        Engine-->EventRouter
+        Engine-->MsgPump
+        Engine-->RenderScheduler
+        Engine-->HitTester
+        Engine-->Context
+    end
 
-    class Widget {<<abstract>>}
-    class Button
-    class Column
-    class Row
-    class Center
-    class Engine
-    class Renderer {
-        +render(rect, Context, Backend)
-    }
-    class Backend
-    class DirectX11
-    class Platform
-    class Win32
-    class EventRouter
-    class HitTester
-    class MsgPump
-    class TreeManager
-    class RenderScheduler
-    class Context
-    class ColorScheme
+    subgraph Widget[Widget 系统]
+        WidgetBase[Widget]
+        Button-->|extends|WidgetBase
+        Column-->|extends|WidgetBase
+        Row-->|extends|WidgetBase
+        Center-->|extends|WidgetBase
+    end
 
-    Widget <|-- Button
-    Widget <|-- Column
-    Widget <|-- Row
-    Widget <|-- Center
-    Renderer --> Widget : layout + draw
-    Renderer --> Backend : draw
-    Backend <|-- DirectX11
-    Platform <|-- Win32
-    MsgPump --> EventRouter
-    EventRouter --> HitTester
-    HitTester --> Widget
-    Engine *-- Renderer
-    Engine *-- TreeManager
-    Engine *-- EventRouter
-    Engine *-- MsgPump
-    Engine *-- RenderScheduler
-    Engine o-- Backend
+    subgraph Backend[渲染后端]
+        BackendBase[Backend]
+        DirectX11-->|implements|BackendBase
+    end
+
+    subgraph Platform[平台抽象]
+        PlatformBase[Platform]
+        Win32-->|implements|PlatformBase
+    end
+
+    Renderer-->WidgetBase
+    Renderer-->BackendBase
+    EventRouter-->HitTester
+    HitTester-->WidgetBase
+    MsgPump-->EventRouter
 ```
 
 分层架构，从底层到上层依次为：
