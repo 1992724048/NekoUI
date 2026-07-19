@@ -305,5 +305,6 @@ NekoUI/
 - **已实现**：跨平台渲染后端抽象（D3D11 实现）、HCT Material You 色彩引擎（sRGB→XYZ→CAM16→HCT 完整管线）、平台抽象（IME TSF / 11 窗口操作 / 注册表主题检测 + 强调色）、响应式 Widget 树（含焦点导航）、Widget Builder API（`build<T>()` / `children()`）、编译期 style mixin 继承（零运行时开销）、12 种速率曲线动画引擎、线程安全事件传递、系统主题变化检测与传递（Light/Dark + AccentColor）、全部核心 Widget（Button/Center/Column/Row）已实现绘制和交互
 - **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`Renderer`（渲染遍历）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）五个独立组件，贯彻单一职责原则
 - **样式系统重构（已完成）**：移除运行时 `StyleSheet` hashmap 样式表和 `Stylable` CRTP，替换为编译期 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），零运行时开销，无字符串查找。Widget 通过多重继承选择所需 mixin，`class_name_` 和 `style()` 链式调用一并移除
-- **未实现**：无可运行的测试、布局容器（Column/Row）的子节点自动布局算法尚未完成（当前仅绘制自身背景，子节点遍历由外部 Renderer 处理）
+- **布局下放（已完成）**：布局计算从 Engine 集中式 Renderer 下放到各 Widget。Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算。Renderer 简化为两阶段（Phase 1 `root->layout()` 全树布局 + Phase 2 递归 `draw()`），不再持有布局方向状态。`horizontal_` 成员从 Widget 基类移除。Center 子节点渲染不再绕过 Renderer 递归模型，消除双重绘制问题
+- **未实现**：无可运行的测试、无裁剪/溢出处理、无 margin/padding 支持、无最小/最大尺寸约束、无 Wrap/基线对齐等高级布局特性
 - **主题色获取**：使用注册表 `HKCU\...\Windows\DWM\AccentColor`（ABGR → RGBA 转换），不再使用已过时的 `DwmGetColorizationColor`
