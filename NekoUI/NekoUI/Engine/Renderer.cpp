@@ -16,29 +16,17 @@ namespace neko::engine {
             return;
         }
 
-        auto render_recursive = [&](auto& self, widget::Widget& w, const type::Vec4I parent_rect) -> type::Rect {
-            const auto child_rect = w.draw(parent_rect, context, backend);
-            w.set_bounds(type::Vec4I{child_rect.x, child_rect.y, child_rect.x + child_rect.width, child_rect.y + child_rect.height});
+        // Phase 1: Layout — calculate all widget bounds
+        root->layout(rect, context);
 
-            const auto is_horizontal = w.horizontal_;
-            auto offset = is_horizontal ? child_rect.x : child_rect.y;
-
-            auto next_rect_for = [&](const int off) -> type::Vec4I {
-                if (is_horizontal) {
-                    return {{{off, child_rect.y, {off + (child_rect.z - child_rect.x)}, {child_rect.w}}}};
-                }
-                return {{{child_rect.x, off, {child_rect.z}, {off + (child_rect.w - child_rect.y)}}}};
-            };
-
+        // Phase 2: Draw — render all widgets using stored bounds
+        auto draw_recursive = [&](auto& self, widget::Widget& w) -> void {
+            w.draw(w.get_bounds(), context, backend);
             visit_children(w,
                            [&](const std::shared_ptr<widget::Widget>& child) -> void {
-                               auto used = self(self, *child, next_rect_for(offset));
-                               offset += is_horizontal ? used.width : used.height;
+                               self(self, *child);
                            });
-
-            return child_rect;
         };
-
-        render_recursive(render_recursive, *root, rect);
+        draw_recursive(draw_recursive, *root);
     }
 }

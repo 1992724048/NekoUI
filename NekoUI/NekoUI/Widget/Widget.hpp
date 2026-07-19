@@ -37,6 +37,10 @@ namespace neko::widget {
 
         [[nodiscard]] auto parent() const -> Widget*;
 
+        virtual auto layout(Vec4I available, engine::Context& /*context*/) -> void {
+            set_bounds(available);
+        }
+
         virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
             return {};
         }
@@ -55,8 +59,6 @@ namespace neko::widget {
 
         [[nodiscard]] auto get_bounds() const -> const Vec4I&;
         auto set_bounds(Vec4I b) -> void;
-
-        bool horizontal_{false};
 
         [[nodiscard]] auto get_children() -> engine::MutableWidget& {
             return children_;

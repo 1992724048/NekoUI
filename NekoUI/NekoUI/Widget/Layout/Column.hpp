@@ -9,6 +9,7 @@ namespace neko::widget {
     public:
         explicit Column(engine::Context&);
 
+        auto layout(Vec4I rect, engine::Context& context) -> void override;
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
         auto build(engine::Context& context) -> void override;
         auto event(engine::Context& context) -> void override;

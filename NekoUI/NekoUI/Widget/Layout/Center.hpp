@@ -8,6 +8,7 @@ namespace neko::widget {
     public:
         explicit Center(engine::Context& /*unused*/);
 
+        auto layout(Vec4I rect, engine::Context& context) -> void override;
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
     };
