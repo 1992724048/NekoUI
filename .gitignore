@@ -382,3 +382,7 @@ docs
 
 # D2 rendered SVG output
 /d2out/
+
+# Doxygen generated docs
+/docs/doxygen/
+/docs/doxygen/*
