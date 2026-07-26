@@ -66,6 +66,9 @@
     <ClCompile Include="NekoUI\Widget\Layout\Row.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NekoUI\Engine\WidgetBuilder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NekoUI\Engine\Engine.hpp" />
@@ -156,6 +159,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Widget\Layout\Row.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Engine\WidgetBuilder.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -30,7 +30,7 @@ namespace neko::engine {
         Engine(Engine&&) = delete;
         auto operator=(Engine&&) -> Engine& = delete;
 
-        template<typename T, typename... Args> requires std::is_base_of_v<widget::Widget, T>
+        template<std::derived_from<widget::Widget> T, typename... Args>
         auto set_root_widget(Args&&... args) -> std::shared_ptr<T> {
             const std::shared_ptr<T> widget = std::make_shared<T>(*context, std::forward<Args>(args)...);
             tree_manager_.set_root(*context, widget);

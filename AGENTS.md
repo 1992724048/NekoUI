@@ -11,45 +11,6 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 
 ## Architecture
 
-> 架构可视化图见项目根目录 [`NekoUI.mmd`](NekoUI.mmd)（Mermaid 格式，GitHub 原生渲染）。Doxygen 文档（含类图）运行 `doxygen Doxyfile` 后在 `docs/doxygen/html/index.html` 查看。
-
-```mermaid
-graph TB
-    subgraph Engine[引擎核心]
-        Engine-->Renderer
-        Engine-->TreeManager
-        Engine-->EventRouter
-        Engine-->MsgPump
-        Engine-->RenderScheduler
-        Engine-->HitTester
-        Engine-->Context
-    end
-
-    subgraph Widget[Widget 系统]
-        WidgetBase[Widget]
-        Button-->|extends|WidgetBase
-        Column-->|extends|WidgetBase
-        Row-->|extends|WidgetBase
-        Center-->|extends|WidgetBase
-    end
-
-    subgraph Backend[渲染后端]
-        BackendBase[Backend]
-        DirectX11-->|implements|BackendBase
-    end
-
-    subgraph Platform[平台抽象]
-        PlatformBase[Platform]
-        Win32-->|implements|PlatformBase
-    end
-
-    Renderer-->WidgetBase
-    Renderer-->BackendBase
-    EventRouter-->HitTester
-    HitTester-->WidgetBase
-    MsgPump-->EventRouter
-```
-
 分层架构，从底层到上层依次为：
 
 ### 1. 平台抽象层 (`neko::platform`)
@@ -57,6 +18,7 @@ graph TB
 平台事件封装与转换。`Platform` 基类（单例）负责将原生消息（如 Win32 `WM_*`）转换为统一 `Event` 变体。
 
 **支持的事件类型**：
+
 - 鼠标/键盘输入（`MouseMoveEvent`、`MouseButtonEvent`、`MouseWheelEvent`、`KeyEvent`、`CharEvent`）
 - 窗口尺寸变化（`ResizeEvent`）
 - DPI 变化（`DpiChangeEvent`）
@@ -64,6 +26,7 @@ graph TB
 - 系统主题切换（`ThemeChangedEvent`，`WM_SETTINGCHANGE`）
 
 **主题检测细节**（`Win32.cpp`）：
+
 - Light/Dark 模式：读取注册表 `HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme`
 - 强调色：读取注册表 `HKCU\Software\Microsoft\Windows\DWM\AccentColor`（ABGR 格式 → 转为 `neko::type::Color` RGBA 格式）
 - 主题变更监听：`WM_SETTINGCHANGE` 消息，`lparam == "ImmersiveColorSet"` 时刷新缓存
@@ -79,6 +42,7 @@ graph TB
 `Backend` 抽象基类定义绘制接口：`draw_rect_fill`、`draw_rect`、`draw_line`、`draw_circle_fill`、`draw_text`，以及 `resize`、`set_dpi`、`begin`/`end` 帧管理。
 
 `DirectX11` 为其具体实现，包含：
+
 - D3D11 设备/上下文/交换链创建
 - HLSL 顶点/像素着色器编译（矩形着色器 + 文本着色器）
 - stb_truetype 字体图集生成（含 CJK 字形支持）
@@ -100,20 +64,20 @@ graph TB
 
 **核心类**：
 
-| 类 | 职责 |
-|---|------|
-| `Engine` | 总控制器：拥有 Backend、TreeManager、WidgetBuilder、Renderer、HitTester、MsgPump、RenderScheduler、EventRouter、InvalidationTracker、输入设备、Context。构造函数通过 std::bind 将所有子系统回调连接起来。提供 `set_root_widget<T>()` 模板工厂、`render_frame()` 帧绘制、`rebuild()` 重建 |
-| `Context` | 引擎共享上下文：`mark_dirty`/`widget_dirty`/`anim_inc`/`anim_dec`/`widget_tree_changed` 回调、Mouse/Keyboard 弱引用、`root`（弱引用根 Widget）、`ColorScheme`、`native_handle` |
-| `TreeManager` | Widget 树管理：root/focus 原子指针（`std::atomic<shared_ptr<Widget>>`）、ID→Widget 映射、index→Widget 映射、`next_focus`/`prev_focus` 焦点导航。`register_widget()` 分配 z_index 和路径并调用 `build()`。`std::shared_mutex` 线程安全 |
-| `Renderer` | 两阶段渲染器：Phase 1 Layout（`root->layout()` 递归计算所有 Widget bounds）+ Phase 2 Draw（`root->draw()` 递归渲染），持有 `TreeManager&` 引用 |
-| `HitTester` | 命中测试器：递归反向遍历子节点（z 顺序），返回最上层命中的 `shared_ptr<Widget>`，持有 `TreeManager&` 引用 |
-| `WidgetBuilder` | 构建遍历器：递归注册 Widget 到 TreeManager 的 ID/index 映射，调用每个 Widget 的 `build()`。`Engine::rebuild()` 触发重建 |
-| `WidgetVisitor` | 工具模板：`visit_children()` 统一分发 `MutableWidget` 四种变体（monostate/shared_ptr/list/vector），为每个子 Widget 调用访问者函数 |
-| `EventRouter` | 事件分发：`std::visit` 模式匹配各事件类型 → 分发到设备更新、HitTester::hit_test → Widget::input、主题变更、DPI 调整、调度器、销毁处理 |
-| `InvalidationTracker` | 脏标记跟踪：`dirty_` 原子标志 + `animation_` 计数器 + 脏 Widget 列表（`shared_mutex` 保护）。提供 `needs_frame()`、`consume_dirty_list()` |
-| `MsgPump` | 线程安全消息队列：有界 SPSC 环形缓冲区（32 槽）+ `std::counting_semaphore<32>` + `std::condition_variable` + `std::jthread` |
-| `RenderScheduler` | 独立渲染线程：`std::jthread` + `condition_variable`，帧回调驱动。`request_frame()` 唤醒渲染、`set_pending_size()` 处理 resize |
-| `MutableWidget` | 变体容器：`std::variant<monostate, list<MutableWidget>, vector<MutableWidget>, shared_ptr<Widget>>`，支持四种 Widget 子节点组织方式。提供 `is_null/is_widget/is_list/is_vector` 查询 + `as_widget/as_list/as_vector` 访问器 |
+| 类                    | 职责                                                                                                                                                                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Engine`              | 总控制器：拥有 Backend、TreeManager、WidgetBuilder、Renderer、HitTester、MsgPump、RenderScheduler、EventRouter、InvalidationTracker、输入设备、Context。构造函数通过 std::bind 将所有子系统回调连接起来。提供 `set_root_widget<T>()` 模板工厂、`render_frame()` 帧绘制、`rebuild()` 重建 |
+| `Context`             | 引擎共享上下文：`mark_dirty`/`widget_dirty`/`anim_inc`/`anim_dec`/`widget_tree_changed` 回调、Mouse/Keyboard 弱引用、`root`（弱引用根 Widget）、`ColorScheme`、`native_handle`                                                                                                           |
+| `TreeManager`         | Widget 树管理：root/focus 原子指针（`std::atomic<shared_ptr<Widget>>`）、ID→Widget 映射、index→Widget 映射、`next_focus`/`prev_focus` 焦点导航。`register_widget()` 分配 z_index 和路径并调用 `build()`。`std::shared_mutex` 线程安全                                                    |
+| `Renderer`            | 两阶段渲染器：Phase 1 Layout（`root->layout()` 递归计算所有 Widget bounds）+ Phase 2 Draw（`root->draw()` 递归渲染），持有 `TreeManager&` 引用                                                                                                                                           |
+| `HitTester`           | 命中测试器：递归反向遍历子节点（z 顺序），返回最上层命中的 `shared_ptr<Widget>`，持有 `TreeManager&` 引用                                                                                                                                                                                |
+| `WidgetBuilder`       | 构建遍历器：递归注册 Widget 到 TreeManager 的 ID/index 映射，调用每个 Widget 的 `build()`。`Engine::rebuild()` 触发重建                                                                                                                                                                  |
+| `WidgetVisitor`       | 工具模板：`visit_children()` 统一分发 `MutableWidget` 四种变体（monostate/shared_ptr/list/vector），为每个子 Widget 调用访问者函数                                                                                                                                                       |
+| `EventRouter`         | 事件分发：`std::visit` 模式匹配各事件类型 → 分发到设备更新、HitTester::hit_test → Widget::input、主题变更、DPI 调整、调度器、销毁处理                                                                                                                                                    |
+| `InvalidationTracker` | 脏标记跟踪：`dirty_` 原子标志 + `animation_` 计数器 + 脏 Widget 列表（`shared_mutex` 保护）。提供 `needs_frame()`、`consume_dirty_list()`                                                                                                                                                |
+| `MsgPump`             | 线程安全消息队列：有界 SPSC 环形缓冲区（32 槽）+ `std::counting_semaphore<32>` + `std::condition_variable` + `std::jthread`                                                                                                                                                              |
+| `RenderScheduler`     | 独立渲染线程：`std::jthread` + `condition_variable`，帧回调驱动。`request_frame()` 唤醒渲染、`set_pending_size()` 处理 resize                                                                                                                                                            |
+| `MutableWidget`       | 变体容器：`std::variant<monostate, list<MutableWidget>, vector<MutableWidget>, shared_ptr<Widget>>`，支持四种 Widget 子节点组织方式。提供 `is_null/is_widget/is_list/is_vector` 查询 + `as_widget/as_list/as_vector` 访问器                                                              |
 
 **全局消息流**：
 
@@ -154,91 +118,86 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
 
 ### 设计模式
 
-| 模式 | 使用位置 |
-|------|---------|
-| 策略模式 | `Backend` 抽象基类 + `DirectX11` 具体实现 |
-| 模板方法 | `Platform` 基类 + `Win32` 具体实现 |
-| 单例模式 | `Platform::instance()` |
-| 组合模式 | Widget 树形结构与子节点（`MutableWidget` 变体容器） |
-| 观察者模式 | `InvalidationTracker` 脏标记 + `AnimationBase` 动画跟踪 + `ValueState` 绑定 |
-| 代理模式 | `MsgPump` 作为线程安全事件代理 |
-| 工厂方法 | `Engine::set_root_widget<T>()`、`register_platform<T>()` |
-| 访问者模式 | `WidgetVisitor::visit_children` 统一分发 `MutableWidget` 四种变体 |
-| CRTP | `Stylable<Derived>` 为 Widget 提供链式 `.style()` 调用（已移除，替换为 style mixin 继承） |
+| 模式       | 使用位置                                                                                  |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| 策略模式   | `Backend` 抽象基类 + `DirectX11` 具体实现                                                 |
+| 模板方法   | `Platform` 基类 + `Win32` 具体实现                                                        |
+| 单例模式   | `Platform::instance()`                                                                    |
+| 组合模式   | Widget 树形结构与子节点（`MutableWidget` 变体容器）                                       |
+| 观察者模式 | `InvalidationTracker` 脏标记 + `AnimationBase` 动画跟踪 + `ValueState` 绑定               |
+| 代理模式   | `MsgPump` 作为线程安全事件代理                                                            |
+| 工厂方法   | `Engine::set_root_widget<T>()`、`register_platform<T>()`                                  |
+| 访问者模式 | `WidgetVisitor::visit_children` 统一分发 `MutableWidget` 四种变体                         |
+| CRTP       | `Stylable<Derived>` 为 Widget 提供链式 `.style()` 调用（已移除，替换为 style mixin 继承） |
 
 ## Source Tree
 
 ```
-NekoUI/
-├── main.cpp                          # 入口：main()、窗口创建、消息循环、Engine 启动、示例 UI
-│
-├── NekoUI/                           # 库核心目录
-│   ├── NekoUI.hpp                    # 主包含头文件（转发 Engine.hpp）
-│   ├── Type.hpp                      # 核心类型：Vec2/3/4<T>（union xyzw/rgba）、Color（uint32 RGBA）、Handle（void*）
-│   │
-│   ├── Backend/
-│   │   ├── Backend.hpp               # 渲染后端抽象基类（策略模式）
-│   │   ├── stb_truetype.h            # 嵌入式字体光栅化（5079 行，gitignored — 不跟踪）
-│   │   └── DirectX11/
-│   │       ├── DirectX11.hpp         # D3D11 实现头文件（设备/交换链/着色器/字体图集/CJK 字形/TextCB）
-│   │       └── DirectX11.cpp         # D3D11 完整实现（583 行）
-│   │
-│   ├── Component/
-│   │   ├── ValueState.hpp            # 响应式值封装 + 脏标记绑定
-│   │   └── Animation.hpp             # 12 种速率曲线动画引擎（376 行）
-│   │
-│   ├── Device/
-│   │   ├── Keyboard.hpp              # 键盘状态（修饰键 + 边沿检测 + 字符缓冲）
-│   │   └── Mouse.hpp                 # 鼠标状态 + DPI 感知 4 种命中测试（153 行）
-│   │
-│   ├── Engine/
-│   │   ├── Context.hpp               # 引擎共享上下文（回调 + Mouse/Keyboard 弱引用 + ColorScheme）
-│   │   ├── Engine.hpp                # 引擎主类声明
-│   │   ├── Engine.cpp                # 引擎实现（99 行）：初始化全部子系统并连接回调
-│   │   ├── EventRouter.hpp           # 事件路由声明
-│   │   ├── EventRouter.cpp           # std::visit 事件分发
-│   │   ├── HitTester.hpp             # 命中测试声明（递归反向遍历，返回顶层命中 Widget）
-│   │   ├── HitTester.cpp             # 命中测试实现
-│   │   ├── InvalidationTracker.hpp   # 脏标记跟踪声明
-│   │   ├── InvalidationTracker.cpp   # 实现（atomic dirty + animation 计数器 + 脏 Widget 列表）
-│   │   ├── MsgPump.hpp               # 线程安全消息队列声明
-│   │   ├── MsgPump.cpp               # SPSC 环形缓冲区实现（32 槽）
-│   │   ├── MutableWidget.hpp         # 变体 Widget 容器（四种形式：monostate/list/vector/shared_ptr）
-│   │   ├── Renderer.hpp              # 渲染器声明（递归渲染遍历 + 布局偏移计算）
-│   │   ├── Renderer.cpp              # 渲染器实现（44 行）
-│   │   ├── RenderScheduler.hpp       # 独立渲染线程声明
-│   │   ├── RenderScheduler.cpp       # 渲染线程实现
-│   │   ├── TreeManager.hpp           # Widget 树管理声明（root/focus 原子指针 + ID/index 映射 + 焦点导航）
-│   │   ├── TreeManager.cpp           # Widget 树管理实现（107 行，shared_mutex 线程安全）
-│   │   ├── WidgetBuilder.hpp         # Widget Builder API 声明
-│   │   ├── WidgetBuilder.cpp         # Widget 构建遍历实现（注册到 ID/index 映射，调用 build()）
-│   │   └── WidgetVisitor.hpp         # Widget 子节点遍历模板（visit_children，统一四种变体分发）
-│   │
-│   ├── Platform/
-│   │   ├── Event.hpp                 # 事件类型（variant：9 种事件 + Overloaded 工具）
-│   │   ├── Platform.hpp              # 平台基类（单例，含 IME / 11 窗口操作接口）
-│   │   └── Win32/
-│   │       ├── Win32.hpp             # Win32 平台实现声明（TSF IME 状态 + 主题缓存）
-│   │       └── Win32.cpp             # WM_* → Event 翻译 + 注册表主题检测（193 行）
-│   │
-│   ├── Style/
-│   │   ├── ColorScheme.hpp           # Material You 36 色调色板结构体
-│   │   ├── ColorScheme.cpp           # HCT 色彩引擎完整实现（404 行）
-│   │   ├── CSS.hpp                   # 基础样式结构体（Background/Size/Border）+ Style Mixin 结构体（BackgroundStyle/SizeStyle/BorderStyle/TextStyle）
-│   │
-│   └── Widget/
-│       ├── Widget.hpp                # Widget 基类声明（含 Builder API：build<T>/children/parent）
-│       ├── Widget.cpp                # Widget 默认实现（29 行）
-│       ├── Button/
-│       │   ├── Button.hpp            # Button 声明（继承 Widget + Style Mixins）
-│       │   └── Button.cpp            # Button 实现（65 行）：draw/input/hit_test/on_click/text
-│       └── Layout/
-│           ├── Center.hpp            # Center 布局声明（继承 Widget + Style Mixins）
-│           ├── Center.cpp            # Center 实现（34 行）：背景绘制 + 子 Widget 居中
-│           ├── Column.hpp            # Column 垂直布局声明（继承 Widget + Style Mixins）
-│           ├── Column.cpp            # Column 实现（38 行）：背景绘制
-│           ├── Row.hpp               # Row 水平布局声明（继承 Widget + Style Mixins）
-│           └── Row.cpp               # Row 实现（34 行）：背景绘制
+NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .clang-format）
+└── NekoUI/                                ← VS 项目目录（含 main.cpp, .vcxproj）
+    ├── main.cpp                           # 入口：main()、窗口创建、消息循环、Engine 启动、示例 UI
+    ├── NekoUI.vcxproj                     # VS 项目文件
+    ├── NekoUI.vcxproj.filters             # VS 项目筛选器
+    └── NekoUI/                            ← 库核心目录
+        ├── NekoUI.hpp                     # 主包含头文件（转发 Engine.hpp）
+        ├── Type.hpp                       # 核心类型：Vec2/3/4<T>（union xyzw/rgba）、Color（uint32 RGBA）、Handle（void*）
+        ├── Backend/
+        │   ├── Backend.hpp                # 渲染后端抽象基类（策略模式）
+        │   ├── stb_truetype.h             # 嵌入式字体光栅化（5079 行，gitignored — 不跟踪）
+        │   └── DirectX11/
+        │       ├── DirectX11.hpp          # D3D11 实现头文件（设备/交换链/着色器/字体图集/CJK 字形/TextCB）
+        │       └── DirectX11.cpp          # D3D11 完整实现
+        ├── Component/
+        │   ├── ValueState.hpp             # 响应式值封装 + 脏标记绑定
+        │   └── Animation.hpp              # 12 种速率曲线动画引擎（376 行）
+        ├── Device/
+        │   ├── Keyboard.hpp               # 键盘状态（修饰键 + 边沿检测 + 字符缓冲）
+        │   └── Mouse.hpp                  # 鼠标状态 + DPI 感知 4 种命中测试（153 行）
+        ├── Engine/
+        │   ├── Context.hpp                # 引擎共享上下文（回调 + Mouse/Keyboard 弱引用 + ColorScheme）
+        │   ├── Engine.hpp                 # 引擎主类声明
+        │   ├── Engine.cpp                 # 引擎实现：初始化全部子系统并连接回调
+        │   ├── EventRouter.hpp            # 事件路由声明
+        │   ├── EventRouter.cpp            # std::visit 事件分发
+        │   ├── HitTester.hpp              # 命中测试声明（递归反向遍历，返回顶层命中 Widget）
+        │   ├── HitTester.cpp              # 命中测试实现
+        │   ├── InvalidationTracker.hpp    # 脏标记跟踪声明
+        │   ├── InvalidationTracker.cpp    # 实现（atomic dirty + animation 计数器 + 脏 Widget 列表）
+        │   ├── MsgPump.hpp                # 线程安全消息队列声明
+        │   ├── MsgPump.cpp                # SPSC 环形缓冲区实现（32 槽）
+        │   ├── MutableWidget.hpp          # 变体 Widget 容器（四种形式：monostate/list/vector/shared_ptr）
+        │   ├── Renderer.hpp               # 渲染器声明（递归渲染遍历 + 布局偏移计算）
+        │   ├── Renderer.cpp               # 渲染器实现
+        │   ├── RenderScheduler.hpp        # 独立渲染线程声明
+        │   ├── RenderScheduler.cpp        # 渲染线程实现
+        │   ├── TreeManager.hpp            # Widget 树管理声明（root/focus 原子指针 + ID/index 映射 + 焦点导航）
+        │   ├── TreeManager.cpp            # Widget 树管理实现（shared_mutex 线程安全）
+        │   ├── WidgetBuilder.hpp          # Widget Builder API 声明
+        │   ├── WidgetBuilder.cpp          # Widget 构建遍历实现（注册到 ID/index 映射，调用 build()）
+        │   └── WidgetVisitor.hpp          # Widget 子节点遍历模板（visit_children，统一四种变体分发）
+        ├── Platform/
+        │   ├── Event.hpp                  # 事件类型（variant：9 种事件 + Overloaded 工具）
+        │   ├── Platform.hpp               # 平台基类（单例，含 IME / 11 窗口操作接口）
+        │   └── Win32/
+        │       ├── Win32.hpp              # Win32 平台实现声明（TSF IME 状态 + 主题缓存）
+        │       └── Win32.cpp              # WM_* → Event 翻译 + 注册表主题检测
+        ├── Style/
+        │   ├── ColorScheme.hpp            # Material You 36 色调色板结构体
+        │   ├── ColorScheme.cpp            # HCT 色彩引擎完整实现
+        │   ├── CSS.hpp                    # 基础样式结构体（Background/Size/Border）+ Style Mixin 结构体（BackgroundStyle/SizeStyle/BorderStyle/TextStyle）
+        └── Widget/
+            ├── Widget.hpp                 # Widget 基类声明（含 Builder API：build<T>/children/parent）
+            ├── Widget.cpp                 # Widget 默认实现
+            ├── Button/
+            │   ├── Button.hpp             # Button 声明（继承 Widget + Style Mixins）
+            │   └── Button.cpp             # Button 实现：draw/input/hit_test/on_click/text
+            └── Layout/
+                ├── Center.hpp             # Center 布局声明（继承 Widget + Style Mixins）
+                ├── Center.cpp             # Center 实现：背景绘制 + 子 Widget 居中
+                ├── Column.hpp             # Column 垂直布局声明（继承 Widget + Style Mixins）
+                ├── Column.cpp             # Column 实现：背景绘制
+                ├── Row.hpp                # Row 水平布局声明（继承 Widget + Style Mixins）
+                └── Row.cpp                # Row 实现：背景绘制
 ```
 
 ## Build
@@ -250,12 +209,12 @@ NekoUI/
 
 ### 构建配置
 
-| 配置 | 平台 | 工具集 | 语言标准 | 运行时库 | 备注 |
-|------|------|--------|---------|---------|------|
-| Debug | Win32 | v145 (MSVC) | C++20 | /MDd | SDL 检查开启 |
-| Release | Win32 | v145 (MSVC) | C++20 | /MD | 全程序优化 |
-| Debug | x64 | Intel C++ Compiler 2026 | C++latest | /MTd | TBB/IPP(Static)/MKL(Parallel)/DAL/MPI、ARROWLAKE-S、Async 异常 |
-| Release | x64 | Intel C++ Compiler 2026 | C++latest | /MT | 同上 + PGO Instrumentation、CFG Guard、MaxSpeedHighLevel |
+| 配置    | 平台  | 工具集                  | 语言标准  | 运行时库 | 备注                                                           |
+| ------- | ----- | ----------------------- | --------- | -------- | -------------------------------------------------------------- |
+| Debug   | Win32 | v145 (MSVC)             | C++20     | /MDd     | SDL 检查开启                                                   |
+| Release | Win32 | v145 (MSVC)             | C++20     | /MD      | 全程序优化                                                     |
+| Debug   | x64   | Intel C++ Compiler 2026 | C++latest | /MTd     | TBB/IPP(Static)/MKL(Parallel)/DAL/MPI、ARROWLAKE-S、Async 异常 |
+| Release | x64   | Intel C++ Compiler 2026 | C++latest | /MT      | 同上 + PGO Instrumentation、CFG Guard、MaxSpeedHighLevel       |
 
 - **输出目录**: `$(SolutionDir)$(Platform)-$(Configuration)/`（如 `x64-Debug/`）
 - **中间目录**: `$(SolutionDir)$(Platform)-$(Configuration)/.tmep/`
@@ -286,15 +245,15 @@ NekoUI/
 
 ### 命名规范
 
-| 元素 | 风格 | 示例 |
-|------|------|------|
-| 命名空间 | snake_case | `neko::engine`、`neko::widget` |
-| 类型（class/struct/enum） | PascalCase | `Engine`、`Widget`、`DirectX11`、`RenderScheduler` |
-| 函数/方法 | snake_case + 尾置返回类型 | `auto get_name() -> std::string` |
-| 成员变量 | snake_case | `mark_dirty`、`bounds`、`children_`（私有成员尾随 `_`） |
-| 参数 | snake_case | `user_id`、`target` |
-| 枚举器 | PascalCase | `MouseButton::Left` |
-| 宏 | UPPER_SNAKE_CASE | `NOMINMAX`、`WINDOWS_API` |
+| 元素                      | 风格                      | 示例                                                    |
+| ------------------------- | ------------------------- | ------------------------------------------------------- |
+| 命名空间                  | snake_case                | `neko::engine`、`neko::widget`                          |
+| 类型（class/struct/enum） | PascalCase                | `Engine`、`Widget`、`DirectX11`、`RenderScheduler`      |
+| 函数/方法                 | snake_case + 尾置返回类型 | `auto get_name() -> std::string`                        |
+| 成员变量                  | snake_case                | `mark_dirty`、`bounds`、`children_`（私有成员尾随 `_`） |
+| 参数                      | snake_case                | `user_id`、`target`                                     |
+| 枚举器                    | PascalCase                | `MouseButton::Left`                                     |
+| 宏                        | UPPER_SNAKE_CASE          | `NOMINMAX`、`WINDOWS_API`                               |
 
 ### 代码规范
 
@@ -326,15 +285,15 @@ NekoUI/
 
 ## Dependencies
 
-| 依赖 | 用途 | 版本/来源 |
-|------|------|----------|
-| DirectX 11 (`d3d11.h`) | GPU 渲染 API | Windows SDK |
-| DXGI (`dxgi1_2.h`) | 交换链管理 | Windows SDK |
-| DirectXMath | 数学运算 | Windows SDK |
-| Windows SDK | Win32 API + 注册表 API | 系统组件 |
-| Intel oneAPI 2026（仅 x64） | TBB（并行）、IPP（图像处理）、MKL（数学）、DAL（数据分析）、MPI | Intel oneAPI 2026 |
-| stb_truetype.h | 字体光栅化（编译期包含，gitignored — 不跟踪） | 项目内嵌（Backend/stb_truetype.h） |
-| MSVC v143/v145 | C++ 标准库 | Visual Studio 2022 |
+| 依赖                        | 用途                                                            | 版本/来源                          |
+| --------------------------- | --------------------------------------------------------------- | ---------------------------------- |
+| DirectX 11 (`d3d11.h`)      | GPU 渲染 API                                                    | Windows SDK                        |
+| DXGI (`dxgi1_2.h`)          | 交换链管理                                                      | Windows SDK                        |
+| DirectXMath                 | 数学运算                                                        | Windows SDK                        |
+| Windows SDK                 | Win32 API + 注册表 API                                          | 系统组件                           |
+| Intel oneAPI 2026（仅 x64） | TBB（并行）、IPP（图像处理）、MKL（数学）、DAL（数据分析）、MPI | Intel oneAPI 2026                  |
+| stb_truetype.h              | 字体光栅化（编译期包含，gitignored — 不跟踪）                   | 项目内嵌（Backend/stb_truetype.h） |
+| MSVC v143/v145              | C++ 标准库                                                      | Visual Studio 2022                 |
 
 **无**外部包管理器（无 vcpkg、无 NuGet、无 npm）— 所有依赖均通过 Windows SDK 和 Visual Studio/Intel 工具集解析。
 

@@ -1,4 +1,6 @@
-﻿#include "Engine.hpp"
+﻿// 2026-07-26 02:19:38
+
+#include "Engine.hpp"
 #include "EventRouter.hpp"
 #include "InvalidationTracker.hpp"
 #include "MsgPump.hpp"
@@ -14,10 +16,9 @@
 
 namespace neko::engine {
     Engine::Engine(std::unique_ptr<backend::Backend> backend) :
-        backend{std::move(backend)} {
+        backend{std::move(backend)},
+        native_handle_(this->backend->get_native_handle()) {
         context = std::make_unique<Context>();
-
-        native_handle_ = this->backend->get_native_handle();
 
         mouse = std::make_shared<device::Mouse>();
         keyboard = std::make_shared<device::Keyboard>();
@@ -92,7 +93,7 @@ namespace neko::engine {
 
         backend->begin();
         const auto szie = render_scheduler_->pending_size();
-        renderer_.render({{0, 0, szie.width, szie.height}}, *context, *backend);
+        renderer_.render({0, 0, szie.width, szie.height}, *context, *backend);
         backend->end();
         invalidation_.clear();
     }

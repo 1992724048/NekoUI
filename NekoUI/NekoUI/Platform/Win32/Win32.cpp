@@ -1,4 +1,4 @@
-#include "Win32.hpp"
+﻿#include "Win32.hpp"
 #ifdef _WIN32
 #include <algorithm>
 #include <string_view>
@@ -107,7 +107,7 @@ namespace neko::platform {
 
     auto Win32::activate_ime(type::Handle native_window, const bool active) const -> bool {
         init_ime();
-        if (!ime_thread_mgr_ || !ime_doc_mgr_) {
+        if (ime_thread_mgr_ == nullptr || ime_doc_mgr_ == nullptr) {
             return false;
         }
 
