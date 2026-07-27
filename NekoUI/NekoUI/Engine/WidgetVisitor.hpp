@@ -10,17 +10,23 @@ namespace neko::engine {
         }
 
         if (children.is_widget()) {
-            visit(children.as_widget());
+            if (auto sp = children.as_widget().lock()) {
+                visit(sp);
+            }
         } else if (children.is_list()) {
             for (auto& mw : children.as_list()) {
                 if (mw.is_widget()) {
-                    visit(mw.as_widget());
+                    if (auto sp = mw.as_widget().lock()) {
+                        visit(sp);
+                    }
                 }
             }
         } else if (children.is_vector()) {
             for (auto& mw : children.as_vector()) {
                 if (mw.is_widget()) {
-                    visit(mw.as_widget());
+                    if (auto sp = mw.as_widget().lock()) {
+                        visit(sp);
+                    }
                 }
             }
         }

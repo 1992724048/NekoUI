@@ -40,7 +40,10 @@ namespace neko::engine {
                 }
             }
 
-            return w.hit_test(mouse) ? w_ptr : std::nullopt;
+            if (w.hit_test(mouse)) {
+                return std::optional{std::weak_ptr{w_ptr}};
+            }
+            return std::nullopt;
         };
 
         return test_recursive(test_recursive, root);
