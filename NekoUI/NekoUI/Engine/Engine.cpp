@@ -5,7 +5,6 @@
 #include "InvalidationTracker.hpp"
 #include "MsgPump.hpp"
 #include "RenderScheduler.hpp"
-#include "Renderer.hpp"
 #include "TreeManager.hpp"
 #include "WidgetBuilder.hpp"
 
@@ -93,7 +92,7 @@ namespace neko::engine {
 
         backend->begin();
         const auto szie = render_scheduler_->pending_size();
-        renderer_.render({0, 0, szie.width, szie.height}, *context, *backend);
+        tree_manager_.get_root()->draw({.x = 0, .y = 0, .z = szie.width, .w = szie.height}, *context, *backend);
         backend->end();
         invalidation_.clear();
     }

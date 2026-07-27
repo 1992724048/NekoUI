@@ -15,8 +15,8 @@ namespace neko::engine {
             return std::nullopt;
         }
 
-        auto test_recursive = [&](auto& self, const std::shared_ptr<widget::Widget>& w_ptr) -> std::shared_ptr<widget::Widget> {
-            auto& w = *w_ptr;
+        auto test_recursive = [&](auto& self, const std::weak_ptr<widget::Widget>& w_ptr) -> std::optional<std::weak_ptr<widget::Widget>> {
+            auto& w = *w_ptr.lock();
 
             if (auto& children = w.get_children(); children.is_widget()) {
                 if (auto hit = self(self, children.as_widget())) {
@@ -40,7 +40,7 @@ namespace neko::engine {
                 }
             }
 
-            return w.hit_test(mouse) ? w_ptr : nullptr;
+            return w.hit_test(mouse) ? w_ptr : std::nullopt;
         };
 
         return test_recursive(test_recursive, root);

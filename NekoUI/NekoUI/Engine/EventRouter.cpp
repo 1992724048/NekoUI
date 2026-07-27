@@ -1,4 +1,4 @@
-#include "EventRouter.hpp"
+﻿#include "EventRouter.hpp"
 
 #include "Context.hpp"
 #include "HitTester.hpp"
@@ -74,7 +74,7 @@ namespace neko::engine {
 
     auto EventRouter::handle_input(const platform::Event& event) const -> void {
         if (const auto target = hit_tester_.hit_test(mouse_)) {
-            target->input(context_, event);
+            target->lock()->input(context_, event);
         }
     }
 

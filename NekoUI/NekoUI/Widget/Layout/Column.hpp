@@ -1,11 +1,11 @@
-﻿#pragma once
+﻿// 2026-07-27 20:29:04
+
+#pragma once
 #include "../Widget.hpp"
 #include "../../Style/CSS.hpp"
 
 namespace neko::widget {
-    class Column final : public Widget,
-                         public style::BackgroundStyle,
-                         public style::SizeStyle {
+    class Column final : public Widget, public style::BackgroundStyle, public style::SizeStyle {
     public:
         explicit Column(engine::Context&);
 
@@ -16,5 +16,4 @@ namespace neko::widget {
         auto input(engine::Context& context, const platform::Event& event) -> void override;
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
     };
-
 } // namespace neko::widget

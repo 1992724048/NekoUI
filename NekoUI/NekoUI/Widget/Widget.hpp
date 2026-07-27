@@ -78,6 +78,8 @@ namespace neko::widget {
     private:
         friend engine::TreeManager;
 
+        engine::MutableWidget children_;
+
         int z_index_{0};
         std::string id_;
         std::string path_;

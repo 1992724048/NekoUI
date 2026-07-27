@@ -8,7 +8,6 @@
 #include "InvalidationTracker.hpp"
 #include "MsgPump.hpp"
 #include "RenderScheduler.hpp"
-#include "Renderer.hpp"
 #include "TreeManager.hpp"
 #include "WidgetBuilder.hpp"
 
@@ -58,7 +57,6 @@ namespace neko::engine {
         InvalidationTracker invalidation_;
         TreeManager tree_manager_;
         WidgetBuilder widget_builder_{tree_manager_};
-        Renderer renderer_{tree_manager_};
         HitTester hit_tester_{tree_manager_};
         std::shared_ptr<RenderScheduler> render_scheduler_{};
         std::shared_ptr<MsgPump> msg_pump_{};
