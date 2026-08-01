@@ -45,9 +45,12 @@ namespace neko::widget {
             return {};
         }
 
-        virtual auto build(engine::Context& context) -> void {}
-        virtual auto event(engine::Context& context) -> void {}
-        virtual auto input(engine::Context& context, const platform::Event& event) -> void {}
+        virtual auto build(engine::Context& context) -> void {
+        }
+        virtual auto event(engine::Context& context) -> void {
+        }
+        virtual auto input(engine::Context& context, const platform::Event& event) -> void {
+        }
 
         [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool {
             return false;
@@ -84,30 +87,32 @@ namespace neko::widget {
         std::string id_;
         std::string path_;
     };
-}
+} // namespace neko::widget
 
 namespace neko::widget {
     template<std::derived_from<Widget> T, typename... Args>
     auto Widget::build(Args&&... args) -> T& {
+        // 子控件由 children_ 强持有，返回引用不悬垂
         auto child = std::make_shared<T>(*context_, std::forward<Args>(args)...);
         child->parent_ = this;
         auto& ref = *child;
 
-        std::visit([&]<typename V>(V& val) -> auto {
-                       if constexpr (std::is_same_v<V, std::monostate>) {
-                           children_ = engine::MutableWidget(std::move(child));
-                       } else if constexpr (std::is_same_v<V, std::shared_ptr<Widget>>) {
-                           engine::internal::MutableWidgetList list;
-                           list.emplace_back(engine::MutableWidget(std::move(val)));
-                           list.emplace_back(engine::MutableWidget(std::move(child)));
-                           children_ = engine::MutableWidget(std::move(list));
-                       } else if constexpr (std::is_same_v<V, engine::internal::MutableWidgetList>) {
-                           val.emplace_back(engine::MutableWidget(std::move(child)));
-                       } else if constexpr (std::is_same_v<V, engine::internal::MutableWidgetVector>) {
-                           val.emplace_back(engine::MutableWidget(std::move(child)));
-                       }
-                   },
-                   static_cast<engine::internal::WidgetContainer&>(children_));
+        std::visit(
+                [&]<typename V>(V& val) -> auto {
+                    if constexpr (std::is_same_v<V, std::monostate>) {
+                        children_ = engine::MutableWidget(std::move(child));
+                    } else if constexpr (std::is_same_v<V, std::shared_ptr<Widget>>) {
+                        engine::internal::MutableWidgetList list;
+                        list.emplace_back(engine::MutableWidget(std::move(val)));
+                        list.emplace_back(engine::MutableWidget(std::move(child)));
+                        children_ = engine::MutableWidget(std::move(list));
+                    } else if constexpr (std::is_same_v<V, engine::internal::MutableWidgetList>) {
+                        val.emplace_back(engine::MutableWidget(std::move(child)));
+                    } else if constexpr (std::is_same_v<V, engine::internal::MutableWidgetVector>) {
+                        val.emplace_back(engine::MutableWidget(std::move(child)));
+                    }
+                },
+                static_cast<engine::internal::WidgetContainer&>(children_));
 
         if (context_ && context_->widget_tree_changed) {
             context_->widget_tree_changed();

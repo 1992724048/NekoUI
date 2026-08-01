@@ -1,13 +1,13 @@
 ﻿#include "HitTester.hpp"
-#include "TreeManager.hpp"
 #include "../Device/Mouse.hpp"
 #include "../Widget/Widget.hpp"
+#include "TreeManager.hpp"
 
 namespace neko::engine {
-    HitTester::HitTester(TreeManager& tree) :
-        tree_(tree) {}
+    HitTester::HitTester(TreeManager& tree) : tree_(tree) {
+    }
 
-    auto HitTester::hit_test(const device::Mouse& mouse) const -> std::optional<std::weak_ptr<widget::Widget>> {
+    auto HitTester::hit_test(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>> {
         std::shared_lock _(tree_.mutex_);
 
         const auto root = tree_.root_.load();
@@ -15,8 +15,8 @@ namespace neko::engine {
             return std::nullopt;
         }
 
-        auto test_recursive = [&](auto& self, const std::weak_ptr<widget::Widget>& w_ptr) -> std::optional<std::weak_ptr<widget::Widget>> {
-            auto& w = *w_ptr.lock();
+        auto test_recursive = [&](auto& self, const std::shared_ptr<widget::Widget>& w_ptr) -> std::optional<std::shared_ptr<widget::Widget>> {
+            auto& w = *w_ptr;
 
             if (auto& children = w.get_children(); children.is_widget()) {
                 if (auto hit = self(self, children.as_widget())) {
@@ -41,7 +41,7 @@ namespace neko::engine {
             }
 
             if (w.hit_test(mouse)) {
-                return std::optional{std::weak_ptr{w_ptr}};
+                return std::optional{std::shared_ptr{w_ptr}};
             }
             return std::nullopt;
         };
