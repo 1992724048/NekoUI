@@ -122,12 +122,12 @@ namespace neko::style {
                 hue += 360.0F;
             }
 
-            const float aw = (2.0F * ra + ga + 0.05F * ba - 0.305F) * vc.nbb;
+            const float aw = (2.0F * ra + ga + 0.05F * ba) * vc.nbb;
             const float j = 100.0F * std::pow(aw / vc.aw, vc.c * vc.z);
 
             const float hue_rad = std::atan2(bb, a);
             const float e_t = 0.25F * (std::cos(hue_rad + 2.0F) + 3.8F);
-            const float t = (50000.0F / 13.0F * vc.nc * vc.ncb * e_t * std::hypot(a, bb)) / (ra + ga + 1.05F * ba);
+            const float t = (50000.0F / 13.0F * vc.nc * vc.ncb * e_t * std::hypot(a, bb)) / (ra + ga + 1.05F * ba + 0.305F);
             const float alpha = std::pow(t, 0.9F) * std::pow(1.64F - std::pow(0.29F, vc.n), 0.73F);
 
             return {.hue = hue, .chroma = alpha * std::sqrt(j / 100.0F), .j = j};
@@ -193,8 +193,8 @@ namespace neko::style {
                 const float z = -0.01584150F * rc - 0.03412294F * gc + 1.04996444F * bc;
 
                 const float lr = 3.2413775F * x - 1.5376652F * yy - 0.4988538F * z;
-                const float lg = -0.9691424F * x + 1.8760108F * yy + 0.0415560F * z;
-                const float lb = 0.0556209F * x - 0.2039559F * yy + 1.0572252F * z;
+                const float lg = -0.9691453F * x + 1.8758853F * yy + 0.0415659F * z;
+                const float lb = 0.0556209F * x - 0.2039552F * yy + 1.0571799F * z;
 
                 if (lr < 0.0F || lg < 0.0F || lb < 0.0F) {
                     return false;
