@@ -220,7 +220,8 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 
 - **平台映射**: `.slnx` 中平台名为 `x86`（`<Platform Name="x86" />`），对应 vcxproj 内部配置名 Win32
 - **Win32 运行时库**: vcxproj 未显式声明 `RuntimeLibrary`，/MDd、/MD 为 `UseDebugLibraries` 默认值
-- **x64 Debug 补充**: `InterproceduralOptimization=true`、`BrowseInformation=false`（避免 BK1506 编译错误）、`LocalDebuggerCommand=$(TargetPath)`（修复无法启动调试）、`EnableSegmentHeap=true`
+- **调试器设置**: Debug 配置（x64 + Win32）均显式声明 `LocalDebuggerCommand=$(TargetPath)` + `DebuggerFlavor=WindowsLocalDebugger`（防止 Intel 工具链默认调试器覆盖导致"无法启动调试"；x64 首次添加于 4ddcf26，Win32 与 DebuggerFlavor 于 2026-08-02 补齐）
+- **x64 Debug 补充**: `InterproceduralOptimization=true`、`BrowseInformation=false`（避免 BK1506 编译错误）、`EnableSegmentHeap=true`
 - **x64 Release 补充**: `StringPooling=true`、`InlineFunctionExpansion=AnySuitable`、`FavorSizeOrSpeed=Speed`、`GuardEHContMetadata=true`、PGO `ProfileDirectory=coverage.profraw`
 - **ARROWLAKE-S**: 对应 `GenerateAlternateCodePaths=ARROWLAKE-S` + `UseProcessorExtensions=ARROWLAKE-S`
 - **输出目录**: `$(SolutionDir)$(Platform)-$(Configuration)/`（如 `x64-Debug/`）
