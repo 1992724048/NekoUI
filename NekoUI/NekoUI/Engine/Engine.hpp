@@ -55,6 +55,7 @@ namespace neko::engine {
         std::shared_ptr<device::Keyboard> keyboard;
 
         auto render_frame() -> void;
+        auto draw_widget(widget::Widget& w, engine::Context& context, backend::Backend& backend) -> void;
 
         InvalidationTracker invalidation_;
         TreeManager tree_manager_;

@@ -7,7 +7,9 @@
 #include "RenderScheduler.hpp"
 #include "TreeManager.hpp"
 #include "WidgetBuilder.hpp"
+#include "WidgetVisitor.hpp"
 
+#include <Windows.h>
 #include <cmath>
 #include <optional>
 
@@ -101,10 +103,36 @@ namespace neko::engine {
             widget_builder_.build(*context);
         }
 
+        auto size = render_scheduler_->pending_size();
+        if (size.width <= 0 || size.height <= 0) {
+            RECT client{};
+            if (GetClientRect(static_cast<HWND>(native_handle_), &client) != 0) {
+                size = {.x = client.right - client.left, .y = client.bottom - client.top};
+            }
+        }
+
+        const auto root = tree_manager_.get_root();
+        if (!root) {
+            invalidation_.clear();
+            return;
+        }
+
+        // 阶段一：布局（草稿期每帧全量）
+        root->layout({.x = 0, .y = 0, .z = size.width, .w = size.height}, *context);
+
+        // 阶段二：绘制（引擎集中式前序 DFS）
         backend->begin();
-        const auto szie = render_scheduler_->pending_size();
-        tree_manager_.get_root()->draw({.x = 0, .y = 0, .z = szie.width, .w = szie.height}, *context, *backend);
+        draw_widget(*root, *context, *backend);
         backend->end();
+
         invalidation_.clear();
+    }
+
+    auto Engine::draw_widget(widget::Widget& w, engine::Context& context, backend::Backend& backend) -> void {
+        w.draw(w.get_bounds(), context, backend);
+        visit_children(w,
+                       [&](const std::shared_ptr<widget::Widget>& child) -> void {
+                           draw_widget(*child, context, backend);
+                       });
     }
 }
