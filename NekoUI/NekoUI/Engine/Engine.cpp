@@ -28,7 +28,7 @@ namespace neko::engine {
         context->anim_inc = std::bind(&InvalidationTracker::anim_inc, &invalidation_);
         context->anim_dec = std::bind(&InvalidationTracker::anim_dec, &invalidation_);
 
-        context->widget_tree_changed = std::bind(&Engine::rebuild, this);
+        context->widget_tree_changed = std::bind(&Engine::schedule_rebuild, this);
 
         context->mark_dirty = std::bind(&InvalidationTracker::mark_dirty, &invalidation_);
         context->widget_dirty = std::bind(&InvalidationTracker::mark_widget_dirty, &invalidation_, std::placeholders::_1);
@@ -77,6 +77,13 @@ namespace neko::engine {
         render_scheduler_->request_frame();
     }
 
+    auto Engine::schedule_rebuild() -> void {
+        tree_dirty_.store(true, std::memory_order_relaxed);
+        if (render_scheduler_) {
+            render_scheduler_->request_frame();
+        }
+    }
+
     auto Engine::get_native_handle() const -> Handle {
         return native_handle_;
     }
@@ -88,6 +95,10 @@ namespace neko::engine {
     auto Engine::render_frame() -> void {
         if (const auto resize = render_scheduler_->consume_resize()) {
             backend->resize(*resize);
+        }
+
+        if (tree_dirty_.exchange(false, std::memory_order_acq_rel)) {
+            widget_builder_.build(*context);
         }
 
         backend->begin();

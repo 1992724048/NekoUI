@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <atomic>
 #include <memory>
 #include <type_traits>
 
@@ -42,7 +43,8 @@ namespace neko::engine {
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
-        auto rebuild() -> void;
+        auto rebuild() -> void;                                  // 立即全树重建（set_root_widget 用）
+        auto schedule_rebuild() -> void;                         // 置标志 + 请求帧，帧首合并重建
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;
     private:
@@ -61,5 +63,6 @@ namespace neko::engine {
         std::shared_ptr<RenderScheduler> render_scheduler_{};
         std::shared_ptr<MsgPump> msg_pump_{};
         std::unique_ptr<EventRouter> event_router_{};
+        std::atomic_bool tree_dirty_{false};
     };
 }
