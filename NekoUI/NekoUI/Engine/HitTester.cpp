@@ -1,11 +1,11 @@
 ﻿#include "HitTester.hpp"
+#include "TreeManager.hpp"
 #include "../Device/Mouse.hpp"
 #include "../Widget/Widget.hpp"
-#include "TreeManager.hpp"
 
 namespace neko::engine {
-    HitTester::HitTester(TreeManager& tree) : tree_(tree) {
-    }
+    HitTester::HitTester(TreeManager& tree) :
+        tree_(tree) {}
 
     auto HitTester::hit_test(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>> {
         std::shared_lock _(tree_.mutex_);

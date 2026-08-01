@@ -20,35 +20,50 @@ namespace neko::engine {
                              const std::shared_ptr<RenderScheduler>& scheduler,
                              std::function<void()> destroy_handler,
                              InvalidationTracker& invalidation) :
-        tree_(tree), hit_tester_(hit_tester), mouse_(mouse), keyboard_(keyboard), context_(context), backend_(backend), scheduler_(scheduler), destroy_handler_(std::move(destroy_handler)), invalidation_(invalidation) {
-    }
+        tree_(tree),
+        hit_tester_(hit_tester),
+        mouse_(mouse),
+        keyboard_(keyboard),
+        context_(context),
+        backend_(backend),
+        scheduler_(scheduler),
+        destroy_handler_(std::move(destroy_handler)),
+        invalidation_(invalidation) {}
 
     auto EventRouter::dispatch(const platform::Event& event) const -> void {
         std::visit(platform::Overloaded{
-                           [&](const device::MouseMoveEvent& e) -> void {
-                               mouse_.handle(e);
-                               handle_input(event);
-                           },
-                           [&](const device::MouseButtonEvent& e) -> void {
-                               mouse_.handle(e);
-                               handle_input(event);
-                           },
-                           [&](const device::MouseWheelEvent& e) -> void {
-                               mouse_.handle(e);
-                               handle_input(event);
-                           },
-                           [&](const device::KeyEvent& e) -> void {
-                               keyboard_.handle(e);
-                               handle_input(event);
-                           },
-                           [&](const device::CharEvent& e) -> void {
-                               keyboard_.handle(e);
-                               handle_input(event);
-                           },
-                           [&](const platform::ResizeEvent& e) -> void { handle_resize(e); },
-                           [&](const platform::DpiChangeEvent& e) -> void { handle_dpi_change(e); },
-                           [&](const platform::ThemeChangedEvent& e) -> void { handle_theme_change(e); },
-                           [&](const platform::DestroyEvent&) -> void { handle_destroy(); },
+                       [&](const device::MouseMoveEvent& e) -> void {
+                           mouse_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::MouseButtonEvent& e) -> void {
+                           mouse_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::MouseWheelEvent& e) -> void {
+                           mouse_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::KeyEvent& e) -> void {
+                           keyboard_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const device::CharEvent& e) -> void {
+                           keyboard_.handle(e);
+                           handle_input(event);
+                       },
+                       [&](const platform::ResizeEvent& e) -> void {
+                           handle_resize(e);
+                       },
+                       [&](const platform::DpiChangeEvent& e) -> void {
+                           handle_dpi_change(e);
+                       },
+                       [&](const platform::ThemeChangedEvent& e) -> void {
+                           handle_theme_change(e);
+                       },
+                       [&](const platform::DestroyEvent&) -> void {
+                           handle_destroy();
+                       },
                    },
                    event);
 
@@ -86,4 +101,4 @@ namespace neko::engine {
             destroy_handler_();
         }
     }
-} // namespace neko::engine
+}

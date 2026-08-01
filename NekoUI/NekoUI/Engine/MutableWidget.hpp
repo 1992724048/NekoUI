@@ -15,7 +15,7 @@ namespace neko::engine {
         using MutableWidgetList = std::list<MutableWidget>;
         using MutableWidgetVector = std::vector<MutableWidget>;
         using WidgetContainer = std::variant<std::monostate, MutableWidgetList, MutableWidgetVector, std::shared_ptr<widget::Widget>>;
-    } // namespace internal
+    }
 
     class MutableWidget : public internal::WidgetContainer {
     public:
@@ -80,4 +80,4 @@ namespace neko::engine {
             return std::get<internal::MutableWidgetVector>(*this);
         }
     };
-} // namespace neko::engine
+}
