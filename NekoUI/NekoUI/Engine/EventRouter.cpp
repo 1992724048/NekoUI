@@ -77,7 +77,7 @@ namespace neko::engine {
             const auto target = hit_tester_.hit_test(mouse_);
             const auto prev = last_mouse_target_.lock();
             if (prev && (!target || prev.get() != target->get())) {
-                prev->input(context_, event); // 旧目标收 MouseMove → is_inside=false → 清除 hover
+                prev->input(context_, event);
             }
             last_mouse_target_ = target ? std::weak_ptr<widget::Widget>{*target} : std::weak_ptr<widget::Widget>{};
             if (target) {

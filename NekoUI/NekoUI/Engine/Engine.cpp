@@ -1,4 +1,4 @@
-﻿// 2026-07-26 02:19:38
+﻿// 2026-08-02 04:25:14
 
 #include "Engine.hpp"
 #include "EventRouter.hpp"
@@ -125,12 +125,10 @@ namespace neko::engine {
             return;
         }
 
-        std::shared_lock lock(tree_manager_.mutex_); // 树结构保护：layout/draw 遍历与 build<T> 突变互斥
+        std::shared_lock lock(tree_manager_.mutex_);
 
-        // 阶段一：布局（草稿期每帧全量）
         root->layout({.x = 0, .y = 0, .z = size.width, .w = size.height}, *context);
 
-        // 阶段二：绘制（引擎集中式前序 DFS）
         backend->begin();
         draw_widget(*root, *context, *backend);
         backend->end();
@@ -138,7 +136,7 @@ namespace neko::engine {
         invalidation_.clear();
     }
 
-    auto Engine::draw_widget(widget::Widget& w, engine::Context& context, backend::Backend& backend) -> void {
+    auto Engine::draw_widget(widget::Widget& w, Context& context, backend::Backend& backend) -> void {
         w.draw(w.get_bounds(), context, backend);
         visit_children(w,
                        [&](const std::shared_ptr<widget::Widget>& child) -> void {

@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// 2026-08-02 04:25:02
+
+#pragma once
 #include <atomic>
 #include <memory>
 #include <type_traits>
@@ -43,8 +45,8 @@ namespace neko::engine {
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
-        auto rebuild() -> void;                                  // 立即全树重建（保留，外部调用入口）
-        auto schedule_rebuild() -> void;                         // 置标志 + 请求帧，帧首合并重建
+        auto rebuild() -> void;
+        auto schedule_rebuild() -> void;
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;
     private:
@@ -55,7 +57,7 @@ namespace neko::engine {
         std::shared_ptr<device::Keyboard> keyboard;
 
         auto render_frame() -> void;
-        auto draw_widget(widget::Widget& w, engine::Context& context, backend::Backend& backend) -> void;
+        static auto draw_widget(widget::Widget& w, Context& context, backend::Backend& backend) -> void;
 
         InvalidationTracker invalidation_;
         TreeManager tree_manager_;

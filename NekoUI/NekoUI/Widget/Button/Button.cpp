@@ -1,4 +1,6 @@
-﻿#include "Button.hpp"
+﻿// 2026-08-02 04:26:20
+
+#include "Button.hpp"
 
 #include <limits>
 #include <utility>
@@ -8,13 +10,13 @@
 #include "../../Platform/Event.hpp"
 
 namespace neko::widget {
-    Button::Button(engine::Context& context, std::string text, std::function<void()> on_click) :
+    Button::Button(const engine::Context& context, std::string text, std::function<void()> on_click) :
         text_(std::move(text)),
         on_click_(std::move(on_click)) {
         scale_.bind(context.anim_inc, context.anim_dec);
     }
 
-    auto Button::layout(Vec4I available, engine::Context& /*context*/) -> void {
+    auto Button::layout(const Vec4I available, engine::Context& /*context*/) -> void {
         auto effective = available;
         const auto use_parent = size_.size.x == std::numeric_limits<float>::max() || size_.size.y == std::numeric_limits<float>::max();
         if (!use_parent) {
@@ -25,8 +27,8 @@ namespace neko::widget {
     }
 
     auto Button::draw(Vec4I /*rect*/, engine::Context& context, backend::Backend& backend) -> Rect {
-        auto bg = background_.color.value != 0 ? background_ : style::Background{hover_ ? context.scheme.secondaryContainer : context.scheme.primary};
-        auto tc = text_color_.value != 0 ? text_color_ : Color{0xFFFFFFFF};
+        const auto bg = background_.color.value != 0 ? background_ : style::Background{hover_ ? context.scheme.secondaryContainer : context.scheme.primary};
+        const auto tc = text_color_.value != 0 ? text_color_ : Color{0xFFFFFFFF};
 
         const auto s = scale_.tick();
         const auto center_x = (bounds.x + bounds.z) / 2;
@@ -40,10 +42,7 @@ namespace neko::widget {
             backend.draw_rect(visual, border_.color, static_cast<int>(border_.size));
         }
         if (!text_.empty()) {
-            const auto text_pos = Vec2I{
-                .x = visual.x + (visual.z - visual.x) / 10,
-                .y = visual.y + (visual.w - visual.y) / 2
-            };
+            const auto text_pos = Vec2I{.x = visual.x + (visual.z - visual.x) / 10, .y = visual.y + (visual.w - visual.y) / 2};
             backend.draw_text(text_, text_pos, tc, font_size_);
         }
         return {.x = visual.x, .y = visual.y, .width = visual.z - visual.x, .height = visual.w - visual.y};

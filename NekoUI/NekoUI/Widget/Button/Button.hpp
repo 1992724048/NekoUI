@@ -9,7 +9,7 @@
 namespace neko::widget {
     class Button final : public Widget, public style::BackgroundStyle, public style::SizeStyle, public style::BorderStyle, public style::TextStyle {
     public:
-        explicit Button(engine::Context& context, std::string text = {}, std::function<void()> on_click = {});
+        explicit Button(const engine::Context& context, std::string text = {}, std::function<void()> on_click = {});
 
         auto layout(Vec4I rect, engine::Context& context) -> void override;
         auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect override;
