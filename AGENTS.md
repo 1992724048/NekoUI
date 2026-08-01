@@ -133,7 +133,7 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
 ## Source Tree
 
 ```
-NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .clang-format）
+NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .clang-format, README.md）
 └── NekoUI/                                ← VS 项目目录（含 main.cpp, .vcxproj）
     ├── main.cpp                           # 入口：main()、窗口创建、消息循环、Engine 启动、示例 UI
     ├── NekoUI.vcxproj                     # VS 项目文件
@@ -209,13 +209,18 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 
 ### 构建配置
 
-| 配置    | 平台  | 工具集                  | 语言标准  | 运行时库 | 备注                                                           |
-| ------- | ----- | ----------------------- | --------- | -------- | -------------------------------------------------------------- |
-| Debug   | Win32 | v145 (MSVC)             | C++20     | /MDd     | SDL 检查开启                                                   |
-| Release | Win32 | v145 (MSVC)             | C++20     | /MD      | 全程序优化                                                     |
-| Debug   | x64   | Intel C++ Compiler 2026 | C++latest | /MTd     | TBB/IPP(Static)/MKL(Parallel)/DAL/MPI、ARROWLAKE-S、Async 异常 |
-| Release | x64   | Intel C++ Compiler 2026 | C++latest | /MT      | 同上 + PGO Instrumentation、CFG Guard、MaxSpeedHighLevel       |
+| 配置      | 平台    | 工具集                     | 语言标准      | 运行时库     | 备注                                                                                                            |
+|---------|-------|-------------------------|-----------|----------|---------------------------------------------------------------------------------------------------------------|
+| Debug   | Win32 | v145 (MSVC)             | C++20     | 默认（/MDd） | SDL 检查开启                                                                                                      |
+| Release | Win32 | v145 (MSVC)             | C++20     | 默认（/MD）  | 全程序优化                                                                                                         |
+| Debug   | x64   | Intel C++ Compiler 2026 | C++latest | /MTd     | TBB/IPP(Static)/MKL(Parallel)/DAL/MPI、ARROWLAKE-S、Async 异常、InterproceduralOptimization、EnableSegmentHeap      |
+| Release | x64   | Intel C++ Compiler 2026 | C++latest | /MT      | 同上 + PGO Instrumentation、CFG Guard、MaxSpeedHighLevel、StringPooling、FavorSizeOrSpeed=Speed、GuardEHContMetadata |
 
+- **平台映射**: `.slnx` 中平台名为 `x86`（`<Platform Name="x86" />`），对应 vcxproj 内部配置名 Win32
+- **Win32 运行时库**: vcxproj 未显式声明 `RuntimeLibrary`，/MDd、/MD 为 `UseDebugLibraries` 默认值
+- **x64 Debug 补充**: `InterproceduralOptimization=true`、`BrowseInformation=false`（避免 BK1506 编译错误）、`LocalDebuggerCommand=$(TargetPath)`（修复无法启动调试）、`EnableSegmentHeap=true`
+- **x64 Release 补充**: `StringPooling=true`、`InlineFunctionExpansion=AnySuitable`、`FavorSizeOrSpeed=Speed`、`GuardEHContMetadata=true`、PGO `ProfileDirectory=coverage.profraw`
+- **ARROWLAKE-S**: 对应 `GenerateAlternateCodePaths=ARROWLAKE-S` + `UseProcessorExtensions=ARROWLAKE-S`
 - **输出目录**: `$(SolutionDir)$(Platform)-$(Configuration)/`（如 `x64-Debug/`）
 - **中间目录**: `$(SolutionDir)$(Platform)-$(Configuration)/.tmep/`
 - **子系统**: 控制台（Console）
