@@ -1,9 +1,9 @@
-﻿#pragma once
+﻿// 2026-07-27 23:30:02
+
+#pragma once
 
 #include <algorithm>
 #include <chrono>
-#include <climits>
-#include <shared_mutex>
 #include <string_view>
 #include <type_traits>
 #include <utility>

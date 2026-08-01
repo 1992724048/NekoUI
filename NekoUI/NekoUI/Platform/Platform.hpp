@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <memory>
 #include <optional>
 
@@ -50,8 +50,9 @@ namespace neko::platform {
     inline std::unique_ptr<Platform> Platform::platform{nullptr};
 }
 
-// 用法：在平台实现的 .cpp 文件中，namespace neko::platform { ... } 内调用
-// NEKO_REGISTER_PLATFORM(Win32)
+/* 用法：在平台实现的 .cpp 文件中，namespace neko::platform { ... } 内调用
+ * NEKO_REGISTER_PLATFORM(Win32)
+ */
 #define NEKO_REGISTER_PLATFORM(T)                                             \
     namespace {                                                               \
         [[maybe_unused]] const auto kNEKO_REGISTER_PLATFORM_##T = [] {         \

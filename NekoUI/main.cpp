@@ -40,7 +40,7 @@ namespace {
 
         return DefWindowProcW(hwnd, msg, wparam, lparam);
     }
-} // namespace
+}
 
 auto main(int argc, char* argv[]) -> int try {
     const std::wstring class_name = L"NekoUI";

@@ -28,4 +28,4 @@ namespace neko::engine {
         };
         build_recursive(build_recursive, *root);
     }
-} // namespace neko::engine
+}
