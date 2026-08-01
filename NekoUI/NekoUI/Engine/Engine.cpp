@@ -27,7 +27,12 @@ namespace neko::engine {
         const auto initial_dpi = static_cast<unsigned int>(std::round(this->backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
 
-        context->anim_inc = std::bind(&InvalidationTracker::anim_inc, &invalidation_);
+        context->anim_inc = [this]() -> void {
+            invalidation_.anim_inc();
+            if (render_scheduler_) {
+                render_scheduler_->request_frame();
+            }
+        };
         context->anim_dec = std::bind(&InvalidationTracker::anim_dec, &invalidation_);
 
         context->widget_tree_changed = std::bind(&Engine::schedule_rebuild, this);

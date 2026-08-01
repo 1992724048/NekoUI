@@ -1,6 +1,7 @@
 #include "RenderScheduler.hpp"
 #include "InvalidationTracker.hpp"
 
+#include <chrono>
 #include <thread>
 
 namespace neko::engine {
@@ -52,7 +53,7 @@ namespace neko::engine {
 
     auto RenderScheduler::render_wait() -> bool {
         if (invalidation_.has_active_animations()) {
-            std::this_thread::yield();
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
             return true;
         }
         std::unique_lock lock(render_mutex_);
