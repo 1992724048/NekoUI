@@ -43,7 +43,7 @@ namespace neko::engine {
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
-        auto rebuild() -> void;                                  // 立即全树重建（set_root_widget 用）
+        auto rebuild() -> void;                                  // 立即全树重建（保留，外部调用入口）
         auto schedule_rebuild() -> void;                         // 置标志 + 请求帧，帧首合并重建
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;

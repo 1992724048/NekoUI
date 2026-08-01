@@ -20,6 +20,7 @@ namespace neko::engine {
         backend{std::move(backend)},
         native_handle_(this->backend->get_native_handle()) {
         context = std::make_unique<Context>();
+        context->tree_mutex = &tree_manager_.mutex_;
 
         mouse = std::make_shared<device::Mouse>();
         keyboard = std::make_shared<device::Keyboard>();
@@ -81,7 +82,9 @@ namespace neko::engine {
 
     auto Engine::rebuild() -> void {
         widget_builder_.build(*context);
-        render_scheduler_->request_frame();
+        if (render_scheduler_) {
+            render_scheduler_->request_frame();
+        }
     }
 
     auto Engine::schedule_rebuild() -> void {
@@ -121,6 +124,8 @@ namespace neko::engine {
             invalidation_.clear();
             return;
         }
+
+        std::shared_lock lock(tree_manager_.mutex_); // 树结构保护：layout/draw 遍历与 build<T> 突变互斥
 
         // 阶段一：布局（草稿期每帧全量）
         root->layout({.x = 0, .y = 0, .z = size.width, .w = size.height}, *context);

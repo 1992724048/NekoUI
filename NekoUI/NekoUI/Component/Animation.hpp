@@ -373,4 +373,4 @@ namespace neko::component {
             return *this;
         }
     };
-} // namespace neko::animation
+} // namespace neko::component

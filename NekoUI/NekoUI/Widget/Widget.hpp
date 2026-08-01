@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <mutex>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -93,6 +94,12 @@ namespace neko::widget {
         auto child = std::make_shared<T>(*context_, std::forward<Args>(args)...);
         child->parent_ = this;
         auto& ref = *child;
+
+        // 树结构突变与渲染线程 layout/draw 遍历互斥（tree_manager_.mutex_）
+        std::unique_lock<std::shared_mutex> tree_lock;
+        if (context_ && context_->tree_mutex) {
+            tree_lock = std::unique_lock<std::shared_mutex>(*context_->tree_mutex);
+        }
 
         std::visit([&]<typename V>(V& val) -> auto {
                        if constexpr (std::is_same_v<V, std::monostate>) {

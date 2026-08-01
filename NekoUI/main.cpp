@@ -73,17 +73,17 @@ auto main(int argc, char* argv[]) -> int try {
     const auto page = engine->set_root_widget<neko::widget::Column>();
 
     page->children([&](auto& col) -> auto {
-        col.template build<neko::widget::Button>("Button 1").on_click([] -> auto {
-            std::println("Button 1 clicked!");
-        });
+        auto& b1 = col.template build<neko::widget::Button>("Button 1");
+        b1.size_.size = {.x = 120.0F, .y = 40.0F};
+        b1.on_click([] -> auto { std::println("Button 1 clicked!"); });
 
-        col.template build<neko::widget::Button>("Button 2").on_click([] -> auto {
-            std::println("Button 2 clicked!");
-        });
+        auto& b2 = col.template build<neko::widget::Button>("Button 2");
+        b2.size_.size = {.x = 120.0F, .y = 40.0F};
+        b2.on_click([] -> auto { std::println("Button 2 clicked!"); });
 
-        col.template build<neko::widget::Button>("Button 3").on_click([] -> auto {
-            std::println("Button 3 clicked!");
-        });
+        auto& b3 = col.template build<neko::widget::Button>("Button 3");
+        b3.size_.size = {.x = 120.0F, .y = 40.0F};
+        b3.on_click([] -> auto { std::println("Button 3 clicked!"); });
     });
 
     MSG msg{};

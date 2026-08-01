@@ -52,5 +52,6 @@ namespace neko::engine {
         std::weak_ptr<RenderScheduler> scheduler_;
         std::function<void()> destroy_handler_;
         InvalidationTracker& invalidation_;
+        mutable std::weak_ptr<widget::Widget> last_mouse_target_;
     };
 }

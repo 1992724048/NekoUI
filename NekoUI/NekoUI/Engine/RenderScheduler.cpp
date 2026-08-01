@@ -29,6 +29,9 @@ namespace neko::engine {
     auto RenderScheduler::stop() -> void {
         render_thread_.request_stop();
         render_notify_.notify_one();
+        if (render_thread_.joinable() && render_thread_.get_id() != std::this_thread::get_id()) {
+            render_thread_.join();
+        }
     }
 
     auto RenderScheduler::consume_resize() -> std::optional<type::Vec2I> {

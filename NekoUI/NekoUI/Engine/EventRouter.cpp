@@ -73,6 +73,18 @@ namespace neko::engine {
     }
 
     auto EventRouter::handle_input(const platform::Event& event) const -> void {
+        if (std::holds_alternative<device::MouseMoveEvent>(event)) {
+            const auto target = hit_tester_.hit_test(mouse_);
+            const auto prev = last_mouse_target_.lock();
+            if (prev && (!target || prev.get() != target->get())) {
+                prev->input(context_, event); // 旧目标收 MouseMove → is_inside=false → 清除 hover
+            }
+            last_mouse_target_ = target ? std::weak_ptr<widget::Widget>{*target} : std::weak_ptr<widget::Widget>{};
+            if (target) {
+                (*target)->input(context_, event);
+            }
+            return;
+        }
         if (const auto target = hit_tester_.hit_test(mouse_)) {
             (*target)->input(context_, event);
         }

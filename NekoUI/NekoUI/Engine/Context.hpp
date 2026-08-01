@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <functional>
 #include <memory>
+#include <shared_mutex>
 
 #include "../Device/Keyboard.hpp"
 #include "../Device/Mouse.hpp"
@@ -28,6 +29,8 @@ namespace neko::engine {
 
         std::weak_ptr<device::Mouse> mouse;
         std::weak_ptr<device::Keyboard> keyboard;
+
+        std::shared_mutex* tree_mutex{nullptr};
 
         std::weak_ptr<widget::Widget> root;
 
