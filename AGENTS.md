@@ -66,10 +66,10 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 
 | 类                    | 职责                                                                                                                                                                                                                                                                                     |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Engine`              | 总控制器：拥有 Backend、TreeManager、WidgetBuilder、Renderer、HitTester、MsgPump、RenderScheduler、EventRouter、InvalidationTracker、输入设备、Context。构造函数通过 std::bind 将所有子系统回调连接起来。提供 `set_root_widget<T>()` 模板工厂、`render_frame()` 帧绘制、`rebuild()` 重建 |
+| `Engine`              | 总控制器：拥有 Backend、TreeManager、WidgetBuilder、HitTester、MsgPump、RenderScheduler、EventRouter、InvalidationTracker、输入设备、Context。构造函数通过 std::bind 将所有子系统回调连接起来。提供 `set_root_widget<T>()` 模板工厂、`render_frame()` 帧绘制、`rebuild()` 重建 |
 | `Context`             | 引擎共享上下文：`mark_dirty`/`widget_dirty`/`anim_inc`/`anim_dec`/`widget_tree_changed` 回调、Mouse/Keyboard 弱引用、`root`（弱引用根 Widget）、`ColorScheme`、`native_handle`                                                                                                           |
 | `TreeManager`         | Widget 树管理：root/focus 原子指针（`std::atomic<shared_ptr<Widget>>`）、ID→Widget 映射、index→Widget 映射、`next_focus`/`prev_focus` 焦点导航。`register_widget()` 分配 z_index 和路径并调用 `build()`。`std::shared_mutex` 线程安全                                                    |
-| `Renderer`            | 两阶段渲染器：Phase 1 Layout（`root->layout()` 递归计算所有 Widget bounds）+ Phase 2 Draw（`root->draw()` 递归渲染），持有 `TreeManager&` 引用                                                                                                                                           |
+| `Renderer`            | 已删除。渲染驱动并入 `Engine::render_frame`（Engine.cpp:88-98）：consume_resize → `backend->begin()` → `root->draw()`（全库唯一 draw 调用点）→ `backend->end()` → `invalidation_.clear()`。⚠️ 当前无布局阶段（`root->layout()` 无任何调用者），draw 不递归子节点（仅 root 被绘制）                                                                 |
 | `HitTester`           | 命中测试器：递归反向遍历子节点（z 顺序），返回最上层命中的 `shared_ptr<Widget>`，持有 `TreeManager&` 引用                                                                                                                                                                                |
 | `WidgetBuilder`       | 构建遍历器：递归注册 Widget 到 TreeManager 的 ID/index 映射，调用每个 Widget 的 `build()`。`Engine::rebuild()` 触发重建                                                                                                                                                                  |
 | `WidgetVisitor`       | 工具模板：`visit_children()` 统一分发 `MutableWidget` 四种变体（monostate/shared_ptr/list/vector），为每个子 Widget 调用访问者函数                                                                                                                                                       |
@@ -77,7 +77,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 | `InvalidationTracker` | 脏标记跟踪：`dirty_` 原子标志 + `animation_` 计数器 + 脏 Widget 列表（`shared_mutex` 保护）。提供 `needs_frame()`、`consume_dirty_list()`                                                                                                                                                |
 | `MsgPump`             | 线程安全消息队列：有界 SPSC 环形缓冲区（32 槽）+ `std::counting_semaphore<32>` + `std::condition_variable` + `std::jthread`                                                                                                                                                              |
 | `RenderScheduler`     | 独立渲染线程：`std::jthread` + `condition_variable`，帧回调驱动。`request_frame()` 唤醒渲染、`set_pending_size()` 处理 resize                                                                                                                                                            |
-| `MutableWidget`       | 变体容器：`std::variant<monostate, list<MutableWidget>, vector<MutableWidget>, shared_ptr<Widget>>`，支持四种 Widget 子节点组织方式。提供 `is_null/is_widget/is_list/is_vector` 查询 + `as_widget/as_list/as_vector` 访问器                                                              |
+| `MutableWidget`       | 变体容器：`std::variant<monostate, list<MutableWidget>, vector<MutableWidget>, weak_ptr<Widget>>`（MutableWidget.hpp:17，子控件仅弱引用、无强持有者），支持四种 Widget 子节点组织方式。提供 `is_null/is_widget/is_list/is_vector` 查询 + `as_widget/as_list/as_vector` 访问器                                                              |
 
 **全局消息流**：
 
@@ -88,14 +88,18 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
       → HitTester::hit_test() → Widget::input() / RenderScheduler::set_pending_size / Context::scheme 更新 / Engine::clear() → TreeManager::clear()
 ```
 
+**重绘触发**：输入事件本身不触发重绘；仅 Resize/DpiChange/ThemeChanged 或控件内部调用 `mark_dirty()` 时，`dispatch()` 尾部（EventRouter.cpp:70-72）才调用 `request_frame()`
+
 ### 6. Widget 系统 (`neko::widget`)
 
-- **Widget** 基类：虚方法 `layout(Vec4I, Context&)`、`draw(Vec4I, Context&, Backend&) -> Rect`、`build(Context&)`、`event(Context&)`、`input(Context&, Event)`、`hit_test(Mouse) -> bool`。Protected 成员：`bounds`（`Vec4I`）、`isFocus`（`std::atomic_bool`）、`isDirty`（`std::atomic_bool`）、`context_`。私有成员：`children_`（`MutableWidget`）、`z_index_`、`id_`、`path_`
+- **Widget** 基类：虚方法 `layout(Vec4I, Context&)`、`draw(Vec4I, Context&, Backend&) -> Rect`、`build(Context&)`、`event(Context&)`、`input(Context&, Event)`、`hit_test(Mouse) -> bool`。Protected 成员：`bounds`（`Vec4I`）、`isFocus`（`std::atomic_bool`）、`isDirty`（`std::atomic_bool`）、`context_`。私有成员：`children_`（`MutableWidget`，变体存储 `weak_ptr<Widget>`，见下）、`z_index_`、`id_`、`path_`
   - **Builder API**：`build<T>(Args...) -> T&`（创建子 Widget 并链式配置）、`children(fn)`（lambda 作用域批量创建子节点）、`parent()`（获取父 Widget）
+  - **build\<T\> 内部流程**（Widget.hpp:90-117）：`make_shared` 创建子控件 → 设 `parent_` → `std::visit` 按当前变体插入 `children_`（monostate → 存为单子；shared_ptr 变体 → 升级为 list；list/vector → `emplace_back`）→ 调用 `context_->widget_tree_changed()`（→ `Engine::rebuild` 全树重建）→ 返回 `T&` 供链式配置
+  - ⚠️ **当前 bug**：`build<T>` 的局部 `shared_ptr` 在函数返回时析构，`children_` 仅存 `weak_ptr`，且 TreeManager 的 id/index 映射（TreeManager.hpp:58-59）也是 `weak_ptr`——子控件无强持有者，**创建后立即销毁**，树中仅 root（TreeManager::root_ 强持有）存活
   - **Style Mixin 继承**：Widget 通过继承 `style::BackgroundStyle`、`style::SizeStyle`、`style::BorderStyle`、`style::TextStyle` 等 mixin 结构体获得样式属性，零运行时开销
 - **Button**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`、`BorderStyle`、`TextStyle`，实现 `layout`（SizeStyle 回退 → 固定尺寸/父尺寸）、`draw`（ColorScheme 回退 → 背景/边框/文字居中）、`input`（左键点击 → `on_click` 回调）、`hit_test`（`Mouse::is_inside(bounds)`）。构造函数 `Button(Context&, text="", onClick=nullptr)`，链式 setter `on_click()`/`text()`
-- **Column**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，垂直布局容器。实现 `layout`（垂直栈式布局子 Widget）和 `draw`（背景绘制）、`build`/`event`/`input`/`hit_test`。子节点遍历由 `Renderer::render` 通过 `TreeManager` 处理
-- **Row**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，水平布局容器。实现 `layout`（水平栈式布局子 Widget）和 `draw`（背景绘制）、`hit_test`。子节点遍历由 `Renderer::render` 通过 `TreeManager` 处理
+- **Column**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，垂直布局容器。实现 `layout`（垂直栈式布局子 Widget，经 `visit_children` 遍历）和 `draw`（仅背景绘制，不遍历子节点）、`build`/`event`/`input`/`hit_test`
+- **Row**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，水平布局容器。实现 `layout`（水平栈式布局子 Widget）和 `draw`（背景绘制）、`hit_test`
 - **Center**：继承 `Widget` + `BackgroundStyle`，居中布局容器。实现 `draw`（ColorScheme 回退 → 背景绘制）、`layout`（计算子 Widget 自然尺寸后居中放置）、`hit_test`
 
 ### 7. 样式系统 (`neko::style`)
@@ -166,8 +170,6 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         │   ├── MsgPump.hpp                # 线程安全消息队列声明
         │   ├── MsgPump.cpp                # SPSC 环形缓冲区实现（32 槽）
         │   ├── MutableWidget.hpp          # 变体 Widget 容器（四种形式：monostate/list/vector/shared_ptr）
-        │   ├── Renderer.hpp               # 渲染器声明（递归渲染遍历 + 布局偏移计算）
-        │   ├── Renderer.cpp               # 渲染器实现
         │   ├── RenderScheduler.hpp        # 独立渲染线程声明
         │   ├── RenderScheduler.cpp        # 渲染线程实现
         │   ├── TreeManager.hpp            # Widget 树管理声明（root/focus 原子指针 + ID/index 映射 + 焦点导航）
@@ -306,8 +308,14 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 
 - **草稿状态** — 核心架构已建立，渲染和交互链路可运行
 - **已实现**：跨平台渲染后端抽象（D3D11 实现）、HCT Material You 色彩引擎（sRGB→XYZ→CAM16→HCT 完整管线）、平台抽象（IME TSF / 11 窗口操作 / 注册表主题检测 + 强调色）、响应式 Widget 树（含焦点导航）、Widget Builder API（`build<T>()` / `children()`）、编译期 style mixin 继承（零运行时开销）、12 种速率曲线动画引擎、线程安全事件传递、系统主题变化检测与传递（Light/Dark + AccentColor）、全部核心 Widget（Button/Center/Column/Row）已实现绘制和交互
-- **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`Renderer`（渲染遍历）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）五个独立组件，贯彻单一职责原则
+- **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）四个独立组件（`Renderer` 已删除，渲染驱动并入 `Engine::render_frame`），贯彻单一职责原则
 - **样式系统重构（已完成）**：移除运行时 `StyleSheet` hashmap 样式表和 `Stylable` CRTP，替换为编译期 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），零运行时开销，无字符串查找。Widget 通过多重继承选择所需 mixin，`class_name_` 和 `style()` 链式调用一并移除
-- **布局下放（已完成）**：布局计算从 Engine 集中式 Renderer 下放到各 Widget。Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算。Renderer 简化为两阶段（Phase 1 `root->layout()` 全树布局 + Phase 2 递归 `draw()`），不再持有布局方向状态。`horizontal_` 成员从 Widget 基类移除。Center 子节点渲染不再绕过 Renderer 递归模型，消除双重绘制问题
+- **布局下放（已完成，但当前无驱动）**：布局计算曾从 Engine 集中式 Renderer 下放到各 Widget——Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算，`horizontal_` 成员从 Widget 基类移除。⚠️ **现状**：Renderer 类已删除，布局阶段未迁入 `Engine::render_frame`，`root->layout()` 无任何调用者——布局虚方法保留但从不执行
 - **未实现**：无可运行的测试、无裁剪/溢出处理、无 margin/padding 支持、无最小/最大尺寸约束、无 Wrap/基线对齐等高级布局特性
+- **断点**：
+  - 子控件 `weak_ptr` 无强持有者，`build<T>` 后立即析构，树中仅 root 存活
+  - 无布局阶段驱动（`root->layout()` 无调用者）
+  - draw 不递归，子树不渲染（`root->draw()` 为全库唯一调用点）
+  - 动画引擎未接线（`AnimationBase::bind` 无调用者；`anim_inc`/`anim_dec` 已绑定 InvalidationTracker + RenderScheduler 动画期间 yield 忙等逻辑存在，但无控件使用）
+  - 输入事件不触发重绘（仅 resize/dpi/theme 事件或显式 `mark_dirty()` 才 `request_frame`）
 - **主题色获取**：使用注册表 `HKCU\...\Windows\DWM\AccentColor`（ABGR → RGBA 转换），不再使用已过时的 `DwmGetColorizationColor`
