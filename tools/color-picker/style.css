@@ -62,9 +62,9 @@ body {
     background-color: color-mix(in srgb, var(--bg) 72%, transparent);
     background-image:
         radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--accent) 55%, transparent) 1px, transparent 1.6px),
-        linear-gradient(color-mix(in srgb, var(--border) 30%, transparent) 1.5px, transparent 1.5px),
-        linear-gradient(90deg, color-mix(in srgb, var(--border) 30%, transparent) 1.5px, transparent 1.5px);
-    background-size: 10px 10px;
+        linear-gradient(color-mix(in srgb, var(--border) 30%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--border) 30%, transparent) 1px, transparent 1px);
+    background-size: 20px 20px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
