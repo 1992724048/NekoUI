@@ -45,6 +45,9 @@ body {
 }
 
 .tone-cell {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
     cursor: pointer;
     border: none;
     padding: 0;
@@ -78,26 +81,84 @@ body {
 
 .toast {
     position: fixed;
-    left: 50%;
+    right: 32px;
     bottom: 32px;
-    transform: translateX(-50%);
     padding: 8px 16px;
     border-radius: 6px;
-    background: var(--text);
-    color: var(--bg);
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+    color: var(--text);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.2s ease;
 }
 
-.toast.show {
+.toast.visible {
     opacity: 1;
+}
+
+.panel h2 {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.seed-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.seed-row input[type="color"] {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+}
+
+.seed-row input[type="text"] {
+    width: 130px;
+    padding: 8px 12px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+    border-radius: 6px;
+}
+
+.palette-ramp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
 }
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app">
+    <section class="panel">
+        <h2>Seed 颜色</h2>
+        <div class="seed-row">
+            <input type="color" id="seed-color" value="#6750a4">
+            <input type="text" id="seed-hex" value="#6750a4" maxlength="7" spellcheck="false">
+            <button type="button" id="seed-random" class="btn">随机种子</button>
+        </div>
+        <div class="palette-ramp" id="ramp-primary"></div>
+        <div class="palette-ramp" id="ramp-secondary"></div>
+        <div class="palette-ramp" id="ramp-tertiary"></div>
+        <div class="palette-ramp" id="ramp-neutral"></div>
+        <div class="palette-ramp" id="ramp-neutralVariant"></div>
+        <div class="palette-ramp" id="ramp-error"></div>
+    </section>
+</div>
 <script>
+'use strict';
 (function () {
     'use strict';
 
@@ -782,6 +843,77 @@ body {
         document.title = '⚠ selfCheck FAIL';
     }
 })();
+
+// 面板①：Seed 选取 + 色调色带
+
+const { copyText } = NekoHCT;
+
+const state = { seed: '#6750a4' };
+
+function showToast(msg) {
+    let toastEl = document.querySelector('.toast');
+    if (toastEl === null) {
+        toastEl = document.createElement('div');
+        toastEl.className = 'toast';
+        document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = msg;
+    toastEl.classList.add('visible');
+    clearTimeout(toastEl._timer);
+    toastEl._timer = setTimeout(() => toastEl.classList.remove('visible'), 1200);
+}
+
+function renderPaletteRamps(seedHex) {
+    const palettes = NekoHCT.palettes(seedHex);
+    for (const [name, pal] of Object.entries(palettes)) {
+        const container = document.getElementById('ramp-' + name);
+        container.textContent = '';
+        for (let tone = 0; tone <= 100; tone += 5) {
+            const rgb = pal.tone(tone);
+            const cell = document.createElement('div');
+            cell.className = 'tone-cell';
+            cell.style.background = NekoHCT.rgbToHex(rgb);
+            cell.title = 'tone ' + tone + '  ' + NekoHCT.rgbToHex(rgb);
+            cell.dataset.tone = tone;
+            cell.dataset.hex = NekoHCT.rgbToHex(rgb);
+            cell.addEventListener('click', () => copyText(cell.dataset.hex).then(() => showToast('已复制 ' + cell.dataset.hex)));
+            container.appendChild(cell);
+        }
+    }
+}
+
+const seedColorInput = document.getElementById('seed-color');
+const seedHexInput = document.getElementById('seed-hex');
+const seedRandomButton = document.getElementById('seed-random');
+
+seedColorInput.addEventListener('input', () => {
+    state.seed = seedColorInput.value;
+    seedHexInput.value = seedColorInput.value;
+    renderPaletteRamps(state.seed);
+});
+
+seedHexInput.addEventListener('change', () => {
+    const rgb = NekoHCT.hexToRgb(seedHexInput.value.trim());
+    if (rgb === null) {
+        seedHexInput.value = state.seed;
+        return;
+    }
+    const normalized = NekoHCT.rgbToHex(rgb);
+    state.seed = normalized;
+    seedColorInput.value = normalized;
+    seedHexInput.value = normalized;
+    renderPaletteRamps(normalized);
+});
+
+seedRandomButton.addEventListener('click', () => {
+    const randomHex = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+    state.seed = randomHex;
+    seedColorInput.value = randomHex;
+    seedHexInput.value = randomHex;
+    renderPaletteRamps(randomHex);
+});
+
+renderPaletteRamps(state.seed);
 </script>
 </body>
 </html>
