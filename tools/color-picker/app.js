@@ -920,7 +920,23 @@ const seedRandomButton = document.getElementById('seed-random');
 
 // 流星雨背景装饰：参考实现风格——--x 横向铺开、--z 深度视差、--d 延迟错开，固定 -45° 同向划过；
 // 每颗流星颜色从当前 scheme 的 47 个角色中随机选取（过滤深色角色保证两种主题下可见）；seed/主题变更时重新生成；reduced-motion 时禁用
-const METEOR_COUNT = 15;
+// 参考实现的 13 组固定 (--x, --z) 配对：近处（z 大正）配小 x、远处（z 大负）配大 x，
+// 大位移补偿 translateZ 透视缩小，保证全屏铺开；颜色与延迟仍随机
+const METEOR_PAIRS = [
+    [3, 3],
+    [3, 2],
+    [4, 1],
+    [4, 0],
+    [6, -1],
+    [6, -2],
+    [8, -3],
+    [10, -4],
+    [12, -5],
+    [14, -6],
+    [16, -7],
+    [18, -8],
+    [20, -9],
+];
 let meteorContainer = null;
 
 function randomSchemeColor() {
@@ -940,13 +956,14 @@ function refreshMeteors() {
         document.body.appendChild(meteorContainer);
     }
     meteorContainer.textContent = '';
-    for (let i = 0; i < METEOR_COUNT; i++) {
+    for (let i = 0; i < METEOR_PAIRS.length; i++) {
+        const [x, z] = METEOR_PAIRS[i];
         const meteor = document.createElement('div');
         meteor.className = 'meteor';
-        // 参考实现：无 left/top 锚点（元素默认容器静态位置），全靠 --x 横向位移 + --z 纵深视差铺开
-        meteor.style.setProperty('--x', (3 + Math.random() * 18).toFixed(1));
-        meteor.style.setProperty('--z', (3 - Math.random() * 12).toFixed(1));
-        // --d 均匀递进（1,2,3 循环，*0.3s 后延迟 0.3/0.6/0.9s 三波错开），避免随机延迟扎堆造成"一阵一阵"
+        // 固定配对：无 left/top 锚点（flex 居中容器静态位置在中心），--x 位移与 --z 透视缩放互为补偿
+        meteor.style.setProperty('--x', x);
+        meteor.style.setProperty('--z', z);
+        // --d 均匀递进（1,2,3 循环，*0.3s 后延迟 0.3/0.6/0.9s 三波错开），配对后每波视觉密度均匀
         meteor.style.setProperty('--d', (i % 3) + 1);
         meteor.style.setProperty('--mc', randomSchemeColor());
         meteorContainer.appendChild(meteor);
