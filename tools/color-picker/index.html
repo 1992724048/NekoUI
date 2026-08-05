@@ -1136,9 +1136,10 @@ function renderHctSlider() {
     const swatchEl = document.getElementById('hct-swatch');
     swatchEl.style.background = hex;
     document.getElementById('hct-hex').textContent = hex;
-    // gamut 判定：把 hex 转回 hct，若 chroma 明显低于请求值则标 gamut-clipped
+    // gamut 判定：把 hex 转回 hct，若 chroma 明显低于请求值则标 gamut-clipped。
+    // 显示分支用 'inline' 而非 ''：'' 会移除 inline 样式，CSS 默认 display:none 重新生效，角标永不可见
     const back = NekoHCT.hctFromColor(NekoHCT.hexToRgb(hex));
-    document.getElementById('gamut-badge').style.display = back.chroma < chroma - 1 ? '' : 'none';
+    document.getElementById('gamut-badge').style.display = back.chroma < chroma - 1 ? 'inline' : 'none';
     document.getElementById('hct-hue-val').textContent = hue;
     document.getElementById('hct-chroma-val').textContent = chroma;
     document.getElementById('hct-tone-val').textContent = tone;
