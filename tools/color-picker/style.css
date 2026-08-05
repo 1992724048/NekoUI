@@ -398,7 +398,8 @@ body,
 
 .seed-row input[type='color']::-webkit-color-swatch {
     border: none;
-    border-radius: 0;
+    /* 内部色板跟随 input 的 5px 圆角 */
+    border-radius: 5px;
 }
 
 .seed-row input[type='text'] {
@@ -939,6 +940,47 @@ body,
 .export-select:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
+}
+
+/* 全场统一 5px 圆角（用户要求：直角扁平化改为 5px；流星光线 .meteor 3px 与圆形语义元素 ref-radio/ref-radio-dot/ref-slider-thumb 50% 保持原样） */
+.panel,
+.btn,
+.seed-row input[type='color'],
+.seed-row input[type='text'],
+.common-color,
+.tone-cell,
+.role-cell,
+.ctx-menu,
+.ctx-submenu,
+.tip,
+.toast,
+#cpp-export,
+.export-select,
+.ref-preview,
+.ref-btn,
+.ref-field,
+.ref-check,
+.ref-switch,
+.ref-switch-thumb,
+.ref-slider,
+.ref-progress,
+.ref-progress-fill,
+.ref-card,
+.ref-dialog,
+.ref-snackbar,
+.ref-chip,
+.ref-appbar,
+.ref-navbar,
+.ref-list,
+.ref-tooltip {
+    border-radius: 5px;
+}
+
+/* 分段滑块组：overflow hidden 使滑块背景与按钮裁剪进容器圆角 */
+.page-tabs,
+.theme-toggle {
+    border-radius: 5px;
+    overflow: hidden;
 }
 
 @media (max-width: 900px) {
