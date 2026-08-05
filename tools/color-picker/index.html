@@ -47,7 +47,7 @@ body {
 }
 
 .app-header {
-    max-width: 1100px;
+    max-width: min(96vw, 1440px);
     margin: 0 auto;
     padding: 20px 20px 0;
     display: flex;
@@ -93,14 +93,14 @@ body {
 }
 
 #app {
-    max-width: 1100px;
+    max-width: min(96vw, 1440px);
     margin: 0 auto;
     padding: 20px 20px 40px;
 }
 
 .layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: start;
     gap: 12px;
 }
@@ -1110,7 +1110,11 @@ body {
 
 const { copyText } = NekoHCT;
 
-const state = { seed: '#6750a4' };
+function randomSeedHex() {
+    return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+}
+
+const state = { seed: randomSeedHex() };
 let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
 function showToast(msg) {
@@ -1183,10 +1187,7 @@ seedHexInput.addEventListener('change', () => {
     applySeed(NekoHCT.rgbToHex(rgb));
 });
 
-seedRandomButton.addEventListener('click', () => {
-    const randomHex = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
-    applySeed(randomHex);
-});
+seedRandomButton.addEventListener('click', () => applySeed(randomSeedHex()));
 
 seedColorInput.addEventListener('input', () => applySeed(seedColorInput.value));
 
@@ -1299,7 +1300,9 @@ cppCopyButton.addEventListener('click', () => {
     copyText(exportText).then(() => showToast('已复制 C++ 代码'));
 });
 
-// 初始化：setTheme 统一按钮高亮、data-theme、页面主题变量与角色表数据（初始跟随系统偏好）
+// 初始化：随机 seed 同步取色器/hex 输入框，setTheme 统一按钮高亮、data-theme、页面主题变量与角色表数据
+seedColorInput.value = state.seed;
+seedHexInput.value = state.seed;
 renderPaletteRamps(state.seed);
 setTheme(currentTheme);
 cppExportPre.textContent = buildCppExport(state.seed);
