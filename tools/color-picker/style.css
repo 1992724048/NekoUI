@@ -150,9 +150,9 @@ body {
 }
 
 .header-sep {
-    width: 1px;
+    width: 2px;
     height: 24px;
-    background: var(--border);
+    background: var(--muted);
 }
 
 /* 分段滑块主题切换：滑块在浅色/深色图标之间平移，图标颜色随按钮 color（currentColor）适配 */
