@@ -27,7 +27,7 @@ namespace neko::widget {
     }
 
     auto Button::draw(Vec4I /*rect*/, engine::Context& context, backend::Backend& backend) -> Rect {
-        const auto bg = background_.color.value != 0 ? background_ : style::Background{hover_ ? context.scheme.secondaryContainer : context.scheme.primary};
+        const auto bg = background_.color.value != 0 ? background_ : style::Background{hover_ ? context.scheme.secondary_container : context.scheme.primary};
         const auto tc = text_color_.value != 0 ? text_color_ : Color{0xFFFFFFFF};
 
         const auto s = scale_.tick();
@@ -58,8 +58,7 @@ namespace neko::widget {
             if (!mouse) {
                 return;
             }
-            const auto inside = mouse->is_inside(bounds);
-            if (inside != hover_) {
+            if (const auto inside = mouse->is_inside(bounds); inside != hover_) {
                 hover_ = inside;
                 scale_.to_value(hover_ ? 1.06F : 1.0F);
                 if (context.mark_dirty) {
