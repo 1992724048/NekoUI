@@ -138,6 +138,83 @@ body {
     gap: 4px;
     margin-bottom: 8px;
 }
+
+.role-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.toggle-group {
+    display: flex;
+    gap: 8px;
+}
+
+.toggle-group .btn {
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+    color: var(--text);
+}
+
+.toggle-group .btn[aria-pressed="true"] {
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.role-table {
+    display: flex;
+    flex-direction: column;
+}
+
+.group-title {
+    margin: 14px 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    color: var(--text);
+    opacity: 0.72;
+}
+
+.group-title:first-child {
+    margin-top: 0;
+}
+
+.role-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 4px;
+    border-radius: 6px;
+}
+
+.role-row:hover {
+    background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.role-label {
+    flex: 1;
+    font-size: 14px;
+}
+
+.role-key {
+    min-width: 150px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.72;
+}
+
+.role-hex {
+    min-width: 76px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+}
+
+.role-row .swatch {
+    cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -155,6 +232,17 @@ body {
         <div class="palette-ramp" id="ramp-neutral"></div>
         <div class="palette-ramp" id="ramp-neutralVariant"></div>
         <div class="palette-ramp" id="ramp-error"></div>
+    </section>
+    <section class="panel">
+        <h2>ColorScheme 角色</h2>
+        <div class="role-controls">
+            <div class="toggle-group">
+                <button type="button" class="btn" id="brightness-light" aria-pressed="true">Light</button>
+                <button type="button" class="btn" id="brightness-dark" aria-pressed="false">Dark</button>
+            </div>
+            <button type="button" class="btn" id="copy-all">复制全部</button>
+        </div>
+        <div id="role-table"></div>
     </section>
 </div>
 <script>
@@ -886,11 +974,16 @@ const seedColorInput = document.getElementById('seed-color');
 const seedHexInput = document.getElementById('seed-hex');
 const seedRandomButton = document.getElementById('seed-random');
 
-seedColorInput.addEventListener('input', () => {
-    state.seed = seedColorInput.value;
-    seedHexInput.value = seedColorInput.value;
-    renderPaletteRamps(state.seed);
-});
+// seed 变更需联动刷新面板②角色表（brief Step 4 验证项），故三路输入统一走此管线
+function applySeed(hex) {
+    state.seed = hex;
+    seedColorInput.value = hex;
+    seedHexInput.value = hex;
+    renderPaletteRamps(hex);
+    renderRoleTable(currentBrightness);
+}
+
+seedColorInput.addEventListener('input', () => applySeed(seedColorInput.value));
 
 seedHexInput.addEventListener('change', () => {
     const rgb = NekoHCT.hexToRgb(seedHexInput.value.trim());
@@ -898,22 +991,63 @@ seedHexInput.addEventListener('change', () => {
         seedHexInput.value = state.seed;
         return;
     }
-    const normalized = NekoHCT.rgbToHex(rgb);
-    state.seed = normalized;
-    seedColorInput.value = normalized;
-    seedHexInput.value = normalized;
-    renderPaletteRamps(normalized);
+    applySeed(NekoHCT.rgbToHex(rgb));
 });
 
 seedRandomButton.addEventListener('click', () => {
     const randomHex = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
-    state.seed = randomHex;
-    seedColorInput.value = randomHex;
-    seedHexInput.value = randomHex;
-    renderPaletteRamps(randomHex);
+    applySeed(randomHex);
 });
 
 renderPaletteRamps(state.seed);
+
+// 面板②：ColorScheme 角色表 + Light/Dark 切换 + 复制
+
+let currentBrightness = 'light';
+
+function renderRoleTable(brightness) {
+    const scheme = NekoHCT.scheme(state.seed, brightness);
+    const wrap = document.getElementById('role-table');
+    wrap.textContent = '';
+    let groupTitle = null;
+    for (const { key, label, group } of NekoHCT.SCHEME_ORDER) {
+        if (group !== groupTitle) {
+            const groupHeading = document.createElement('h4');
+            groupHeading.className = 'group-title';
+            groupHeading.textContent = group;
+            wrap.appendChild(groupHeading);
+            groupTitle = group;
+        }
+        const hex = scheme[key];
+        const row = document.createElement('div');
+        row.className = 'role-row';
+        row.innerHTML = `<span class="role-label">${label}</span><code class="role-key">${key}</code><span class="swatch" style="background:${hex}"></span><code class="role-hex">${hex}</code>`;
+        row.querySelector('.swatch').addEventListener('click', () => copyText(hex).then(() => showToast('已复制 ' + key + ' ' + hex)));
+        wrap.appendChild(row);
+    }
+}
+
+const brightnessLightButton = document.getElementById('brightness-light');
+const brightnessDarkButton = document.getElementById('brightness-dark');
+const copyAllButton = document.getElementById('copy-all');
+
+function setBrightness(brightness) {
+    currentBrightness = brightness;
+    brightnessLightButton.setAttribute('aria-pressed', String(brightness === 'light'));
+    brightnessDarkButton.setAttribute('aria-pressed', String(brightness === 'dark'));
+    renderRoleTable(brightness);
+}
+
+brightnessLightButton.addEventListener('click', () => setBrightness('light'));
+brightnessDarkButton.addEventListener('click', () => setBrightness('dark'));
+
+copyAllButton.addEventListener('click', () => {
+    const scheme = NekoHCT.scheme(state.seed, currentBrightness);
+    const text = NekoHCT.SCHEME_ORDER.map(({ key }) => key + ': ' + scheme[key]).join('\n');
+    copyText(text).then(() => showToast('已复制全部 ' + NekoHCT.SCHEME_ORDER.length + ' 角色'));
+});
+
+renderRoleTable('light');
 </script>
 </body>
 </html>
