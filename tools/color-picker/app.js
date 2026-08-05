@@ -941,11 +941,12 @@ function refreshMeteors() {
     for (let i = 0; i < METEOR_COUNT; i++) {
         const meteor = document.createElement('div');
         meteor.className = 'meteor';
-        meteor.style.left = Math.random() * 100 + '%';
-        meteor.style.top = Math.random() * 60 + '%';
+        meteor.style.left = 60 + Math.random() * 45 + '%';
+        meteor.style.top = -5 + Math.random() * 40 + '%';
         meteor.style.animationDelay = Math.random() * 8 + 's';
         meteor.style.animationDuration = 2.5 + Math.random() * 2.5 + 's';
         meteor.style.setProperty('--mc', randomSchemeColor());
+        meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
         meteorContainer.appendChild(meteor);
     }
 }

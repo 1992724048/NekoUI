@@ -248,39 +248,17 @@ body,
     gap: 12px;
 }
 
-/* 卡片：轻微半透明 + 模糊，叠加形状线条装饰（矩形轮廓/圆环/斜线，与 LED 数码标题栏协调）；不支持 color-mix/backdrop-filter 时降级为不透明 */
+/* 卡片：半透明 + 模糊（透明可见，流星透出），叠加网状点阵纹理（与 LED 标题栏网格点协调）；不支持 color-mix/backdrop-filter 时降级为不透明 */
 .panel {
     position: relative;
     background: var(--panel);
-    background-color: color-mix(in srgb, var(--panel) 85%, transparent);
-    background-image: linear-gradient(135deg, transparent 82%, color-mix(in srgb, var(--border) 18%, transparent) 82.5%, transparent 83.5%);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
     border: 1px solid var(--border);
     padding: 16px 20px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-}
-
-.panel::before {
-    content: '';
-    position: absolute;
-    top: 14px;
-    right: 18px;
-    width: 44px;
-    height: 28px;
-    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-    pointer-events: none;
-}
-
-.panel::after {
-    content: '';
-    position: absolute;
-    bottom: 12px;
-    left: 16px;
-    width: 36px;
-    height: 36px;
-    border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
-    border-radius: 50%;
-    pointer-events: none;
 }
 
 /* 流星雨背景装饰：fixed 底层容器，流星带拖尾斜向滑落；只动 transform/opacity（GPU 加速），不遮挡交互 */
@@ -306,7 +284,7 @@ body,
 
 @keyframes meteor-fall {
     0% {
-        transform: rotate(-35deg) translateX(0);
+        transform: rotate(var(--angle)) translateX(0);
         opacity: 0;
     }
     8% {
@@ -316,7 +294,7 @@ body,
         opacity: 1;
     }
     100% {
-        transform: rotate(-35deg) translateX(-130vw);
+        transform: rotate(var(--angle)) translateX(-130vw);
         opacity: 0;
     }
 }
@@ -623,7 +601,10 @@ body,
     min-width: 180px;
     padding: 4px 0;
     background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 72%, transparent);
     border: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .ctx-item {
@@ -685,8 +666,11 @@ body,
     min-width: 240px;
     padding: 4px 0;
     background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 72%, transparent);
     border: 1px solid var(--border);
     z-index: 31;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .ctx-submenu .ctx-item {
