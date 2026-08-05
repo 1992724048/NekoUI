@@ -918,26 +918,11 @@ const seedColorInput = document.getElementById('seed-color');
 const seedHexInput = document.getElementById('seed-hex');
 const seedRandomButton = document.getElementById('seed-random');
 
-// 流星雨背景装饰：参考实现风格——--x 横向铺开、--z 深度视差、--d 延迟错开，固定 -45° 同向划过；
+// 流星雨背景装饰：--x 横向铺开、--z 深度视差、--angle 随机斜向、--i 负延迟错峰、--dur 随机时长，固定斜向划过；
 // 每颗流星颜色从当前 scheme 的 47 个角色中随机选取（过滤深色角色保证两种主题下可见）；seed/主题变更时重新生成；reduced-motion 时禁用
-// 参考实现的 13 组固定 (--x, --z) 配对：近处（z 大正）配小 x、远处（z 大负）配大 x，
-// 大位移补偿 translateZ 透视缩小，保证全屏铺开；z 正上限收敛为 2.5（配合 perspective 1000px 控制近处大小）；
-// 每颗在此基础上加小幅随机扰动（--x ±1.5、--z ±0.5）与随机斜向 --angle，颜色随机
-const METEOR_PAIRS = [
-    [3, 2.5],
-    [3, 1.5],
-    [4, 1],
-    [4, 0],
-    [6, -1],
-    [6, -2],
-    [8, -3],
-    [10, -4],
-    [12, -5],
-    [14, -6],
-    [16, -7],
-    [18, -8],
-    [20, -9],
-];
+// 近小远大递进配对：--x 25..60、--z 3..-5（配合 perspective 1200px，最远透视比 1200/1700≈0.71，位移 6000×0.71≈4200px 铺满宽屏）；
+// 每条加小幅随机扰动（--x ±1.5、--z ±0.5）与随机斜向 --angle，颜色随机
+const METEOR_COUNT = 30;
 let meteorContainer = null;
 
 function randomSchemeColor() {
@@ -957,17 +942,18 @@ function refreshMeteors() {
         document.body.appendChild(meteorContainer);
     }
     meteorContainer.textContent = '';
-    for (let i = 0; i < METEOR_PAIRS.length; i++) {
-        const [x, z] = METEOR_PAIRS[i];
+    for (let i = 0; i < METEOR_COUNT; i++) {
         const meteor = document.createElement('div');
         meteor.className = 'meteor';
-        // 参考配对 + 小幅随机扰动：--x ±1.5、--z ±0.5，保留近小远大的透视补偿又避免机械同轨
-        meteor.style.setProperty('--x', (x + Math.random() * 3 - 1.5).toFixed(1));
-        meteor.style.setProperty('--z', (z + Math.random() - 0.5).toFixed(1));
+        // 近小远大递进 + 小幅随机扰动：--x 25..60、--z 3..-5，位移 2500..6000px 补偿透视缩小铺满全屏
+        meteor.style.setProperty('--x', (25 + (i + 1) / METEOR_COUNT * 35 + Math.random() * 3 - 1.5).toFixed(1));
+        meteor.style.setProperty('--z', (3 - (i + 1) / METEOR_COUNT * 8 + Math.random() - 0.5).toFixed(1));
+        // --i 驱动负延迟（CSS calc(var(--i) * -0.3s)）：首帧即从循环中间相位开始，周期相位铺满无空窗
+        meteor.style.setProperty('--i', i);
+        // --dur 每条随机 2-10s，打散同速同步，配合随机时长相位永不重合
+        meteor.style.setProperty('--dur', (2 + Math.random() * 8).toFixed(1) + 's');
         // --angle 随机斜向（-25°~-65°），每颗方向各异
         meteor.style.setProperty('--angle', (-25 - Math.random() * 40).toFixed(1) + 'deg');
-        // --d 均匀递进（1,2,3 循环，*0.3s 后延迟 0.3/0.6/0.9s 三波错开）±0.2 抖动，有节奏又不整齐
-        meteor.style.setProperty('--d', ((i % 3) + 1 + Math.random() * 0.4 - 0.2).toFixed(1));
         meteor.style.setProperty('--mc', randomSchemeColor());
         meteorContainer.appendChild(meteor);
     }

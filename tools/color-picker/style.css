@@ -262,7 +262,7 @@ body,
 }
 
 /* 流星雨背景装饰：细线渐变拖尾 + ::before/::after 双层模糊光晕 + 3D 视差分层（参考实现风格）；
-   --x 横向铺开、--z 深度分层、--angle 随机斜向、--d 延迟错开；fixed 底层不遮挡交互 */
+   --x 横向铺开、--z 深度分层、--angle 随机斜向、--i 负延迟错峰、--dur 随机时长；fixed 底层不遮挡交互 */
 .meteors {
     position: fixed;
     inset: 0;
@@ -273,8 +273,8 @@ body,
     display: flex;
     justify-content: center;
     align-items: center;
-    /* 1000px：降低近处（z 正值）透视放大倍数（z=2.5 时 1000/750≈1.33），远处 z=-9 仍 0.53 倍铺满全屏 */
-    perspective: 1000px;
+    /* 1200px：近处（z=3）放大 1200/900≈1.33 不突兀，远处 z=-5 透视比 1200/1700≈0.71（位移仍铺满全屏） */
+    perspective: 1200px;
     transform-style: preserve-3d;
 }
 
@@ -285,8 +285,9 @@ body,
     border-radius: 3px;
     background-image: linear-gradient(to right, var(--mc), #ffffff50, transparent);
     will-change: transform;
-    animation: meteor-fall 1s linear infinite both;
-    animation-delay: calc(var(--d) * 0.3s);
+    /* --dur 每颗随机 2-10s；负延迟（--i 递进 * -0.3s）让首帧即从循环中间相位开始，任意时刻都有流星在飞 */
+    animation: meteor-fall var(--dur) linear infinite both;
+    animation-delay: calc(var(--i) * -0.3s);
 }
 
 .meteor::before,
