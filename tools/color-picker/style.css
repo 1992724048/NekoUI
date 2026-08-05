@@ -756,19 +756,24 @@ body,
     display: block;
 }
 
+/* 控件参考网格：每个控件独立卡片，auto-fill 动态列（宽屏 3-4 列 / 中屏 2 列 / 窄屏 1 列，无手写断点） */
 .ref-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
 }
 
 .ref-item {
     display: flex;
     flex-direction: column;
+    padding: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 5px;
 }
 
 .ref-item-name {
-    margin: 0 0 8px;
+    margin: 0 0 10px;
     font-size: 13px;
     font-weight: 600;
 }
@@ -784,10 +789,11 @@ body,
 }
 
 .ref-item-roles {
-    margin-top: 6px;
+    margin-top: 8px;
     font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
     font-size: 11px;
     color: var(--muted);
+    overflow-wrap: anywhere;
 }
 
 .ref-btn {
@@ -1196,7 +1202,18 @@ body,
     outline-offset: -2px;
 }
 
-/* 页面预览：浏览器窗口示意（假地址栏 + 完整示例站），配色全部走 CSS 变量，随 seed / 主题自动刷新 */
+/* 页面预览：浏览器窗口示意（假地址栏 + 完整示例站），配色全部走 CSS 变量，随 seed / 主题自动刷新；
+   预览页无外层卡片，preview-frame 直接作为页面内容 */
+.preview-head {
+    margin-bottom: 12px;
+}
+
+.preview-head h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
 .preview-frame {
     border: 1px solid var(--border);
     border-radius: 5px;
@@ -1547,9 +1564,5 @@ body,
 @media (max-width: 760px) {
     .role-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-
-    .ref-grid {
-        grid-template-columns: 1fr;
     }
 }
