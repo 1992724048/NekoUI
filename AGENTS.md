@@ -144,7 +144,9 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
 NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGENTS.md, .clang-format, README.md）
 ├── tools/
 │   └── color-picker/
-│       └── index.html                     # HCT 颜色选取/调试工具（单文件零依赖，算法与 ColorScheme.cpp 同源）
+│       ├── index.html                     # HCT 颜色选取/调试工具入口（零依赖，算法与 ColorScheme.cpp 同源）
+│       ├── style.css                      # 工具样式（直角扁平化，主题 CSS 变量）
+│       └── app.js                         # 工具逻辑（NekoHCT 引擎 + 页面交互）
 └── NekoUI/                                ← VS 项目目录（含 main.cpp, .vcxproj）
     ├── main.cpp                           # 入口：main()、窗口创建、消息循环、Engine 启动、示例 UI
     ├── NekoUI.vcxproj                     # VS 项目文件
@@ -320,6 +322,6 @@ NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGE
 - **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）四个独立组件（`Renderer` 已删除，渲染驱动并入 `Engine::render_frame`），贯彻单一职责原则
 - **样式系统重构（已完成）**：移除运行时 `StyleSheet` hashmap 样式表和 `Stylable` CRTP，替换为编译期 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），零运行时开销，无字符串查找。Widget 通过多重继承选择所需 mixin，`class_name_` 和 `style()` 链式调用一并移除
 - **布局下放（已完成）**：布局计算曾从 Engine 集中式 Renderer 下放到各 Widget——Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算，`horizontal_` 成员从 Widget 基类移除。`Engine::render_frame` 每帧调用 `root->layout({0,0,w,h})`（草稿期每帧全量布局）驱动布局阶段
-- **工具（已完成）**：`tools/color-picker/index.html` HCT 颜色选取/调试工具（直角扁平化 UI，两栏布局：左栏 Seed 颜色+导出 C++、右栏 47 角色表）——seed 输入（取色器 + hex 文本框 + 随机按钮）+ 6 组色调色带 + 47 角色 ColorScheme 表（色块展示，名称/值居中）+ 手动 Light/Dark 主题切换（初始跟随系统，页面主题色由 scheme() 角色派生）+ 导出 ColorScheme C++ 初始化代码；单文件零依赖（file:// 即用），JS 引擎与 ColorScheme.cpp 同源（MCU 0.13.0 对齐）
+- **工具（已完成）**：`tools/color-picker/`（index.html + style.css + app.js，零依赖 file:// 即用）HCT 颜色选取/调试工具（直角扁平化 UI，两栏布局：左栏 Seed 颜色+导出 C++、右栏 47 角色表）——seed 输入（取色器 + hex 文本框 + 随机按钮 + 常用颜色列表）+ 6 组色调色带（tone 5..95）+ 47 角色 ColorScheme 表（色块展示，名称/值居中，hover 富提示框显示五色值 RGB/HSL/HSV/CMYK/VEC4）+ 手动 Light/Dark 主题切换（分段滑块动画，初始跟随系统，页面主题色由 scheme() 角色派生）+ 自定义右键菜单（选色器入口/复制颜色格式子菜单）+ 控件配色参考覆盖层 + 导出 ColorScheme 角色字典（名称 → 0xAARRGGBB 两段）；JS 引擎与 ColorScheme.cpp 同源（MCU 0.13.0 对齐）
 - **未实现**：无可运行的测试、无裁剪/溢出处理、无 margin/padding 支持、无最小/最大尺寸约束、无 Wrap/基线对齐等高级布局特性
 - **主题色获取**：使用注册表 `HKCU\...\Windows\DWM\AccentColor`（ABGR → RGBA 转换），不再使用已过时的 `DwmGetColorizationColor`
