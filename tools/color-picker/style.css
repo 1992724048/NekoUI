@@ -257,8 +257,8 @@ body,
     background-size: 12px 12px;
     border: 1px solid var(--border);
     padding: 16px 20px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 /* 流星雨背景装饰：fixed 底层容器，流星带拖尾斜向滑落；只动 transform/opacity（GPU 加速），不遮挡交互 */
@@ -272,11 +272,13 @@ body,
 
 .meteor {
     position: absolute;
-    width: 130px;
-    height: 2px;
+    width: 160px;
+    height: 16px;
+    /* 圆头（右端亮核）+ 渐变拖尾底色，clip-path 切成三角形：宽端在头部、向后渐收成尖尾（头部在前、尾巴在后，随 rotate 方向一致） */
     background:
-        radial-gradient(circle at 100% 50%, var(--mc) 0 2px, transparent 3px),
-        linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--mc) 55%, transparent) 70%, var(--mc) 100%);
+        radial-gradient(circle at 152px 8px, var(--mc) 0 3.5px, transparent 4.5px),
+        linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--mc) 70%, transparent) 55%, var(--mc) 100%);
+    clip-path: polygon(0 8px, 160px 2px, 160px 14px);
     opacity: 0;
     will-change: transform, opacity;
     animation: meteor-fall 4s linear infinite;
@@ -294,7 +296,7 @@ body,
         opacity: 1;
     }
     100% {
-        transform: rotate(var(--angle)) translateX(-130vw);
+        transform: rotate(var(--angle)) translateX(calc(var(--dir, -1) * 130vw));
         opacity: 0;
     }
 }

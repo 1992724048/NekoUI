@@ -918,13 +918,14 @@ const seedColorInput = document.getElementById('seed-color');
 const seedHexInput = document.getElementById('seed-hex');
 const seedRandomButton = document.getElementById('seed-random');
 
-// 流星雨背景装饰：每颗流星颜色从当前 scheme 的 47 个角色中随机选取；seed/主题变更时重新生成；reduced-motion 时禁用
-const METEOR_COUNT = 10;
+// 流星雨背景装饰：每颗流星颜色从当前 scheme 的 47 个角色中随机选取（过滤深色角色保证两种主题下可见）；seed/主题变更时重新生成；reduced-motion 时禁用
+const METEOR_COUNT = 18;
 let meteorContainer = null;
 
 function randomSchemeColor() {
     const scheme = NekoHCT.scheme(state.seed, currentTheme);
-    const keys = Object.keys(scheme);
+    // 排除纯黑系（shadow/scrim 等 tone < 25），保证流星在深/浅背景上都有对比
+    const keys = Object.keys(scheme).filter((key) => NekoHCT.hctFromColor(NekoHCT.hexToRgb(scheme[key])).tone >= 25);
     return scheme[keys[Math.floor(Math.random() * keys.length)]];
 }
 
@@ -941,12 +942,27 @@ function refreshMeteors() {
     for (let i = 0; i < METEOR_COUNT; i++) {
         const meteor = document.createElement('div');
         meteor.className = 'meteor';
-        meteor.style.left = 60 + Math.random() * 45 + '%';
-        meteor.style.top = -5 + Math.random() * 40 + '%';
+        // 四周边缘随机起始：上边缘整条（50%）向左下滑落，右边缘（25%）向左下滑落，左边缘（25%）向右下滑落（角度与 --dir 联动）
+        const roll = Math.random();
+        if (roll < 0.5) {
+            meteor.style.left = Math.random() * 100 + '%';
+            meteor.style.top = -10 + Math.random() * 10 + '%';
+            meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
+            meteor.style.setProperty('--dir', '-1');
+        } else if (roll < 0.75) {
+            meteor.style.left = 95 + Math.random() * 10 + '%';
+            meteor.style.top = Math.random() * 60 + '%';
+            meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
+            meteor.style.setProperty('--dir', '-1');
+        } else {
+            meteor.style.left = -10 + Math.random() * 5 + '%';
+            meteor.style.top = Math.random() * 60 + '%';
+            meteor.style.setProperty('--angle', 15 + Math.random() * 60 + 'deg');
+            meteor.style.setProperty('--dir', '1');
+        }
         meteor.style.animationDelay = Math.random() * 8 + 's';
         meteor.style.animationDuration = 2.5 + Math.random() * 2.5 + 's';
         meteor.style.setProperty('--mc', randomSchemeColor());
-        meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
         meteorContainer.appendChild(meteor);
     }
 }
