@@ -961,8 +961,8 @@ function showCtxMenu(x, y) {
     ctxMenu.hidden = false;
     ctxMenu.style.left = Math.max(8, Math.min(x, window.innerWidth - ctxMenu.offsetWidth - 8)) + 'px';
     ctxMenu.style.top = Math.max(8, Math.min(y, window.innerHeight - ctxMenu.offsetHeight - 8)) + 'px';
-    // 子菜单默认向右展开，贴近右缘时向左（估计子菜单宽度 160）
-    ctxMenu.classList.toggle('open-left', x + ctxMenu.offsetWidth + 160 > window.innerWidth);
+    // 子菜单默认向右展开，贴近右缘时向左（估计子菜单宽度 250）
+    ctxMenu.classList.toggle('open-left', x + ctxMenu.offsetWidth + 250 > window.innerWidth);
 }
 
 function hideCtxMenu() {
@@ -989,6 +989,14 @@ document.addEventListener('contextmenu', (e) => {
     ctxCopyHex = hex;
     ctxCopyColorItem.hidden = ctxCopyHex === null;
     ctxSepCopy.hidden = ctxCopyHex === null;
+    // 命中色块时按当前色值填充子菜单各格式预览
+    if (ctxCopyHex !== null) {
+        const rgb = NekoHCT.hexToRgb(ctxCopyHex);
+        const lines = rgb === null ? null : colorValueLines(rgb);
+        for (const item of ctxCopySubmenu.querySelectorAll('.ctx-item')) {
+            item.querySelector('.ctx-val').textContent = lines === null ? '' : lines[item.dataset.format];
+        }
+    }
     showCtxMenu(e.clientX, e.clientY);
 });
 

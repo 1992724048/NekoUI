@@ -598,11 +598,25 @@ body,
     position: absolute;
     left: 100%;
     top: -4px;
-    min-width: 150px;
+    min-width: 240px;
     padding: 4px 0;
     background: var(--panel);
     border: 1px solid var(--border);
     z-index: 31;
+}
+
+.ctx-submenu .ctx-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ctx-val {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
 }
 
 .ctx-submenu-root:hover .ctx-submenu {
