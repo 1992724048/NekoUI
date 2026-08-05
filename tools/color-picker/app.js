@@ -1216,28 +1216,65 @@ const ROLE_INFO = {
 const REF_CONTROLS = [
     {
         name: 'Button',
-        roles: ['primary', 'onPrimary'],
+        roles: ['primary', 'onPrimary', 'outline'],
         preview: (scheme) => {
-            const el = document.createElement('button');
-            el.type = 'button';
-            el.className = 'ref-btn';
-            el.style.background = scheme.primary;
-            el.style.color = scheme.onPrimary;
-            el.textContent = '按钮';
-            return el;
+            // MD3 三变体：Filled（实心）/ Outlined（描边）/ Text（纯文字）
+            const wrap = document.createElement('div');
+            wrap.style.display = 'flex';
+            wrap.style.flexWrap = 'wrap';
+            wrap.style.gap = '8px';
+            const variants = [
+                { label: 'Filled', background: scheme.primary, color: scheme.onPrimary, border: null },
+                { label: 'Outlined', background: null, color: scheme.primary, border: scheme.outline },
+                { label: 'Text', background: null, color: scheme.primary, border: null },
+            ];
+            for (const variant of variants) {
+                const el = document.createElement('button');
+                el.type = 'button';
+                el.className = 'ref-btn';
+                if (variant.background !== null) {
+                    el.style.background = variant.background;
+                    el.style.color = variant.color;
+                } else {
+                    el.style.background = 'none';
+                    el.style.color = variant.color;
+                    if (variant.border !== null) {
+                        el.style.border = '1px solid ' + variant.border;
+                    } else {
+                        el.style.border = 'none';
+                    }
+                }
+                el.textContent = variant.label;
+                wrap.appendChild(el);
+            }
+            return wrap;
         },
     },
     {
         name: 'TextField',
-        roles: ['surface_container_highest', 'on_surface', 'outline'],
+        roles: ['surface_container_highest', 'surface_container_lowest', 'on_surface', 'outline'],
         preview: (scheme) => {
-            const el = document.createElement('div');
-            el.className = 'ref-field';
-            el.style.background = scheme.surface_container_highest;
-            el.style.color = scheme.on_surface;
-            el.style.borderColor = scheme.outline;
-            el.textContent = '输入文本';
-            return el;
+            // MD3 两变体：Outlined（描边 + 底色）/ Filled（底色 + 聚焦粗底线）
+            const wrap = document.createElement('div');
+            wrap.style.display = 'flex';
+            wrap.style.flexWrap = 'wrap';
+            wrap.style.gap = '10px';
+            const outlined = document.createElement('div');
+            outlined.className = 'ref-field';
+            outlined.style.background = scheme.surface_container_lowest;
+            outlined.style.color = scheme.on_surface;
+            outlined.style.borderColor = scheme.outline;
+            outlined.textContent = 'Outlined';
+            const filled = document.createElement('div');
+            filled.className = 'ref-field';
+            filled.style.background = scheme.surface_container_highest;
+            filled.style.color = scheme.on_surface;
+            filled.style.borderColor = scheme.primary;
+            filled.style.borderBottomWidth = '2px';
+            filled.textContent = 'Filled';
+            wrap.appendChild(outlined);
+            wrap.appendChild(filled);
+            return wrap;
         },
     },
     {
@@ -1316,6 +1353,10 @@ const REF_CONTROLS = [
             const track = document.createElement('div');
             track.className = 'ref-slider';
             track.style.background = scheme.surface_container_highest;
+            const fill = document.createElement('div');
+            fill.className = 'ref-slider-fill';
+            fill.style.background = scheme.primary;
+            track.appendChild(fill);
             const thumb = document.createElement('div');
             thumb.className = 'ref-slider-thumb';
             thumb.style.background = scheme.primary;
@@ -1325,50 +1366,101 @@ const REF_CONTROLS = [
     },
     {
         name: 'Card',
-        roles: ['surface_container_lowest', 'on_surface', 'outline_variant'],
+        roles: ['surface_container_lowest', 'surface_container_highest', 'on_surface', 'outline_variant'],
         preview: (scheme) => {
-            const el = document.createElement('div');
-            el.className = 'ref-card';
-            el.style.background = scheme.surface_container_lowest;
-            el.style.color = scheme.on_surface;
-            el.style.borderColor = scheme.outline_variant;
-            el.textContent = '卡片内容';
-            return el;
+            // MD3 两变体：Filled（底色无边框）/ Outlined（描边）
+            const wrap = document.createElement('div');
+            wrap.style.display = 'flex';
+            wrap.style.flexWrap = 'wrap';
+            wrap.style.gap = '10px';
+            const filled = document.createElement('div');
+            filled.className = 'ref-card';
+            filled.style.background = scheme.surface_container_highest;
+            filled.style.color = scheme.on_surface;
+            filled.style.border = 'none';
+            filled.textContent = 'Filled';
+            const outlined = document.createElement('div');
+            outlined.className = 'ref-card';
+            outlined.style.background = scheme.surface_container_lowest;
+            outlined.style.color = scheme.on_surface;
+            outlined.style.borderColor = scheme.outline_variant;
+            outlined.textContent = 'Outlined';
+            wrap.appendChild(filled);
+            wrap.appendChild(outlined);
+            return wrap;
         },
     },
     {
         name: 'Dialog',
-        roles: ['surface_container_high', 'on_surface'],
+        roles: ['surface_container_high', 'on_surface', 'primary'],
         preview: (scheme) => {
+            // MD3 对话框：标题 + 内容 + 右侧操作按钮
             const el = document.createElement('div');
             el.className = 'ref-dialog';
             el.style.background = scheme.surface_container_high;
             el.style.color = scheme.on_surface;
-            el.innerHTML = '<strong>对话框</strong><div>对话框内容区域</div>';
+            const title = document.createElement('strong');
+            title.textContent = '对话框';
+            const body = document.createElement('div');
+            body.textContent = '对话框内容区域';
+            const actions = document.createElement('div');
+            actions.className = 'ref-dialog-actions';
+            const cancel = document.createElement('button');
+            cancel.type = 'button';
+            cancel.className = 'ref-dialog-btn';
+            cancel.style.color = scheme.primary;
+            cancel.textContent = '取消';
+            const ok = document.createElement('button');
+            ok.type = 'button';
+            ok.className = 'ref-dialog-btn';
+            ok.style.color = scheme.primary;
+            ok.textContent = '确定';
+            actions.appendChild(cancel);
+            actions.appendChild(ok);
+            el.appendChild(title);
+            el.appendChild(body);
+            el.appendChild(actions);
             return el;
         },
     },
     {
         name: 'SnackBar',
-        roles: ['inverse_surface', 'inverse_on_surface'],
+        roles: ['inverse_surface', 'inverse_on_surface', 'primary'],
         preview: (scheme) => {
+            // MD3 Snackbar：消息 + 右侧操作按钮
             const el = document.createElement('div');
             el.className = 'ref-snackbar';
             el.style.background = scheme.inverse_surface;
             el.style.color = scheme.inverse_on_surface;
-            el.textContent = '提示消息';
+            const text = document.createElement('span');
+            text.textContent = '已保存更改';
+            const action = document.createElement('button');
+            action.type = 'button';
+            action.className = 'ref-snackbar-action';
+            action.style.color = scheme.primary;
+            action.textContent = '撤销';
+            el.appendChild(text);
+            el.appendChild(action);
             return el;
         },
     },
     {
         name: 'Chip',
-        roles: ['secondary_container', 'on_secondary_container'],
+        roles: ['secondary_container', 'on_secondary_container', 'outline'],
         preview: (scheme) => {
+            // MD3 assist chip：描边 + 引导图标 + 标签
             const el = document.createElement('div');
             el.className = 'ref-chip';
             el.style.background = scheme.secondary_container;
             el.style.color = scheme.on_secondary_container;
-            el.textContent = '标签';
+            el.style.borderColor = scheme.outline;
+            const icon = document.createElement('span');
+            icon.className = 'ref-chip-icon';
+            icon.textContent = '+';
+            const label = document.createElement('span');
+            label.textContent = '添加标签';
+            el.appendChild(icon);
+            el.appendChild(label);
             return el;
         },
     },
@@ -1387,16 +1479,20 @@ const REF_CONTROLS = [
     },
     {
         name: 'NavigationBar',
-        roles: ['surface_container', 'primary', 'on_surface_variant'],
+        roles: ['surface_container', 'primary', 'primary_container', 'on_surface_variant'],
         preview: (scheme) => {
+            // MD3 底部导航：选中项胶囊指示条（primary_container）
             const wrap = document.createElement('div');
             wrap.className = 'ref-navbar';
             wrap.style.background = scheme.surface_container;
             const labels = ['首页', '项目', '设置'];
             for (let i = 0; i < labels.length; i++) {
                 const item = document.createElement('span');
-                item.className = 'ref-nav-item';
+                item.className = 'ref-nav-item' + (i === 0 ? ' ref-nav-item-active' : '');
                 item.style.color = i === 0 ? scheme.primary : scheme.on_surface_variant;
+                if (i === 0) {
+                    item.style.background = scheme.primary_container;
+                }
                 item.textContent = labels[i];
                 wrap.appendChild(item);
             }
@@ -1405,18 +1501,26 @@ const REF_CONTROLS = [
     },
     {
         name: 'List',
-        roles: ['surface_container_lowest', 'on_surface', 'on_surface_variant', 'outline_variant'],
+        roles: ['surface_container_lowest', 'primary_container', 'on_surface', 'on_surface_variant', 'outline_variant'],
         preview: (scheme) => {
+            // MD3 list item：引导图标 + 标题 + 次要说明
             const wrap = document.createElement('div');
             wrap.className = 'ref-list';
             const items = [
-                { title: '列表项一', sub: '次要说明文字' },
-                { title: '列表项二', sub: '次要说明文字' },
+                { title: '列表项一', sub: '次要说明文字', icon: '◇' },
+                { title: '列表项二', sub: '次要说明文字', icon: '▦' },
             ];
             for (const item of items) {
                 const row = document.createElement('div');
                 row.className = 'ref-list-item';
                 row.style.borderColor = scheme.outline_variant;
+                const icon = document.createElement('span');
+                icon.className = 'ref-list-icon';
+                icon.style.background = scheme.primary_container;
+                icon.style.color = scheme.on_primary_container;
+                icon.textContent = item.icon;
+                const body = document.createElement('div');
+                body.className = 'ref-list-body';
                 const title = document.createElement('span');
                 title.className = 'ref-list-title';
                 title.style.color = scheme.on_surface;
@@ -1425,8 +1529,10 @@ const REF_CONTROLS = [
                 sub.className = 'ref-list-sub';
                 sub.style.color = scheme.on_surface_variant;
                 sub.textContent = item.sub;
-                row.appendChild(title);
-                row.appendChild(sub);
+                body.appendChild(title);
+                body.appendChild(sub);
+                row.appendChild(icon);
+                row.appendChild(body);
                 wrap.appendChild(row);
             }
             wrap.style.background = scheme.surface_container_lowest;

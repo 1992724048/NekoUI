@@ -131,101 +131,97 @@
             <div class="panel-head">
                 <h2>页面预览</h2>
             </div>
-            <p class="panel-desc">用当前 seed 的 scheme() 配色渲染示例产品官网（随 seed / 主题实时刷新，纯 CSS 变量驱动）</p>
+            <p class="panel-desc">用当前 seed 的 scheme() 配色渲染应用界面示例（通用设置页，随 seed / 主题实时刷新，纯 CSS 变量驱动）</p>
             <div class="preview-frame">
                 <div class="preview-bar">
                     <span class="preview-dot"></span>
                     <span class="preview-dot"></span>
                     <span class="preview-dot"></span>
-                    <span class="preview-url">nako.example.com</span>
+                    <span class="preview-url">app.example.com/settings</span>
                 </div>
-                <div class="preview-site">
-                    <header class="pv-nav">
-                        <span class="pv-logo">◇ Nako</span>
-                        <nav class="pv-links">
-                            <a>首页</a>
-                            <a>特性</a>
-                            <a>价格</a>
-                            <a>文档</a>
+                <div class="preview-site pv-app">
+                    <aside class="pv-sidebar">
+                        <div class="pv-side-head">◇ 设置</div>
+                        <nav class="pv-side-nav">
+                            <a class="pv-side-item pv-side-active">账号</a>
+                            <a class="pv-side-item">外观</a>
+                            <a class="pv-side-item">通知</a>
+                            <a class="pv-side-item">关于</a>
                         </nav>
-                        <button type="button" class="pv-btn pv-btn-primary">立即开始</button>
-                    </header>
-                    <section class="pv-hero">
-                        <h3>让产品配色从「调得还行」到「和谐自然」</h3>
-                        <p>基于 Material You HCT 色彩引擎，从单一 seed 生成 47 个配色角色，所见即所得。</p>
-                        <div class="pv-hero-actions">
-                            <button type="button" class="pv-btn pv-btn-primary">免费试用</button>
-                            <button type="button" class="pv-btn pv-btn-ghost">查看文档</button>
-                        </div>
-                    </section>
-                    <section class="pv-stats">
-                        <div class="pv-stat"><b>12K+</b><span>活跃开发者</span></div>
-                        <div class="pv-stat"><b>99.9%</b><span>服务可用性</span></div>
-                        <div class="pv-stat"><b>47</b><span>色彩角色</span></div>
-                    </section>
-                    <section class="pv-features">
-                        <div class="pv-feature">
-                            <span class="pv-ficon">◈</span>
-                            <b>HCT 色彩引擎</b>
-                            <p>色相 / 彩度 / 明度三维建模，颜色感知均匀。</p>
-                        </div>
-                        <div class="pv-feature">
-                            <span class="pv-ficon">▦</span>
-                            <b>一键导出</b>
-                            <p>14 种语言代码，字段逐字匹配 ColorScheme.hpp。</p>
-                        </div>
-                        <div class="pv-feature">
-                            <span class="pv-ficon">◉</span>
-                            <b>明暗双主题</b>
-                            <p>亮色 / 深色配色方案同时生成，随系统联动。</p>
-                        </div>
-                    </section>
-                    <section class="pv-pricing">
-                        <div class="pv-plan">
-                            <b>基础版</b>
-                            <span class="pv-price">¥0<em>/月</em></span>
-                            <ul>
-                                <li>1 个工程</li>
-                                <li>基础色彩角色</li>
-                                <li>社区支持</li>
-                            </ul>
-                            <button type="button" class="pv-btn pv-btn-ghost">开始使用</button>
-                        </div>
-                        <div class="pv-plan pv-plan-hot">
-                            <span class="pv-hot-tag">推荐</span>
-                            <b>专业版</b>
-                            <span class="pv-price">¥39<em>/月</em></span>
-                            <ul>
-                                <li>无限工程</li>
-                                <li>全部 47 个角色</li>
-                                <li>页面预览</li>
-                                <li>优先支持</li>
-                            </ul>
-                            <button type="button" class="pv-btn pv-btn-onaccent">立即升级</button>
-                        </div>
-                        <div class="pv-plan">
-                            <b>企业版</b>
-                            <span class="pv-price">¥199<em>/月</em></span>
-                            <ul>
-                                <li>团队协作</li>
-                                <li>品牌规范管理</li>
-                                <li>专属支持</li>
-                            </ul>
-                            <button type="button" class="pv-btn pv-btn-ghost">联系我们</button>
-                        </div>
-                    </section>
-                    <section class="pv-cta">
-                        <b>准备好统一你的产品配色了吗？</b>
-                        <button type="button" class="pv-btn pv-btn-onaccent">免费开始</button>
-                    </section>
-                    <footer class="pv-footer">
-                        <div class="pv-footer-cols">
-                            <div class="pv-footer-col"><b>产品</b><a>特性</a><a>价格</a><a>更新日志</a></div>
-                            <div class="pv-footer-col"><b>资源</b><a>文档</a><a>示例</a><a>API</a></div>
-                            <div class="pv-footer-col"><b>公司</b><a>关于</a><a>博客</a><a>联系</a></div>
-                        </div>
-                        <div class="pv-copyright">© 2026 Nako Studio · 配色由 NekoUI HCT 生成</div>
-                    </footer>
+                    </aside>
+                    <main class="pv-main">
+                        <header class="pv-topbar">
+                            <b>账号设置</b>
+                            <span class="pv-search">搜索设置…</span>
+                            <span class="pv-avatar-mini">N</span>
+                        </header>
+                        <section class="pv-section">
+                            <div class="pv-section-title">个人资料</div>
+                            <div class="pv-row">
+                                <span class="pv-avatar-lg">N</span>
+                                <div class="pv-row-body">
+                                    <b>示例用户</b>
+                                    <span>user@example.com</span>
+                                </div>
+                                <button type="button" class="pv-btn pv-btn-outlined">编辑资料</button>
+                            </div>
+                        </section>
+                        <section class="pv-section">
+                            <div class="pv-section-title">外观</div>
+                            <div class="pv-row">
+                                <div class="pv-row-body">
+                                    <b>主题模式</b>
+                                    <span>跟随系统、浅色或深色</span>
+                                </div>
+                                <div class="pv-seg">
+                                    <span class="pv-seg-item pv-seg-active">浅色</span>
+                                    <span class="pv-seg-item">深色</span>
+                                    <span class="pv-seg-item">系统</span>
+                                </div>
+                            </div>
+                            <div class="pv-row">
+                                <div class="pv-row-body">
+                                    <b>强调色</b>
+                                    <span>由当前 seed 生成的主色</span>
+                                </div>
+                                <span class="pv-swatch"></span>
+                            </div>
+                        </section>
+                        <section class="pv-section">
+                            <div class="pv-section-title">通知</div>
+                            <div class="pv-row">
+                                <div class="pv-row-body">
+                                    <b>邮件通知</b>
+                                    <span>重要更新通过邮件发送</span>
+                                </div>
+                                <span class="pv-switch pv-switch-on"><span class="pv-switch-thumb"></span></span>
+                            </div>
+                            <div class="pv-row">
+                                <div class="pv-row-body">
+                                    <b>推送通知</b>
+                                    <span>桌面与移动端即时推送</span>
+                                </div>
+                                <span class="pv-switch pv-switch-on"><span class="pv-switch-thumb"></span></span>
+                            </div>
+                            <div class="pv-row">
+                                <div class="pv-row-body">
+                                    <b>每周摘要</b>
+                                    <span>每周一发送使用情况摘要</span>
+                                </div>
+                                <span class="pv-switch"><span class="pv-switch-thumb"></span></span>
+                            </div>
+                        </section>
+                        <section class="pv-section">
+                            <div class="pv-section-title">关于</div>
+                            <div class="pv-row">
+                                <div class="pv-row-body">
+                                    <b>版本 2.4.0</b>
+                                    <span>配色由 NekoUI HCT 色彩引擎生成</span>
+                                </div>
+                                <button type="button" class="pv-btn pv-btn-primary">检查更新</button>
+                            </div>
+                        </section>
+                    </main>
                 </div>
             </div>
         </section>
