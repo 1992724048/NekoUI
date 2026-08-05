@@ -772,24 +772,24 @@ function rgbToCmyk(rgb) {
     };
 }
 
-// 各格式色值单行文本（提示框与右键复制子菜单共用，保证格式一致）
+// 各格式色值单行纯值（右键复制子菜单直接复制，不带名称前缀）
 function colorValueLines(rgb) {
     const hsl = rgbToHsl(rgb);
     const hsv = rgbToHsv(rgb);
     const cmyk = rgbToCmyk(rgb);
     return {
         hex: NekoHCT.rgbToHex(rgb).toUpperCase(),
-        rgb: 'RGB: ' + rgb.r + ', ' + rgb.g + ', ' + rgb.b,
-        hsl: 'HSL: ' + Math.round(hsl.h) % 360 + '°, ' + Math.round(hsl.s) + '%, ' + Math.round(hsl.l) + '%',
-        hsv: 'HSV: ' + Math.round(hsv.h) % 360 + '°, ' + Math.round(hsv.s) + '%, ' + Math.round(hsv.v) + '%',
-        cmyk: 'CMYK: ' + [cmyk.c, cmyk.m, cmyk.y, cmyk.k].map((value) => Math.round(value) + '%').join(', '),
-        vec4: 'VEC4: ' + [rgb.r / 255, rgb.g / 255, rgb.b / 255, 1].map((value) => value.toFixed(3)).join(', '),
+        rgb: rgb.r + ', ' + rgb.g + ', ' + rgb.b,
+        hsl: Math.round(hsl.h) % 360 + '°, ' + Math.round(hsl.s) + '%, ' + Math.round(hsl.l) + '%',
+        hsv: Math.round(hsv.h) % 360 + '°, ' + Math.round(hsv.s) + '%, ' + Math.round(hsv.v) + '%',
+        cmyk: [cmyk.c, cmyk.m, cmyk.y, cmyk.k].map((value) => Math.round(value) + '%').join(', '),
+        vec4: [rgb.r / 255, rgb.g / 255, rgb.b / 255, 1].map((value) => value.toFixed(3)).join(', '),
     };
 }
 
 function formatColorValues(rgb) {
     const lines = colorValueLines(rgb);
-    return lines.rgb + '\n' + lines.hsl + '\n' + lines.hsv + '\n' + lines.cmyk + '\n' + lines.vec4;
+    return 'RGB: ' + lines.rgb + '\nHSL: ' + lines.hsl + '\nHSV: ' + lines.hsv + '\nCMYK: ' + lines.cmyk + '\nVEC4: ' + lines.vec4;
 }
 
 // 统一富提示框：标题区（名称 + 色值）+ 分隔线 + 内容区（用途说明 + 多行色值）；单例 fixed 定位，样式跟随主题 CSS 变量，右/下边缘防溢出
@@ -925,10 +925,10 @@ function applySeed(hex) {
     seedHexInput.value = hex;
     renderPaletteRamps(hex);
     renderRoleTable(currentTheme);
-    cppExportPre.textContent = buildCppExport(hex);
+    cppExportPre.textContent = buildExport(hex, currentExportLang);
     applyPageTheme(currentTheme, hex);
-    if (refOverlay.hidden === false) {
-        renderRefOverlay();
+    if (refPage.hidden === false) {
+        renderRefControls();
     }
 }
 
@@ -970,8 +970,8 @@ function hideCtxMenu() {
 }
 
 document.addEventListener('contextmenu', (e) => {
-    // 输入框内放行原生右键（hex 文本框粘贴/全选、取色器查看颜色值）；覆盖层内放行（自定义菜单被覆盖层遮挡，z-index 低于覆盖层）
-    if (e.target.closest('input') || refOverlay.hidden === false) {
+    // 输入框内放行原生右键（hex 文本框粘贴/全选、取色器查看颜色值），其余位置拦截显示自定义菜单
+    if (e.target.closest('input')) {
         return;
     }
     e.preventDefault();
@@ -1265,13 +1265,99 @@ const REF_CONTROLS = [
             return el;
         },
     },
+    {
+        name: 'TopAppBar',
+        roles: ['surface', 'on_surface', 'outline_variant'],
+        preview: (scheme) => {
+            const el = document.createElement('div');
+            el.className = 'ref-appbar';
+            el.style.background = scheme.surface;
+            el.style.color = scheme.on_surface;
+            el.style.borderColor = scheme.outline_variant;
+            el.textContent = '顶栏标题';
+            return el;
+        },
+    },
+    {
+        name: 'NavigationBar',
+        roles: ['surface_container', 'primary', 'on_surface_variant'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-navbar';
+            wrap.style.background = scheme.surface_container;
+            const labels = ['首页', '项目', '设置'];
+            for (let i = 0; i < labels.length; i++) {
+                const item = document.createElement('span');
+                item.className = 'ref-nav-item';
+                item.style.color = i === 0 ? scheme.primary : scheme.on_surface_variant;
+                item.textContent = labels[i];
+                wrap.appendChild(item);
+            }
+            return wrap;
+        },
+    },
+    {
+        name: 'List',
+        roles: ['surface_container_lowest', 'on_surface', 'on_surface_variant', 'outline_variant'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-list';
+            const items = [
+                { title: '列表项一', sub: '次要说明文字' },
+                { title: '列表项二', sub: '次要说明文字' },
+            ];
+            for (const item of items) {
+                const row = document.createElement('div');
+                row.className = 'ref-list-item';
+                row.style.borderColor = scheme.outline_variant;
+                const title = document.createElement('span');
+                title.className = 'ref-list-title';
+                title.style.color = scheme.on_surface;
+                title.textContent = item.title;
+                const sub = document.createElement('span');
+                sub.className = 'ref-list-sub';
+                sub.style.color = scheme.on_surface_variant;
+                sub.textContent = item.sub;
+                row.appendChild(title);
+                row.appendChild(sub);
+                wrap.appendChild(row);
+            }
+            wrap.style.background = scheme.surface_container_lowest;
+            return wrap;
+        },
+    },
+    {
+        name: 'Tooltip',
+        roles: ['inverse_surface', 'inverse_on_surface'],
+        preview: (scheme) => {
+            const el = document.createElement('div');
+            el.className = 'ref-tooltip';
+            el.style.background = scheme.inverse_surface;
+            el.style.color = scheme.inverse_on_surface;
+            el.textContent = '提示文字';
+            return el;
+        },
+    },
+    {
+        name: 'ProgressBar',
+        roles: ['primary', 'surface_container_highest'],
+        preview: (scheme) => {
+            const track = document.createElement('div');
+            track.className = 'ref-progress';
+            track.style.background = scheme.surface_container_highest;
+            const fill = document.createElement('div');
+            fill.className = 'ref-progress-fill';
+            fill.style.background = scheme.primary;
+            track.appendChild(fill);
+            return track;
+        },
+    },
 ];
 
-const refOverlay = document.getElementById('ref-overlay');
-const refOpenButton = document.getElementById('ref-open');
-const refCloseButton = document.getElementById('ref-close');
+// 页面切换：取色工具 / 控件配色（tab 组驱动，.page 容器显隐）
+const refPage = document.getElementById('page-ref');
 
-function renderRefOverlay() {
+function renderRefControls() {
     const scheme = NekoHCT.scheme(state.seed, currentTheme);
     const body = document.getElementById('ref-body');
     body.textContent = '';
@@ -1294,27 +1380,21 @@ function renderRefOverlay() {
     }
 }
 
-function openRefOverlay() {
-    renderRefOverlay();
-    refOverlay.hidden = false;
+function switchPage(pageId) {
+    document.getElementById('page-picker').hidden = pageId !== 'picker';
+    refPage.hidden = pageId !== 'ref';
+    for (const tab of document.querySelectorAll('.page-tab')) {
+        tab.setAttribute('aria-selected', String(tab.dataset.page === pageId));
+    }
+    document.getElementById('page-tabs').setAttribute('data-page', pageId);
+    if (pageId === 'ref') {
+        renderRefControls();
+    }
 }
 
-function closeRefOverlay() {
-    refOverlay.hidden = true;
+for (const tab of document.querySelectorAll('.page-tab')) {
+    tab.addEventListener('click', () => switchPage(tab.dataset.page));
 }
-
-refOpenButton.addEventListener('click', openRefOverlay);
-refCloseButton.addEventListener('click', closeRefOverlay);
-refOverlay.addEventListener('click', (e) => {
-    if (e.target === refOverlay) {
-        closeRefOverlay();
-    }
-});
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && refOverlay.hidden === false) {
-        closeRefOverlay();
-    }
-});
 
 // 角色表：每行 = 色块，label 与 hex 上下居中，文字色按色块 tone 选深/浅
 function renderRoleTable(brightness) {
@@ -1344,7 +1424,7 @@ function renderRoleTable(brightness) {
         cell.dataset.hex = hex;
         cell.innerHTML = '<span class="role-cell-label">' + label + '</span><span class="role-cell-hex">' + hex + '</span>';
         const roleInfo = ROLE_INFO[key] || 'Material Design 颜色角色';
-        cell.addEventListener('click', () => copyText(hex).then(() => showToast('已复制 ' + key + ' ' + hex)));
+        cell.addEventListener('click', () => copyText(hex).then(() => showToast('已复制 ' + hex)));
         cell.addEventListener('mouseenter', (e) => showTip(label, hex, roleInfo, e.clientX, e.clientY));
         cell.addEventListener('mousemove', (e) => showTip(label, hex, roleInfo, e.clientX, e.clientY));
         cell.addEventListener('mouseleave', hideTip);
@@ -1365,8 +1445,8 @@ function setTheme(brightness) {
     document.documentElement.dataset.theme = brightness;
     applyPageTheme(brightness, state.seed);
     renderRoleTable(brightness);
-    if (refOverlay.hidden === false) {
-        renderRefOverlay();
+    if (refPage.hidden === false) {
+        renderRefControls();
     }
 }
 
@@ -1379,7 +1459,7 @@ copyAllButton.addEventListener('click', () => {
     copyText(text).then(() => showToast('已复制全部 ' + NekoHCT.SCHEME_ORDER.length + ' 角色'));
 });
 
-// 导出 ColorScheme 角色字典（light/dark 两段，key 逐字匹配 ColorScheme.hpp，值 0xAARRGGBB 大写）
+// 导出 ColorScheme 角色字典（14 种语言，light/dark 两段，key 逐字匹配 ColorScheme.hpp，值 0xAARRGGBB / CSS 用 #RRGGBB）
 
 function hexToArgb(hex) {
     const rgb = NekoHCT.hexToRgb(hex);
@@ -1387,29 +1467,220 @@ function hexToArgb(hex) {
     return '0xFF' + channel(rgb.r) + channel(rgb.g) + channel(rgb.b);
 }
 
-function buildCppExport(seedHex) {
-    const lines = [];
-    for (const brightness of ['light', 'dark']) {
+// 共享中间结构：{ light: [{key, hex}...], dark: [...] }，14 个语言生成器消费同一数据
+function schemeData(seedHex) {
+    const entries = (brightness) => {
         const scheme = NekoHCT.scheme(seedHex, brightness);
-        const mapName = brightness === 'light' ? 'kSchemeLight' : 'kSchemeDark';
-        lines.push('// ' + brightness + '(seed) 角色字典（名称 → 0xAARRGGBB，字段名逐字匹配 ColorScheme.hpp）');
-        lines.push('static const std::unordered_map<std::string, uint32_t> ' + mapName + ' = {');
-        for (const { key } of NekoHCT.SCHEME_ORDER) {
-            lines.push('    {"' + key + '", ' + hexToArgb(scheme[key]) + '},');
-        }
-        lines.push('};');
-        lines.push('');
-    }
-    return lines.join('\n');
+        return NekoHCT.SCHEME_ORDER.map(({ key }) => ({ key, hex: scheme[key] }));
+    };
+    return { light: entries('light'), dark: entries('dark') };
+}
+
+const EXPORT_LANGUAGES = [
+    {
+        id: 'cpp',
+        name: 'C++',
+        generate: (data) => {
+            const lines = [];
+            for (const brightness of ['light', 'dark']) {
+                const mapName = brightness === 'light' ? 'kSchemeLight' : 'kSchemeDark';
+                lines.push('// ' + brightness + '(seed) 角色字典（名称 → 0xAARRGGBB，字段名逐字匹配 ColorScheme.hpp）');
+                lines.push('static const std::unordered_map<std::string, uint32_t> ' + mapName + ' = {');
+                for (const { key, hex } of data[brightness]) {
+                    lines.push('    {"' + key + '", ' + hexToArgb(hex) + '},');
+                }
+                lines.push('};');
+                lines.push('');
+            }
+            return lines.join('\n');
+        },
+    },
+    {
+        id: 'json',
+        name: 'JSON',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '        "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
+            return '{\n'
+                + '    "light": {\n' + block(data.light) + '\n    },\n'
+                + '    "dark": {\n' + block(data.dark) + '\n    }\n'
+                + '}';
+        },
+    },
+    {
+        id: 'css',
+        name: 'CSS 变量',
+        generate: (data) => {
+            const lines = [];
+            for (const brightness of ['light', 'dark']) {
+                lines.push('/* ' + brightness + '(seed) 角色变量（#RRGGBB） */');
+                lines.push(":root[data-theme='" + brightness + "'] {");
+                for (const { key, hex } of data[brightness]) {
+                    lines.push('    --' + key + ': ' + hex + ';');
+                }
+                lines.push('}');
+                lines.push('');
+            }
+            return lines.join('\n');
+        },
+    },
+    {
+        id: 'python',
+        name: 'Python',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
+            return 'LIGHT_SCHEME = {\n' + block(data.light) + '\n}\n\nDARK_SCHEME = {\n' + block(data.dark) + '\n}';
+        },
+    },
+    {
+        id: 'javascript',
+        name: 'JavaScript',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    ' + key + ': ' + hexToArgb(hex) + ',').join('\n');
+            return 'const kSchemeLight = {\n' + block(data.light) + '\n};\n\nconst kSchemeDark = {\n' + block(data.dark) + '\n};';
+        },
+    },
+    {
+        id: 'rust',
+        name: 'Rust',
+        generate: (data) => {
+            const len = data.light.length;
+            const block = (entries) => entries.map(({ key, hex }) => '    ("' + key + '", ' + hexToArgb(hex) + '),').join('\n');
+            return 'pub const LIGHT_SCHEME: [(&str, u32); ' + len + '] = [\n' + block(data.light) + '\n];\n\n'
+                + 'pub const DARK_SCHEME: [(&str, u32); ' + len + '] = [\n' + block(data.dark) + '\n];';
+        },
+    },
+    {
+        id: 'go',
+        name: 'Go',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
+            return 'var lightScheme = map[string]uint32{\n' + block(data.light) + '\n}\n\nvar darkScheme = map[string]uint32{\n' + block(data.dark) + '\n}';
+        },
+    },
+    {
+        id: 'java',
+        name: 'Java',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '        put("' + key + '", ' + hexToArgb(hex) + ');').join('\n');
+            return 'Map<String, Integer> lightScheme = new HashMap<>() {{\n' + block(data.light) + '\n    }};\n\n'
+                + 'Map<String, Integer> darkScheme = new HashMap<>() {{\n' + block(data.dark) + '\n    }};';
+        },
+    },
+    {
+        id: 'dart',
+        name: 'Dart',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => "    '" + key + "': " + hexToArgb(hex) + ',').join('\n');
+            return 'const lightScheme = <String, int>{\n' + block(data.light) + '\n};\n\nconst darkScheme = <String, int>{\n' + block(data.dark) + '\n};';
+        },
+    },
+    {
+        id: 'csharp',
+        name: 'C#',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    ["' + key + '"] = ' + hexToArgb(hex) + ',').join('\n');
+            return 'var lightScheme = new Dictionary<string, uint> {\n' + block(data.light) + '\n};\n\nvar darkScheme = new Dictionary<string, uint> {\n' + block(data.dark) + '\n};';
+        },
+    },
+    {
+        id: 'php',
+        name: 'PHP',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => "    '" + key + "' => " + hexToArgb(hex) + ',').join('\n');
+            return '$lightScheme = [\n' + block(data.light) + '\n];\n\n$darkScheme = [\n' + block(data.dark) + '\n];';
+        },
+    },
+    {
+        id: 'kotlin',
+        name: 'Kotlin',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '" to ' + hexToArgb(hex) + ',').join('\n');
+            return 'val lightScheme = mapOf(\n' + block(data.light) + '\n)\n\nval darkScheme = mapOf(\n' + block(data.dark) + '\n)';
+        },
+    },
+    {
+        id: 'typescript',
+        name: 'TypeScript',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    ' + key + ': ' + hexToArgb(hex) + ',').join('\n');
+            return 'export const lightScheme: Record<string, number> = {\n' + block(data.light) + '\n};\n\nexport const darkScheme: Record<string, number> = {\n' + block(data.dark) + '\n};';
+        },
+    },
+    {
+        id: 'swift',
+        name: 'Swift',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
+            return 'let lightScheme: [String: UInt32] = [\n' + block(data.light) + '\n]\n\nlet darkScheme: [String: UInt32] = [\n' + block(data.dark) + '\n]';
+        },
+    },
+    {
+        id: 'toml',
+        name: 'TOML',
+        generate: (data) => {
+            const lines = [];
+            for (const brightness of ['light', 'dark']) {
+                lines.push('# ' + brightness + '(seed) 角色字典');
+                lines.push('[' + brightness + ']');
+                for (const { key, hex } of data[brightness]) {
+                    lines.push(key + ' = ' + hexToArgb(hex));
+                }
+                lines.push('');
+            }
+            return lines.join('\n');
+        },
+    },
+    {
+        id: 'yaml',
+        name: 'YAML',
+        generate: (data) => {
+            const lines = [];
+            for (const brightness of ['light', 'dark']) {
+                lines.push('# ' + brightness + '(seed) 角色字典');
+                lines.push(brightness + ':');
+                for (const { key, hex } of data[brightness]) {
+                    lines.push('  ' + key + ': ' + hexToArgb(hex));
+                }
+            }
+            return lines.join('\n');
+        },
+    },
+    {
+        id: 'xaml',
+        name: 'XAML',
+        generate: (data) => {
+            const block = (entries) => entries.map(({ key, hex }) => '    <Color x:Key="' + key + '">#' + hexToArgb(hex).slice(2) + '</Color>').join('\n');
+            return '<!-- light(seed) 角色字典 -->\n<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\n'
+                + block(data.light) + '\n</ResourceDictionary>\n\n'
+                + '<!-- dark(seed) 角色字典 -->\n<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\n'
+                + block(data.dark) + '\n</ResourceDictionary>';
+        },
+    },
+];
+
+function buildExport(seedHex, language) {
+    const generator = EXPORT_LANGUAGES.find((lang) => lang.id === language) || EXPORT_LANGUAGES[0];
+    return generator.generate(schemeData(seedHex));
 }
 
 const cppExportPre = document.getElementById('cpp-export');
 const cppCopyButton = document.getElementById('cpp-copy');
+const exportLangSelect = document.getElementById('export-lang');
+let currentExportLang = 'cpp';
+
+function refreshExport() {
+    cppExportPre.textContent = buildExport(state.seed, currentExportLang);
+}
+
+exportLangSelect.addEventListener('change', () => {
+    currentExportLang = exportLangSelect.value;
+    refreshExport();
+});
 
 cppCopyButton.addEventListener('click', () => {
-    const exportText = buildCppExport(state.seed);
-    cppExportPre.textContent = exportText;
-    copyText(exportText).then(() => showToast('已复制 C++ 代码'));
+    refreshExport();
+    const langName = EXPORT_LANGUAGES.find((lang) => lang.id === currentExportLang).name;
+    copyText(cppExportPre.textContent).then(() => showToast('已复制 ' + langName + ' 代码'));
 });
 
 // 初始化：随机 seed 同步取色器/hex 输入框，setTheme 统一按钮高亮、data-theme、页面主题变量与角色表数据
@@ -1418,4 +1689,4 @@ seedColorInput.value = state.seed;
 seedHexInput.value = state.seed;
 renderPaletteRamps(state.seed);
 setTheme(currentTheme);
-cppExportPre.textContent = buildCppExport(state.seed);
+refreshExport();

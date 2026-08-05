@@ -34,6 +34,15 @@ body {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     font-size: 14px;
     line-height: 1.5;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 页面大部分区域禁用文字选中（鼠标拖动不选中），可编辑/可选区域例外 */
+.seed-row input[type='text'],
+#cpp-export {
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 .app-header {
@@ -62,13 +71,81 @@ body {
     gap: 12px;
 }
 
+/* 页面切换分段滑块：滑块在「取色工具/控件配色」之间平移，选中按钮文字为滑块上的 on-accent */
+.page-tabs {
+    position: relative;
+    display: flex;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.page-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: var(--accent);
+    pointer-events: none;
+    transition: transform 0.25s ease;
+}
+
+.page-tabs[data-page='ref'] .page-slider {
+    transform: translateX(100%);
+}
+
+.page-tab {
+    position: relative;
+    z-index: 1;
+    width: 88px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+.page-tab[aria-selected='true'] {
+    color: var(--on-accent);
+}
+
+.page-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.page[hidden] {
+    display: none;
+}
+
+/* 页面切换内容淡入（状态转换引导） */
+.page {
+    animation: page-fade 0.2s ease;
+}
+
+@keyframes page-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .header-sep {
     width: 1px;
     height: 24px;
     background: var(--border);
 }
 
-/* 分段滑块主题切换：滑块在 Light/Dark 之间平移，选中按钮文字为滑块上的 on-accent */
+/* 分段滑块主题切换：滑块在浅色/深色图标之间平移，图标颜色随按钮 color（currentColor）适配 */
 .theme-toggle {
     position: relative;
     display: flex;
@@ -95,18 +172,17 @@ body {
 .theme-toggle button {
     position: relative;
     z-index: 1;
-    width: 68px;
-    padding: 6px 0;
+    width: 40px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: none;
     background: none;
     color: var(--muted);
-    font-size: 13px;
     cursor: pointer;
     transition: color 0.25s ease;
-}
-
-.theme-toggle button + button {
-    border-left: 1px solid var(--border);
 }
 
 .theme-toggle button[aria-pressed='true'] {
@@ -130,9 +206,7 @@ body,
 .seed-row input[type='text'],
 #cpp-export,
 .ctx-menu,
-.ctx-submenu,
-.ref-panel,
-.ref-close {
+.ctx-submenu {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -544,68 +618,15 @@ body,
     right: 100%;
 }
 
-.ref-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 48px 20px;
-    overflow: auto;
-}
-
-/* display:flex 会覆盖 UA 的 [hidden] 规则，必须显式声明以支持初始隐藏与开关切换 */
-.ref-overlay[hidden] {
-    display: none;
-}
-
-.ref-panel {
-    width: min(96vw, 760px);
-    background: var(--panel);
-    border: 1px solid var(--border);
-}
-
-.ref-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-}
-
-.ref-head h2 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.ref-close {
-    border: none;
-    background: none;
-    color: var(--muted);
-    font-size: 20px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 2px 6px;
-}
-
-.ref-close:hover {
-    color: var(--text);
-}
-
-.ref-body {
-    padding: 16px 20px;
+.ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
 }
 
 .ref-item {
-    margin-bottom: 18px;
-}
-
-.ref-item:last-child {
-    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .ref-item-name {
@@ -730,6 +751,87 @@ body,
     font-size: 12px;
 }
 
+.ref-appbar {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 220px;
+    border-bottom: 1px solid;
+}
+
+.ref-navbar {
+    display: flex;
+    gap: 16px;
+    padding: 10px 14px;
+    font-size: 12px;
+    min-width: 220px;
+}
+
+.ref-nav-item {
+    padding: 2px 0;
+    font-weight: 600;
+}
+
+.ref-list {
+    min-width: 200px;
+}
+
+.ref-list-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    border-bottom: 1px solid;
+    font-size: 12px;
+}
+
+.ref-list-title {
+    font-weight: 600;
+}
+
+.ref-list-sub {
+    opacity: 0.8;
+}
+
+.ref-tooltip {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.ref-progress {
+    position: relative;
+    width: 160px;
+    height: 4px;
+}
+
+.ref-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 40%;
+}
+
+.export-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.export-select {
+    height: 36px;
+    padding: 0 8px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+}
+
+.export-select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
 @media (max-width: 900px) {
     .layout {
         grid-template-columns: 1fr;
@@ -739,5 +841,9 @@ body,
 @media (max-width: 760px) {
     .role-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .ref-grid {
+        grid-template-columns: 1fr;
     }
 }

@@ -14,17 +14,31 @@
 <header class="app-header">
     <h1>NekoUI HCT 颜色工具</h1>
     <div class="header-actions">
-        <button type="button" class="btn" id="ref-open">控件配色</button>
+        <nav class="page-tabs" id="page-tabs">
+            <span class="page-slider" id="page-slider"></span>
+            <button type="button" class="page-tab" data-page="picker" aria-selected="true">取色工具</button>
+            <button type="button" class="page-tab" data-page="ref" aria-selected="false">控件配色</button>
+        </nav>
         <span class="header-sep"></span>
         <div class="theme-toggle" id="theme-toggle" role="group" aria-label="主题切换">
             <span class="theme-slider" id="theme-slider"></span>
-            <button type="button" id="theme-light" aria-pressed="false">Light</button>
-            <button type="button" id="theme-dark" aria-pressed="false">Dark</button>
+            <button type="button" id="theme-light" aria-pressed="false" aria-label="浅色主题" title="浅色主题">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+                </svg>
+            </button>
+            <button type="button" id="theme-dark" aria-pressed="false" aria-label="深色主题" title="深色主题">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
         </div>
     </div>
 </header>
 <div id="app">
-    <div class="layout">
+    <div class="page" id="page-picker">
+        <div class="layout">
         <div class="left-col">
             <section class="panel">
                 <div class="panel-head">
@@ -65,10 +79,31 @@
             </section>
             <section class="panel">
                 <div class="panel-head">
-                    <h2>导出 C++</h2>
-                    <button type="button" class="btn" id="cpp-copy">复制代码</button>
+                    <h2>导出颜色方案</h2>
+                    <div class="export-actions">
+                        <select id="export-lang" class="export-select">
+                            <option value="cpp" selected>C++</option>
+                            <option value="json">JSON</option>
+                            <option value="css">CSS 变量</option>
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="rust">Rust</option>
+                            <option value="go">Go</option>
+                            <option value="java">Java</option>
+                            <option value="dart">Dart</option>
+                            <option value="csharp">C#</option>
+                            <option value="php">PHP</option>
+                            <option value="kotlin">Kotlin</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="swift">Swift</option>
+                            <option value="toml">TOML</option>
+                            <option value="yaml">YAML</option>
+                            <option value="xaml">XAML</option>
+                        </select>
+                        <button type="button" class="btn" id="cpp-copy">复制代码</button>
+                    </div>
                 </div>
-                <p class="panel-desc">生成 ColorScheme 角色字典（名称 → 0xAARRGGBB），字段名逐字匹配 ColorScheme.hpp</p>
+                <p class="panel-desc">生成 ColorScheme 角色字典（名称 → 0xAARRGGBB / #RRGGBB），支持 14 种语言，字段名逐字匹配 ColorScheme.hpp</p>
                 <pre id="cpp-export"></pre>
             </section>
         </div>
@@ -78,6 +113,16 @@
                 <button type="button" class="btn" id="copy-all">复制全部</button>
             </div>
             <div id="role-table"></div>
+        </section>
+    </div>
+    </div>
+    <div class="page" id="page-ref" hidden>
+        <section class="panel">
+            <div class="panel-head">
+                <h2>控件配色参考</h2>
+            </div>
+            <p class="panel-desc">按当前 seed 的 scheme() 角色渲染常见控件配色，标注所用角色（随 seed / 主题实时刷新）</p>
+            <div class="ref-grid" id="ref-body"></div>
         </section>
     </div>
 </div>
@@ -99,15 +144,6 @@
     <div class="ctx-sep"></div>
     <button type="button" class="ctx-item" id="ctx-random">随机种子</button>
     <button type="button" class="ctx-item" id="ctx-copy-accent">复制页面主题色</button>
-</div>
-<div id="ref-overlay" class="ref-overlay" hidden>
-    <div class="ref-panel">
-        <div class="ref-head">
-            <h2>控件配色参考</h2>
-            <button type="button" class="ref-close" id="ref-close">×</button>
-        </div>
-        <div class="ref-body" id="ref-body"></div>
-    </div>
 </div>
 <script src="app.js"></script>
 </body>
