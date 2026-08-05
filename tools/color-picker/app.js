@@ -946,7 +946,8 @@ function refreshMeteors() {
         // 参考实现：无 left/top 锚点（元素默认容器静态位置），全靠 --x 横向位移 + --z 纵深视差铺开
         meteor.style.setProperty('--x', (3 + Math.random() * 18).toFixed(1));
         meteor.style.setProperty('--z', (3 - Math.random() * 12).toFixed(1));
-        meteor.style.setProperty('--d', (1 + Math.random() * 2).toFixed(1));
+        // --d 均匀递进（1,2,3 循环，*0.3s 后延迟 0.3/0.6/0.9s 三波错开），避免随机延迟扎堆造成"一阵一阵"
+        meteor.style.setProperty('--d', (i % 3) + 1);
         meteor.style.setProperty('--mc', randomSchemeColor());
         meteorContainer.appendChild(meteor);
     }
@@ -991,6 +992,45 @@ const ctxCopySubmenu = document.getElementById('ctx-copy-submenu');
 let ctxMenuX = 0;
 let ctxMenuY = 0;
 let ctxCopyHex = null;
+let ctxSubmenuTimer = null;
+
+// 复制颜色子菜单已迁出 .ctx-menu（body 级独立元素，backdrop-filter 独立生效），
+// 位置按主菜单实际矩形计算：贴靠右侧（open-left 时贴左侧），左右边缘防溢出
+function positionCtxSubmenu() {
+    if (ctxCopySubmenu === null) {
+        return;
+    }
+    const rect = ctxMenu.getBoundingClientRect();
+    const subWidth = ctxCopySubmenu.offsetWidth || 250;
+    const left = ctxMenu.classList.contains('open-left') ? rect.left - subWidth : rect.right;
+    ctxCopySubmenu.style.left = Math.max(8, Math.min(left, window.innerWidth - subWidth - 8)) + 'px';
+    ctxCopySubmenu.style.top = Math.max(8, rect.top) + 'px';
+}
+
+function showCtxSubmenu() {
+    if (ctxCopySubmenu === null) {
+        return;
+    }
+    clearTimeout(ctxSubmenuTimer);
+    ctxCopySubmenu.hidden = false;
+    ctxCopySubmenu.classList.add('show');
+    positionCtxSubmenu();
+}
+
+function hideCtxSubmenu() {
+    if (ctxCopySubmenu === null) {
+        return;
+    }
+    clearTimeout(ctxSubmenuTimer);
+    ctxCopySubmenu.hidden = true;
+    ctxCopySubmenu.classList.remove('show');
+}
+
+// 移出根项后延迟隐藏，留出跨越根项/子菜单间隙的过渡时间（移入子菜单即取消）
+function scheduleHideCtxSubmenu() {
+    clearTimeout(ctxSubmenuTimer);
+    ctxSubmenuTimer = setTimeout(hideCtxSubmenu, 150);
+}
 
 function showCtxMenu(x, y) {
     ctxMenu.hidden = false;
@@ -998,10 +1038,12 @@ function showCtxMenu(x, y) {
     ctxMenu.style.top = Math.max(8, Math.min(y, window.innerHeight - ctxMenu.offsetHeight - 8)) + 'px';
     // 子菜单默认向右展开，贴近右缘时向左（估计子菜单宽度 250）
     ctxMenu.classList.toggle('open-left', x + ctxMenu.offsetWidth + 250 > window.innerWidth);
+    hideCtxSubmenu();
 }
 
 function hideCtxMenu() {
     ctxMenu.hidden = true;
+    hideCtxSubmenu();
 }
 
 document.addEventListener('contextmenu', (e) => {
@@ -1044,21 +1086,37 @@ document.addEventListener('keydown', (e) => {
 });
 
 // 子菜单项委托：点击按所选格式复制右键时缓存的色块颜色
-ctxCopySubmenu.addEventListener('click', (e) => {
-    const btn = e.target.closest('.ctx-item');
-    if (btn === null || ctxCopyHex === null) {
-        return;
-    }
-    const text = colorValueLines(NekoHCT.hexToRgb(ctxCopyHex))[btn.dataset.format] || ctxCopyHex;
-    copyText(text).then(() => showToast('已复制 ' + btn.textContent + ' ' + text));
-    hideCtxMenu();
-});
+if (ctxCopySubmenu !== null) {
+    ctxCopySubmenu.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ctx-item');
+        if (btn === null || ctxCopyHex === null) {
+            return;
+        }
+        const text = colorValueLines(NekoHCT.hexToRgb(ctxCopyHex))[btn.dataset.format] || ctxCopyHex;
+        copyText(text).then(() => showToast('已复制 ' + btn.textContent + ' ' + text));
+        hideCtxMenu();
+    });
+}
 
-// 点击「复制颜色」根项也可展开/收起子菜单（hover 展开之外的可发现性兜底）；阻止冒泡避免 document click 误关菜单
-ctxCopyColorItem.addEventListener('click', (e) => {
-    e.stopPropagation();
-    ctxCopySubmenu.classList.toggle('show');
-});
+// hover 显隐：子菜单已迁出 .ctx-menu，原 CSS 后代选择器失效，改由 JS 驱动（150ms 延迟留出跨元素过渡）
+if (ctxCopyColorItem !== null) {
+    ctxCopyColorItem.addEventListener('mouseenter', () => showCtxSubmenu());
+    ctxCopyColorItem.addEventListener('mouseleave', scheduleHideCtxSubmenu);
+    // 点击「复制颜色」根项也可展开/收起子菜单（hover 展开之外的可发现性兜底）；阻止冒泡避免 document click 误关菜单
+    ctxCopyColorItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (ctxCopySubmenu !== null && ctxCopySubmenu.classList.contains('show')) {
+            hideCtxSubmenu();
+        } else {
+            showCtxSubmenu();
+        }
+    });
+}
+
+if (ctxCopySubmenu !== null) {
+    ctxCopySubmenu.addEventListener('mouseenter', () => clearTimeout(ctxSubmenuTimer));
+    ctxCopySubmenu.addEventListener('mouseleave', scheduleHideCtxSubmenu);
+}
 
 // 选色器从右键位置弹出：将取色 input 固定定位到鼠标坐标（1px 透明）再 click()，原生弹层随元素位置出现
 document.getElementById('ctx-picker').addEventListener('click', () => {

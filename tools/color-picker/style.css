@@ -269,6 +269,10 @@ body,
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
+    /* flex 居中使 .meteor（absolute 无 left/top）静态位置落在容器中心，流星从中心铺开而非左上角 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
     perspective: 800px;
     transform-style: preserve-3d;
 }
@@ -680,15 +684,13 @@ body,
 
 .ctx-submenu {
     display: none;
-    position: absolute;
-    left: 100%;
-    top: -4px;
+    position: fixed;
     min-width: 240px;
     padding: 4px 0;
     background: var(--panel);
-    /* 嵌套在 .ctx-menu（有 backdrop-filter）内时子元素 backdrop-filter 失效（Chromium 限制），
-       提高不透明度保证二级菜单背景清晰可读；blur 规则保留，浏览器支持时生效 */
-    background-color: color-mix(in srgb, var(--panel) 95%, transparent);
+    /* body 级独立元素（不再嵌套在有 backdrop-filter 的 .ctx-menu 内），backdrop-filter 独立生效；
+       位置由 JS 按主菜单矩形贴靠计算（open-left 时贴左侧） */
+    background-color: color-mix(in srgb, var(--panel) 72%, transparent);
     border: 1px solid var(--border);
     z-index: 31;
     backdrop-filter: blur(8px);
@@ -719,17 +721,8 @@ body,
     white-space: nowrap;
 }
 
-.ctx-submenu-root:hover .ctx-submenu {
-    display: block;
-}
-
 .ctx-submenu.show {
     display: block;
-}
-
-.ctx-menu.open-left .ctx-submenu {
-    left: auto;
-    right: 100%;
 }
 
 .ref-grid {
