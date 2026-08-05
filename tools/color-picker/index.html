@@ -268,6 +268,33 @@ body {
     color: #ffffff;
     font-size: 12px;
 }
+
+.panel-desc {
+    margin: 0 0 12px;
+    font-size: 13px;
+    opacity: 0.72;
+}
+
+.export-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+}
+
+#cpp-export {
+    margin: 0;
+    padding: 12px;
+    max-height: 320px;
+    overflow: auto;
+    background: var(--bg);
+    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+    border-radius: 6px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre;
+    user-select: text;
+}
 </style>
 </head>
 <body>
@@ -319,6 +346,14 @@ body {
             <code id="hct-hex"></code>
             <span id="gamut-badge">gamut-clipped</span>
         </div>
+    </section>
+    <section class="panel">
+        <h2>导出 C++</h2>
+        <p class="panel-desc">生成 ColorScheme::light()/dark() 初始化块，字段名逐字匹配 ColorScheme.hpp</p>
+        <div class="export-row">
+            <button type="button" class="btn" id="cpp-copy">复制代码</button>
+        </div>
+        <pre id="cpp-export"></pre>
     </section>
 </div>
 <script>
@@ -1160,6 +1195,62 @@ hctSwatch.addEventListener('click', () => {
 });
 
 renderHctSlider();
+
+// 面板④：导出 ColorScheme C++ 初始化代码（light/dark 两段，字段名逐字匹配 ColorScheme.hpp）
+
+// 显式 47 key → palette 映射，逐 key 对齐 ColorScheme.cpp 的 light()/dark() 赋值来源（不用字符串启发式推断）
+const ROLE_PALETTE = {
+    // primary（10）
+    primary: 'primary', onPrimary: 'primary', primary_container: 'primary',
+    on_primary_container: 'primary', primary_fixed: 'primary', primary_fixed_dim: 'primary',
+    on_primary_fixed: 'primary', on_primary_fixed_variant: 'primary', surface_tint: 'primary',
+    inverse_primary: 'primary',
+    // secondary（8）
+    secondary: 'secondary', on_secondary: 'secondary', secondary_container: 'secondary',
+    on_secondary_container: 'secondary', secondary_fixed: 'secondary', secondary_fixed_dim: 'secondary',
+    on_secondary_fixed: 'secondary', on_secondary_fixed_variant: 'secondary',
+    // tertiary（8）
+    tertiary: 'tertiary', on_tertiary: 'tertiary', tertiary_container: 'tertiary',
+    on_tertiary_container: 'tertiary', tertiary_fixed: 'tertiary', tertiary_fixed_dim: 'tertiary',
+    on_tertiary_fixed: 'tertiary', on_tertiary_fixed_variant: 'tertiary',
+    // error（4）
+    error: 'error', on_error: 'error', error_container: 'error', on_error_container: 'error',
+    // neutral（13）
+    surface: 'neutral', surface_dim: 'neutral', surface_bright: 'neutral',
+    surface_container_lowest: 'neutral', surface_container_low: 'neutral', surface_container: 'neutral',
+    surface_container_high: 'neutral', surface_container_highest: 'neutral', on_surface: 'neutral',
+    shadow: 'neutral', scrim: 'neutral', inverse_surface: 'neutral', inverse_on_surface: 'neutral',
+    // neutral_variant（4）
+    surface_variant: 'neutral_variant', on_surface_variant: 'neutral_variant',
+    outline: 'neutral_variant', outline_variant: 'neutral_variant',
+};
+
+function buildCppExport(seedHex) {
+    const lines = [];
+    for (const brightness of ['Light', 'Dark']) {
+        const scheme = NekoHCT.scheme(seedHex, brightness.toLowerCase());
+        lines.push('// ' + (brightness === 'Light' ? 'light' : 'dark') + '(seed) 初始化块');
+        lines.push('.brightness = Brightness::' + brightness + ',');
+        for (const { key } of NekoHCT.SCHEME_ORDER) {
+            const palette = ROLE_PALETTE[key];
+            const tone = Math.round(NekoHCT.hctFromColor(NekoHCT.hexToRgb(scheme[key])).tone);
+            lines.push('.' + key + ' = ' + palette + '.tone(' + tone + '),');
+        }
+        lines.push('');
+    }
+    return lines.join('\n');
+}
+
+const cppExportPre = document.getElementById('cpp-export');
+const cppCopyButton = document.getElementById('cpp-copy');
+
+cppCopyButton.addEventListener('click', () => {
+    const exportText = buildCppExport(state.seed);
+    cppExportPre.textContent = exportText;
+    copyText(exportText).then(() => showToast('已复制 C++ 代码'));
+});
+
+cppExportPre.textContent = buildCppExport(state.seed);
 </script>
 </body>
 </html>
