@@ -1254,7 +1254,7 @@ const REF_CONTROLS = [
         name: 'TextField',
         roles: ['surface_container_highest', 'surface_container_lowest', 'on_surface', 'outline'],
         preview: (scheme) => {
-            // MD3 两变体：Outlined（描边 + 底色）/ Filled（底色 + 聚焦粗底线）
+            // MD3 两变体：Outlined（描边 + 底色）/ Filled（底色 + 聚焦粗底线）；点击模拟聚焦（边框转 primary）
             const wrap = document.createElement('div');
             wrap.style.display = 'flex';
             wrap.style.flexWrap = 'wrap';
@@ -1264,14 +1264,22 @@ const REF_CONTROLS = [
             outlined.style.background = scheme.surface_container_lowest;
             outlined.style.color = scheme.on_surface;
             outlined.style.borderColor = scheme.outline;
+            outlined.style.cursor = 'text';
             outlined.textContent = 'Outlined';
             const filled = document.createElement('div');
             filled.className = 'ref-field';
             filled.style.background = scheme.surface_container_highest;
             filled.style.color = scheme.on_surface;
-            filled.style.borderColor = scheme.primary;
-            filled.style.borderBottomWidth = '2px';
+            filled.style.borderColor = scheme.outline;
+            filled.style.cursor = 'text';
             filled.textContent = 'Filled';
+            outlined.addEventListener('click', () => {
+                outlined.style.borderColor = scheme.primary;
+            });
+            filled.addEventListener('click', () => {
+                filled.style.borderColor = scheme.primary;
+                filled.style.borderBottomWidth = '2px';
+            });
             wrap.appendChild(outlined);
             wrap.appendChild(filled);
             return wrap;
@@ -1281,20 +1289,42 @@ const REF_CONTROLS = [
         name: 'Checkbox',
         roles: ['primary', 'onPrimary', 'outline'],
         preview: (scheme) => {
-            const checked = document.createElement('span');
-            checked.className = 'ref-check';
-            checked.style.background = scheme.primary;
-            checked.style.color = scheme.onPrimary;
-            checked.style.borderColor = scheme.primary;
-            checked.textContent = '✓';
-            const unchecked = document.createElement('span');
-            unchecked.className = 'ref-check';
-            unchecked.style.borderColor = scheme.outline;
+            // 可点击切换选中：选中 primary 背景 + onPrimary 勾，未选 outline 边框
             const wrap = document.createElement('div');
             wrap.style.display = 'flex';
-            wrap.style.gap = '8px';
-            wrap.appendChild(checked);
-            wrap.appendChild(unchecked);
+            wrap.style.alignItems = 'center';
+            wrap.style.gap = '14px';
+            const makeCheckbox = (initial, labelText) => {
+                const box = document.createElement('span');
+                box.className = 'ref-check';
+                box.style.cursor = 'pointer';
+                box.dataset.checked = initial ? '1' : '0';
+                const apply = () => {
+                    const checked = box.dataset.checked === '1';
+                    box.style.background = checked ? scheme.primary : 'none';
+                    box.style.color = checked ? scheme.onPrimary : 'transparent';
+                    box.style.borderColor = checked ? scheme.primary : scheme.outline;
+                    box.textContent = checked ? '✓' : '';
+                };
+                apply();
+                box.addEventListener('click', () => {
+                    box.dataset.checked = box.dataset.checked === '1' ? '0' : '1';
+                    apply();
+                });
+                const label = document.createElement('span');
+                label.style.fontSize = '12px';
+                label.style.color = 'var(--muted)';
+                label.textContent = labelText;
+                const group = document.createElement('span');
+                group.style.display = 'inline-flex';
+                group.style.alignItems = 'center';
+                group.style.gap = '6px';
+                group.appendChild(box);
+                group.appendChild(label);
+                wrap.appendChild(group);
+            };
+            makeCheckbox(true, '已选');
+            makeCheckbox(false, '未选');
             return wrap;
         },
     },
@@ -1302,21 +1332,48 @@ const REF_CONTROLS = [
         name: 'Radio',
         roles: ['primary', 'onPrimary', 'outline'],
         preview: (scheme) => {
-            const sel = document.createElement('span');
-            sel.className = 'ref-radio';
-            sel.style.borderColor = scheme.primary;
-            const dot = document.createElement('span');
-            dot.className = 'ref-radio-dot';
-            dot.style.background = scheme.primary;
-            sel.appendChild(dot);
-            const unsel = document.createElement('span');
-            unsel.className = 'ref-radio';
-            unsel.style.borderColor = scheme.outline;
+            // 可点击切换选中：选中 primary 边框 + 内点，未选 outline 边框
             const wrap = document.createElement('div');
             wrap.style.display = 'flex';
-            wrap.style.gap = '8px';
-            wrap.appendChild(sel);
-            wrap.appendChild(unsel);
+            wrap.style.alignItems = 'center';
+            wrap.style.gap = '14px';
+            const makeRadio = (initial, labelText) => {
+                const radio = document.createElement('span');
+                radio.className = 'ref-radio';
+                radio.style.cursor = 'pointer';
+                radio.dataset.checked = initial ? '1' : '0';
+                const dot = document.createElement('span');
+                dot.className = 'ref-radio-dot';
+                radio.appendChild(dot);
+                const apply = () => {
+                    const checked = radio.dataset.checked === '1';
+                    radio.style.borderColor = checked ? scheme.primary : scheme.outline;
+                    dot.style.background = checked ? scheme.primary : 'none';
+                };
+                apply();
+                radio.addEventListener('click', () => {
+                    for (const other of wrap.querySelectorAll('.ref-radio')) {
+                        other.dataset.checked = '0';
+                        other.querySelector('.ref-radio-dot').style.background = 'none';
+                        other.style.borderColor = scheme.outline;
+                    }
+                    radio.dataset.checked = '1';
+                    apply();
+                });
+                const label = document.createElement('span');
+                label.style.fontSize = '12px';
+                label.style.color = 'var(--muted)';
+                label.textContent = labelText;
+                const group = document.createElement('span');
+                group.style.display = 'inline-flex';
+                group.style.alignItems = 'center';
+                group.style.gap = '6px';
+                group.appendChild(radio);
+                group.appendChild(label);
+                wrap.appendChild(group);
+            };
+            makeRadio(true, '已选');
+            makeRadio(false, '未选');
             return wrap;
         },
     },
@@ -1324,25 +1381,44 @@ const REF_CONTROLS = [
         name: 'Switch',
         roles: ['primary', 'onPrimary', 'outline'],
         preview: (scheme) => {
-            const on = document.createElement('span');
-            on.className = 'ref-switch';
-            on.style.background = scheme.primary;
-            const onThumb = document.createElement('span');
-            onThumb.className = 'ref-switch-thumb';
-            onThumb.style.background = scheme.onPrimary;
-            on.appendChild(onThumb);
-            const off = document.createElement('span');
-            off.className = 'ref-switch';
-            off.style.background = scheme.outline;
-            const offThumb = document.createElement('span');
-            offThumb.className = 'ref-switch-thumb';
-            offThumb.style.background = scheme.surface_container_lowest;
-            off.appendChild(offThumb);
+            // 可点击切换：选中 primary 胶囊 + onPrimary thumb（右），未选 outline 底 + 浅 thumb（左）
             const wrap = document.createElement('div');
             wrap.style.display = 'flex';
-            wrap.style.gap = '8px';
-            wrap.appendChild(on);
-            wrap.appendChild(off);
+            wrap.style.alignItems = 'center';
+            wrap.style.gap = '14px';
+            const makeSwitch = (initial, labelText) => {
+                const sw = document.createElement('span');
+                sw.className = 'ref-switch';
+                sw.style.cursor = 'pointer';
+                sw.dataset.checked = initial ? '1' : '0';
+                const thumb = document.createElement('span');
+                thumb.className = 'ref-switch-thumb';
+                sw.appendChild(thumb);
+                const apply = () => {
+                    const checked = sw.dataset.checked === '1';
+                    sw.style.background = checked ? scheme.primary : scheme.surface_container_highest;
+                    sw.style.justifyContent = checked ? 'flex-end' : 'flex-start';
+                    thumb.style.background = checked ? scheme.onPrimary : scheme.outline;
+                };
+                apply();
+                sw.addEventListener('click', () => {
+                    sw.dataset.checked = sw.dataset.checked === '1' ? '0' : '1';
+                    apply();
+                });
+                const label = document.createElement('span');
+                label.style.fontSize = '12px';
+                label.style.color = 'var(--muted)';
+                label.textContent = labelText;
+                const group = document.createElement('span');
+                group.style.display = 'inline-flex';
+                group.style.alignItems = 'center';
+                group.style.gap = '8px';
+                group.appendChild(sw);
+                group.appendChild(label);
+                wrap.appendChild(group);
+            };
+            makeSwitch(true, '开');
+            makeSwitch(false, '关');
             return wrap;
         },
     },
@@ -1350,17 +1426,28 @@ const REF_CONTROLS = [
         name: 'Slider',
         roles: ['primary', 'surface_container_highest'],
         preview: (scheme) => {
+            // 点击轨道定位：fill 与 thumb 跟随点击位置（纯视觉演示）
             const track = document.createElement('div');
             track.className = 'ref-slider';
             track.style.background = scheme.surface_container_highest;
+            track.style.cursor = 'pointer';
             const fill = document.createElement('div');
             fill.className = 'ref-slider-fill';
             fill.style.background = scheme.primary;
-            track.appendChild(fill);
             const thumb = document.createElement('div');
             thumb.className = 'ref-slider-thumb';
             thumb.style.background = scheme.primary;
+            track.appendChild(fill);
             track.appendChild(thumb);
+            const setValue = (percent) => {
+                const clamped = Math.min(100, Math.max(0, percent));
+                fill.style.width = clamped + '%';
+                thumb.style.left = 'calc(' + clamped + '% - 8px)';
+            };
+            track.addEventListener('click', (e) => {
+                const rect = track.getBoundingClientRect();
+                setValue((e.clientX - rect.left) / rect.width * 100);
+            });
             return track;
         },
     },
@@ -1446,14 +1533,12 @@ const REF_CONTROLS = [
     },
     {
         name: 'Chip',
-        roles: ['secondary_container', 'on_secondary_container', 'outline'],
+        roles: ['secondary_container', 'on_secondary_container', 'primary_container', 'on_primary_container', 'outline'],
         preview: (scheme) => {
-            // MD3 assist chip：描边 + 引导图标 + 标签
+            // 可点击切换选中：未选 assist chip（secondary_container + outline 描边），选中 primary_container
             const el = document.createElement('div');
             el.className = 'ref-chip';
-            el.style.background = scheme.secondary_container;
-            el.style.color = scheme.on_secondary_container;
-            el.style.borderColor = scheme.outline;
+            el.style.cursor = 'pointer';
             const icon = document.createElement('span');
             icon.className = 'ref-chip-icon';
             icon.textContent = '+';
@@ -1461,6 +1546,17 @@ const REF_CONTROLS = [
             label.textContent = '添加标签';
             el.appendChild(icon);
             el.appendChild(label);
+            let selected = false;
+            const apply = () => {
+                el.style.background = selected ? scheme.primary_container : scheme.secondary_container;
+                el.style.color = selected ? scheme.on_primary_container : scheme.on_secondary_container;
+                el.style.borderColor = selected ? scheme.primary : scheme.outline;
+            };
+            apply();
+            el.addEventListener('click', () => {
+                selected = !selected;
+                apply();
+            });
             return el;
         },
     },
@@ -1569,20 +1665,34 @@ const REF_CONTROLS = [
         name: 'Tabs',
         roles: ['primary', 'on_surface_variant'],
         preview: (scheme) => {
+            // 可点击切换：选中文字 primary + 指示条移动
             const wrap = document.createElement('div');
             wrap.className = 'ref-tabs';
             const labels = ['概览', '项目', '设置'];
+            const tabs = [];
             for (let i = 0; i < labels.length; i++) {
                 const tab = document.createElement('span');
                 tab.className = 'ref-tab' + (i === 0 ? ' ref-tab-active' : '');
                 tab.style.color = i === 0 ? scheme.primary : scheme.on_surface_variant;
+                tab.style.cursor = 'pointer';
                 tab.textContent = labels[i];
+                tabs.push(tab);
                 wrap.appendChild(tab);
             }
             const indicator = document.createElement('span');
             indicator.className = 'ref-tab-indicator';
             indicator.style.background = scheme.primary;
             wrap.appendChild(indicator);
+            const activate = (index) => {
+                for (let i = 0; i < tabs.length; i++) {
+                    tabs[i].style.color = i === index ? scheme.primary : scheme.on_surface_variant;
+                }
+                indicator.style.left = tabs[index].offsetLeft + 'px';
+                indicator.style.width = tabs[index].offsetWidth + 'px';
+            };
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].addEventListener('click', () => activate(i));
+            }
             return wrap;
         },
     },
@@ -1647,20 +1757,33 @@ const REF_CONTROLS = [
         name: 'Pagination',
         roles: ['primary', 'onPrimary', 'on_surface_variant', 'outline'],
         preview: (scheme) => {
+            // 可点击页码：当前页 primary 高亮，点击切换
             const wrap = document.createElement('div');
             wrap.className = 'ref-pagination';
             const pages = ['‹', '1', '2', '3', '4', '›'];
+            const applyList = [];
+            let current = 1;
             for (let i = 0; i < pages.length; i++) {
                 const page = document.createElement('span');
                 page.className = 'ref-page-item';
-                if (pages[i] === '2') {
-                    page.style.background = scheme.primary;
-                    page.style.color = scheme.onPrimary;
-                    page.style.borderColor = scheme.primary;
-                } else {
-                    page.style.color = pages[i] === '‹' || pages[i] === '›' ? scheme.on_surface_variant : scheme.on_surface_variant;
-                    page.style.borderColor = scheme.outline;
+                const isNumber = /^\d$/.test(pages[i]);
+                page.style.cursor = isNumber ? 'pointer' : 'default';
+                const apply = () => {
+                    const active = isNumber && Number(pages[i]) === current;
+                    page.style.background = active ? scheme.primary : 'none';
+                    page.style.color = active ? scheme.onPrimary : scheme.on_surface_variant;
+                    page.style.borderColor = active ? scheme.primary : scheme.outline;
+                };
+                apply();
+                if (isNumber) {
+                    page.addEventListener('click', () => {
+                        current = Number(pages[i]);
+                        for (const refresh of applyList) {
+                            refresh();
+                        }
+                    });
                 }
+                applyList.push(apply);
                 page.textContent = pages[i];
                 wrap.appendChild(page);
             }
@@ -1708,6 +1831,7 @@ const REF_CONTROLS = [
         name: 'Stepper',
         roles: ['primary', 'primary_container', 'on_primary_container', 'outline', 'on_surface_variant'],
         preview: (scheme) => {
+            // 可点击步骤：该步成为当前，之前完成、之后待开始
             const wrap = document.createElement('div');
             wrap.className = 'ref-stepper';
             const steps = [
@@ -1715,6 +1839,7 @@ const REF_CONTROLS = [
                 { label: '进行中', state: 'current' },
                 { label: '待开始', state: 'todo' },
             ];
+            const applyList = [];
             for (let i = 0; i < steps.length; i++) {
                 if (i > 0) {
                     const line = document.createElement('span');
@@ -1724,28 +1849,42 @@ const REF_CONTROLS = [
                 }
                 const step = document.createElement('span');
                 step.className = 'ref-step';
+                step.style.cursor = 'pointer';
                 const dot = document.createElement('span');
                 dot.className = 'ref-step-dot';
-                if (steps[i].state === 'done') {
-                    dot.style.background = scheme.primary;
-                    dot.style.color = scheme.onPrimary;
-                    dot.textContent = '✓';
-                } else if (steps[i].state === 'current') {
-                    dot.style.background = scheme.primary_container;
-                    dot.style.color = scheme.on_primary_container;
-                    dot.style.borderColor = scheme.primary;
-                    dot.textContent = '2';
-                } else {
-                    dot.style.borderColor = scheme.outline;
-                    dot.style.color = scheme.on_surface_variant;
-                    dot.textContent = '3';
-                }
                 const label = document.createElement('span');
                 label.className = 'ref-step-label';
-                label.style.color = steps[i].state === 'todo' ? scheme.on_surface_variant : scheme.on_surface;
-                label.textContent = steps[i].label;
                 step.appendChild(dot);
                 step.appendChild(label);
+                const apply = () => {
+                    const state = steps[i].state;
+                    if (state === 'done') {
+                        dot.style.background = scheme.primary;
+                        dot.style.color = scheme.onPrimary;
+                        dot.style.borderColor = 'transparent';
+                        dot.textContent = '✓';
+                    } else if (state === 'current') {
+                        dot.style.background = scheme.primary_container;
+                        dot.style.color = scheme.on_primary_container;
+                        dot.style.borderColor = scheme.primary;
+                        dot.textContent = String(i + 1);
+                    } else {
+                        dot.style.background = 'none';
+                        dot.style.color = scheme.on_surface_variant;
+                        dot.style.borderColor = scheme.outline;
+                        dot.textContent = String(i + 1);
+                    }
+                    label.style.color = state === 'todo' ? scheme.on_surface_variant : scheme.on_surface;
+                    label.textContent = steps[i].label;
+                };
+                apply();
+                step.addEventListener('click', () => {
+                    for (let j = 0; j < steps.length; j++) {
+                        steps[j].state = j < i ? 'done' : (j === i ? 'current' : 'todo');
+                        applyList[j]();
+                    }
+                });
+                applyList.push(apply);
                 wrap.appendChild(step);
             }
             return wrap;
@@ -2134,3 +2273,31 @@ renderPaletteRamps(state.seed);
 setTheme(currentTheme);
 refreshExport();
 refreshMeteors();
+
+// 预览页互动（纯视觉状态切换，无全局副作用）：侧栏导航切换激活、分段选择器切换、开关切换
+function initPreviewInteractions() {
+    const sideItems = document.querySelectorAll('.pv-side-item');
+    for (const item of sideItems) {
+        item.addEventListener('click', () => {
+            for (const other of sideItems) {
+                other.classList.remove('pv-side-active');
+            }
+            item.classList.add('pv-side-active');
+        });
+    }
+    const segItems = document.querySelectorAll('.pv-seg-item');
+    for (const item of segItems) {
+        item.addEventListener('click', () => {
+            for (const other of segItems) {
+                other.classList.remove('pv-seg-active');
+            }
+            item.classList.add('pv-seg-active');
+        });
+    }
+    const switches = document.querySelectorAll('.pv-switch');
+    for (const sw of switches) {
+        sw.addEventListener('click', () => sw.classList.toggle('pv-switch-on'));
+    }
+}
+
+initPreviewInteractions();

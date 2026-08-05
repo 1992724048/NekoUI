@@ -1182,6 +1182,39 @@ body,
     padding: 6px 10px;
 }
 
+/* 参考控件交互反馈：hover 微调亮度 / 按压加深（filter 不覆盖 inline 角色色），click 切换控件在 JS preview 内绑定 */
+.ref-btn,
+.ref-tab,
+.ref-chip,
+.ref-page-item,
+.ref-menu-item,
+.ref-step,
+.ref-badge-btn,
+.ref-nav-item,
+.ref-card {
+    transition: filter 0.15s ease;
+}
+
+.ref-btn:hover,
+.ref-tab:hover,
+.ref-chip:hover,
+.ref-page-item:hover,
+.ref-menu-item:hover,
+.ref-step:hover,
+.ref-badge-btn:hover,
+.ref-nav-item:hover {
+    filter: brightness(0.94);
+}
+
+.ref-btn:active,
+.ref-tab:active,
+.ref-chip:active,
+.ref-page-item:active,
+.ref-step:active,
+.ref-nav-item:active {
+    filter: brightness(0.86);
+}
+
 .export-actions {
     display: flex;
     align-items: center;
@@ -1203,12 +1236,14 @@ body,
 }
 
 /* 页面预览：浏览器窗口示意（假地址栏 + 完整示例站），配色全部走 CSS 变量，随 seed / 主题自动刷新；
-   预览页无外层卡片，preview-frame 直接作为页面内容 */
-.preview-head {
+   预览页无外层卡片、无标题，preview-frame 直接作为页面内容 */
+
+/* 控件参考页标题行（无卡片包装，直接位于页面背景上） */
+.ref-head {
     margin-bottom: 12px;
 }
 
-.preview-head h2 {
+.ref-head h2 {
     margin: 0 0 4px;
     font-size: 16px;
     font-weight: 600;
@@ -1481,6 +1516,18 @@ body,
 
 .pv-switch:not(.pv-switch-on) .pv-switch-thumb {
     background: var(--panel-2);
+}
+
+/* 预览页互动：侧栏/分段/开关可点击切换，按钮按压反馈（纯视觉状态，无全局副作用） */
+.pv-side-item,
+.pv-seg-item,
+.pv-switch {
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pv-btn:active {
+    filter: brightness(0.88);
 }
 
 @media (max-width: 760px) {
