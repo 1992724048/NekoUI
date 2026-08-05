@@ -215,6 +215,59 @@ body {
 .role-row .swatch {
     cursor: pointer;
 }
+
+.hct-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.hct-row label {
+    min-width: 60px;
+    font-size: 14px;
+}
+
+.hct-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+}
+
+.hct-row .hct-val {
+    min-width: 36px;
+    text-align: right;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 13px;
+}
+
+.hct-swatch {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+.hct-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.hct-result code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 15px;
+}
+
+#gamut-badge {
+    display: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 12px;
+}
 </style>
 </head>
 <body>
@@ -243,6 +296,29 @@ body {
             <button type="button" class="btn" id="copy-all">复制全部</button>
         </div>
         <div id="role-table"></div>
+    </section>
+    <section class="panel">
+        <h2>HCT 直接取色</h2>
+        <div class="hct-row">
+            <label for="hct-hue">Hue</label>
+            <input type="range" id="hct-hue" min="0" max="360" step="1" value="240">
+            <span class="hct-val" id="hct-hue-val">240</span>
+        </div>
+        <div class="hct-row">
+            <label for="hct-chroma">Chroma</label>
+            <input type="range" id="hct-chroma" min="0" max="130" step="1" value="40">
+            <span class="hct-val" id="hct-chroma-val">40</span>
+        </div>
+        <div class="hct-row">
+            <label for="hct-tone">Tone</label>
+            <input type="range" id="hct-tone" min="0" max="100" step="1" value="60">
+            <span class="hct-val" id="hct-tone-val">60</span>
+        </div>
+        <div class="hct-result">
+            <div class="hct-swatch" id="hct-swatch"></div>
+            <code id="hct-hex"></code>
+            <span id="gamut-badge">gamut-clipped</span>
+        </div>
     </section>
 </div>
 <script>
@@ -1048,6 +1124,41 @@ copyAllButton.addEventListener('click', () => {
 });
 
 renderRoleTable('light');
+
+// 面板③：HCT 滑杆直接取色（独立于 seed，seed 变更不扰动滑杆当前值）
+
+function renderHctSlider() {
+    const hue = +document.getElementById('hct-hue').value;
+    const chroma = +document.getElementById('hct-chroma').value;
+    const tone = +document.getElementById('hct-tone').value;
+    const rgb = NekoHCT.colorFromHct(hue, chroma, tone);
+    const hex = NekoHCT.rgbToHex(rgb);
+    const swatchEl = document.getElementById('hct-swatch');
+    swatchEl.style.background = hex;
+    document.getElementById('hct-hex').textContent = hex;
+    // gamut 判定：把 hex 转回 hct，若 chroma 明显低于请求值则标 gamut-clipped
+    const back = NekoHCT.hctFromColor(NekoHCT.hexToRgb(hex));
+    document.getElementById('gamut-badge').style.display = back.chroma < chroma - 1 ? '' : 'none';
+    document.getElementById('hct-hue-val').textContent = hue;
+    document.getElementById('hct-chroma-val').textContent = chroma;
+    document.getElementById('hct-tone-val').textContent = tone;
+}
+
+const hueSlider = document.getElementById('hct-hue');
+const chromaSlider = document.getElementById('hct-chroma');
+const toneSlider = document.getElementById('hct-tone');
+const hctSwatch = document.getElementById('hct-swatch');
+
+hueSlider.addEventListener('input', () => renderHctSlider());
+chromaSlider.addEventListener('input', () => renderHctSlider());
+toneSlider.addEventListener('input', () => renderHctSlider());
+
+hctSwatch.addEventListener('click', () => {
+    const hex = document.getElementById('hct-hex').textContent;
+    copyText(hex).then(() => showToast('已复制 ' + hex));
+});
+
+renderHctSlider();
 </script>
 </body>
 </html>
