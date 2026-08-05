@@ -111,9 +111,9 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
   - sRGB 线性化/反线性化（`linearized`/`delinearized`）
   - D65 XYZ 矩阵变换（`xyz_from_rgb`）
   - CAM16 色表模型（`ViewingConditions` 缓存单例 + `chromatic_adaptation` 色适应函数 + `cam16_from_xyz`）
-  - HCT→sRGB 求解（`find_linear_rgb` 5 轮 J 牛顿迭代 + `hct_to_color` 16 轮二分 chroma 回退）
+  - HCT→sRGB 求解（`find_linear_rgb` 5 轮 J 牛顿迭代 + `bisect_to_limit` 临界平面色相二分回退，对齐 material_color_utilities 0.13.0）
   - 6 组色调色板（`make_palettes`）：primary(36)、secondary(16)、tertiary(+60° hue, 24)、neutral(6)、neutral_variant(8)、error(25° hue, 84) —— 均取 seed 的 hue，tertiary 移位
-  - `light(seed)` / `dark(seed)` 静态工厂按 Material You tone 规范生成 38 个色调字段
+  - `light(seed)` / `dark(seed)` 静态工厂按 Material You tone 规范生成 47 个色调字段（与 Flutter ColorScheme 的 47 个非废弃角色一一对应）
   - 字段命名注意：`primary`/`secondary`/`surface` 等为 snake_case（`primary_container`、`secondary_container`、`on_primary_container`），仅 `onPrimary`/`onSecondary`/`onTertiary` 为 camelCase（对齐 Material 官方命名）——**引用时以 `scheme.secondary_container` 这类 snake_case 为准**
 - **CSS 基础结构**：`Background`（Color）、`Size`（size/margin/padding）、`Border`（size/color）
 - **Style Mixin 结构体**：`BackgroundStyle`、`SizeStyle`、`BorderStyle`、`TextStyle` 四个 mixin 结构体，每个包含对应样式成员（`background_`、`size_`、`border_`、`text_color_`、`font_size_`）。Widget 通过多重继承选择所需的 mixin，**零运行时开销**，无字符串查找，无 hashmap
@@ -188,7 +188,7 @@ NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGE
         │       ├── Win32.hpp              # Win32 平台实现声明（TSF IME 状态 + 主题缓存）
         │       └── Win32.cpp              # WM_* → Event 翻译 + 注册表主题检测
         ├── Style/
-        │   ├── ColorScheme.hpp            # Material You 38 色调字段结构体（Brightness 枚举 + light/dark 工厂）
+        │   ├── ColorScheme.hpp            # Material You 47 色调字段结构体（Brightness 枚举 + light/dark 工厂）
         │   ├── ColorScheme.cpp            # HCT 色彩引擎完整实现（约 400 行）
         │   ├── CSS.hpp                    # 基础样式结构体（Background/Size/Border）+ Style Mixin 结构体（BackgroundStyle/SizeStyle/BorderStyle/TextStyle）
         └── Widget/

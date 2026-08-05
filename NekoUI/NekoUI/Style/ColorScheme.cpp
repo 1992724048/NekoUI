@@ -92,7 +92,7 @@ namespace neko::style {
             vc.z = 1.48F + std::sqrt(n);
             vc.nbb = nbb;
             vc.ncb = nbb;
-            vc.aw = (2.0F * chromatic_adaptation(vc.rgb_d[0] * rw, fl) + chromatic_adaptation(vc.rgb_d[1] * gw, fl) + 0.05F * chromatic_adaptation(vc.rgb_d[2] * bw, fl) - 0.305F) * nbb;
+            vc.aw = (2.0F * chromatic_adaptation(vc.rgb_d[0] * rw, fl) + chromatic_adaptation(vc.rgb_d[1] * gw, fl) + 0.05F * chromatic_adaptation(vc.rgb_d[2] * bw, fl)) * nbb;
             vc.c = 0.69F;
             vc.nc = 1.0F;
             return vc;
@@ -213,9 +213,194 @@ namespace neko::style {
                     return true;
                 }
                 j -= (fnj - y) * j / (2.0F * fnj);
-                j = std::max(j, 0.0F);
             }
             return false;
+        }
+
+        constexpr std::array<std::array<float, 3>, 3> kScaledDiscountFromLinrgb = {
+            std::array<float, 3>{0.001200833568784504F, 0.002389694492170889F, 0.0002795742885861124F},
+            std::array<float, 3>{0.0005891086651375999F, 0.0029785502573438758F, 0.0003270666104008398F},
+            std::array<float, 3>{0.00010146692491640572F, 0.0005364214359186694F, 0.0032979401770712076F},
+        };
+        constexpr std::array<float, 3> kYFromLinrgb = {0.2126F, 0.7152F, 0.0722F};
+
+        // 等价生成 Dart 的 _criticalPlanes（255 项），阈值取 0.040449936 对齐 MCU
+        [[nodiscard]] auto critical_planes() -> const std::array<float, 255>& {
+            static const auto kInstance = []() -> std::array<float, 255> {
+                std::array<float, 255> planes{};
+                for (std::size_t i = 0; i < planes.size(); ++i) {
+                    const float sample = static_cast<float>(i) + 0.5F;
+                    const float norm = sample / 255.0F;
+                    const float lin = norm <= 0.040449936F ? norm / 12.92F : std::pow((norm + 0.055F) / 1.055F, 2.4F);
+                    planes[i] = 100.0F * lin;
+                }
+                return planes;
+            }();
+            return kInstance;
+        }
+
+        [[nodiscard]] auto true_delinearized(const float rgb_component) -> float {
+            const float normalized = rgb_component / 100.0F;
+            return (normalized <= 0.0031308F ? normalized * 12.92F : (1.055F * std::pow(normalized, 1.0F / 2.4F)) - 0.055F) * 255.0F;
+        }
+
+        [[nodiscard]] auto critical_plane_below(const float value) -> int {
+            return static_cast<int>(std::floor(value - 0.5F));
+        }
+
+        [[nodiscard]] auto critical_plane_above(const float value) -> int {
+            return static_cast<int>(std::ceil(value - 0.5F));
+        }
+
+        [[nodiscard]] auto sanitize_radians(const float angle) -> float {
+            return std::fmod(angle + (8.0F * std::numbers::pi_v<float>), 2.0F * std::numbers::pi_v<float>);
+        }
+
+        [[nodiscard]] auto are_in_cyclic_order(const float first, const float second, const float third) -> bool {
+            return sanitize_radians(second - first) < sanitize_radians(third - first);
+        }
+
+        // 缩放折扣版自适应（无 fl 因子，fl 已折入矩阵）
+        [[nodiscard]] auto scaled_chromatic_adaptation(const float component) -> float {
+            const float adapted = std::pow(std::fabs(component), 0.42F);
+            return std::copysign(400.0F * adapted / (adapted + 27.13F), component);
+        }
+
+        [[nodiscard]] auto hue_of(const std::array<float, 3>& linrgb) -> float {
+            const float scaled_r = (linrgb[0] * kScaledDiscountFromLinrgb[0][0]) + (linrgb[1] * kScaledDiscountFromLinrgb[0][1]) + (linrgb[2] * kScaledDiscountFromLinrgb[0][2]);
+            const float scaled_g = (linrgb[0] * kScaledDiscountFromLinrgb[1][0]) + (linrgb[1] * kScaledDiscountFromLinrgb[1][1]) + (linrgb[2] * kScaledDiscountFromLinrgb[1][2]);
+            const float scaled_b = (linrgb[0] * kScaledDiscountFromLinrgb[2][0]) + (linrgb[1] * kScaledDiscountFromLinrgb[2][1]) + (linrgb[2] * kScaledDiscountFromLinrgb[2][2]);
+
+            const float adapt_r = scaled_chromatic_adaptation(scaled_r);
+            const float adapt_g = scaled_chromatic_adaptation(scaled_g);
+            const float adapt_b = scaled_chromatic_adaptation(scaled_b);
+
+            const float opponent_a = ((11.0F * adapt_r) - (12.0F * adapt_g) + adapt_b) / 11.0F;
+            const float opponent_b = (adapt_r + adapt_g - (2.0F * adapt_b)) / 9.0F;
+            return std::atan2(opponent_b, opponent_a);
+        }
+
+        [[nodiscard]] constexpr auto is_bounded(const float value) -> bool {
+            return 0.0F <= value && value <= 100.0F;
+        }
+
+        [[nodiscard]] auto nth_vertex(const float plane_y, const int vertex_index) -> std::array<float, 3> {
+            constexpr std::array<float, 3> kInvalid{-1.0F, -1.0F, -1.0F};
+            const float coord_a = vertex_index % 4 <= 1 ? 0.0F : 100.0F;
+            const float coord_b = vertex_index % 2 == 0 ? 0.0F : 100.0F;
+
+            if (vertex_index < 4) {
+                const float green = coord_a;
+                const float blue = coord_b;
+                const float red = (plane_y - (green * kYFromLinrgb[1]) - (blue * kYFromLinrgb[2])) / kYFromLinrgb[0];
+                return is_bounded(red) ? std::array<float, 3>{red, green, blue} : kInvalid;
+            }
+            if (vertex_index < 8) {
+                const float blue = coord_a;
+                const float red = coord_b;
+                const float green = (plane_y - (red * kYFromLinrgb[0]) - (blue * kYFromLinrgb[2])) / kYFromLinrgb[1];
+                return is_bounded(green) ? std::array<float, 3>{red, green, blue} : kInvalid;
+            }
+            const float red = coord_a;
+            const float green = coord_b;
+            const float blue = (plane_y - (red * kYFromLinrgb[0]) - (green * kYFromLinrgb[1])) / kYFromLinrgb[2];
+            return is_bounded(blue) ? std::array<float, 3>{red, green, blue} : kInvalid;
+        }
+
+        [[nodiscard]] auto intercept(const float source, const float mid, const float target) -> float {
+            return (mid - source) / (target - source);
+        }
+
+        [[nodiscard]] auto lerp_point(const std::array<float, 3>& source, const float factor, const std::array<float, 3>& target) -> std::array<float, 3> {
+            return {
+                source[0] + ((target[0] - source[0]) * factor),
+                source[1] + ((target[1] - source[1]) * factor),
+                source[2] + ((target[2] - source[2]) * factor),
+            };
+        }
+
+        [[nodiscard]] auto set_coordinate(const std::array<float, 3>& source, const float coordinate, const std::array<float, 3>& target, const int axis) -> std::array<float, 3> {
+            return lerp_point(source, intercept(source[axis], coordinate, target[axis]), target);
+        }
+
+        [[nodiscard]] auto midpoint(const std::array<float, 3>& point_a, const std::array<float, 3>& point_b) -> std::array<float, 3> {
+            return {(point_a[0] + point_b[0]) * 0.5F, (point_a[1] + point_b[1]) * 0.5F, (point_a[2] + point_b[2]) * 0.5F};
+        }
+
+        [[nodiscard]] auto bisect_to_segment(const float plane_y, const float target_hue) -> std::array<std::array<float, 3>, 2> {
+            std::array<float, 3> left{-1.0F, -1.0F, -1.0F};
+            std::array<float, 3> right = left;
+            float left_hue = 0.0F;
+            float right_hue = 0.0F;
+            bool initialized = false;
+            bool uncut = true;
+
+            for (int vertex_index = 0; vertex_index < 12; ++vertex_index) {
+                const std::array<float, 3> mid = nth_vertex(plane_y, vertex_index);
+                if (mid[0] < 0.0F) {
+                    continue;
+                }
+                const float mid_hue = hue_of(mid);
+                if (!initialized) {
+                    left = mid;
+                    right = mid;
+                    left_hue = mid_hue;
+                    right_hue = mid_hue;
+                    initialized = true;
+                    continue;
+                }
+                if (uncut || are_in_cyclic_order(left_hue, mid_hue, right_hue)) {
+                    uncut = false;
+                    if (are_in_cyclic_order(left_hue, target_hue, mid_hue)) {
+                        right = mid;
+                        right_hue = mid_hue;
+                    } else {
+                        left = mid;
+                        left_hue = mid_hue;
+                    }
+                }
+            }
+            return {left, right};
+        }
+
+        [[nodiscard]] auto bisect_to_limit(const float plane_y, const float target_hue) -> std::array<float, 3> {
+            const std::array<std::array<float, 3>, 2> segment = bisect_to_segment(plane_y, target_hue);
+            std::array<float, 3> left = segment[0];
+            float left_hue = hue_of(left);
+            std::array<float, 3> right = segment[1];
+
+            for (int axis = 0; axis < 3; ++axis) {
+                if (left[axis] == right[axis]) {
+                    continue;
+                }
+                int l_plane = -1;
+                int r_plane = 255;
+                if (left[axis] < right[axis]) {
+                    l_plane = critical_plane_below(true_delinearized(left[axis]));
+                    r_plane = critical_plane_above(true_delinearized(right[axis]));
+                } else {
+                    l_plane = critical_plane_above(true_delinearized(left[axis]));
+                    r_plane = critical_plane_below(true_delinearized(right[axis]));
+                }
+                for (int i = 0; i < 8; ++i) {
+                    if (std::abs(r_plane - l_plane) <= 1) {
+                        break;
+                    }
+                    const int m_plane = static_cast<int>(std::floor(static_cast<float>(l_plane + r_plane) * 0.5F));
+                    const float mid_plane_coordinate = critical_planes()[static_cast<std::size_t>(m_plane)];
+                    const std::array<float, 3> mid = set_coordinate(left, mid_plane_coordinate, right, axis);
+                    const float mid_hue = hue_of(mid);
+                    if (are_in_cyclic_order(left_hue, target_hue, mid_hue)) {
+                        right = mid;
+                        r_plane = m_plane;
+                    } else {
+                        left = mid;
+                        left_hue = mid_hue;
+                        l_plane = m_plane;
+                    }
+                }
+            }
+            return midpoint(left, right);
         }
 
         [[nodiscard]] auto hct_to_color(const Hct hct) -> type::Color {
@@ -232,22 +417,8 @@ namespace neko::style {
 
             auto lin = std::array<float, 3>{y, y, y};
             if (!find_linear_rgb(hue, hct.chroma, y, lin)) {
-                float lo = 0.0F;
-                float hi = hct.chroma;
-                for (int i = 0; i < 16; ++i) {
-                    const float mid = 0.5F * (lo + hi);
-                    if (auto candidate = std::array<float, 3>{}; find_linear_rgb(hue, mid, y, candidate)) {
-                        lo = mid;
-                        lin[0] = candidate[0];
-                        lin[1] = candidate[1];
-                        lin[2] = candidate[2];
-                    } else {
-                        hi = mid;
-                    }
-                }
-                if (lo <= 1e-4F) {
-                    lin[0] = lin[1] = lin[2] = y;
-                }
+                // 牛顿失败 → 临界平面色相二分（对齐 MCU 0.13.0 _bisectToLimit）
+                lin = bisect_to_limit(y, hue * std::numbers::pi_v<float> / 180.0F);
             }
 
             return make_color(delinearized(lin[0] / 100.0F), delinearized(lin[1] / 100.0F), delinearized(lin[2] / 100.0F));
@@ -300,7 +471,7 @@ namespace neko::style {
             .primary = primary.tone(40),
             .onPrimary = primary.tone(100),
             .primary_container = primary.tone(90),
-            .on_primary_container = primary.tone(10),
+            .on_primary_container = primary.tone(30),
             .primary_fixed = primary.tone(90),
             .primary_fixed_dim = primary.tone(80),
             .on_primary_fixed = primary.tone(10),
@@ -308,7 +479,7 @@ namespace neko::style {
             .secondary = secondary.tone(40),
             .on_secondary = secondary.tone(100),
             .secondary_container = secondary.tone(90),
-            .on_secondary_container = secondary.tone(10),
+            .on_secondary_container = secondary.tone(30),
             .secondary_fixed = secondary.tone(90),
             .secondary_fixed_dim = secondary.tone(80),
             .on_secondary_fixed = secondary.tone(10),
@@ -316,7 +487,7 @@ namespace neko::style {
             .tertiary = tertiary.tone(40),
             .on_tertiary = tertiary.tone(100),
             .tertiary_container = tertiary.tone(90),
-            .on_tertiary_container = tertiary.tone(10),
+            .on_tertiary_container = tertiary.tone(30),
             .tertiary_fixed = tertiary.tone(90),
             .tertiary_fixed_dim = tertiary.tone(80),
             .on_tertiary_fixed = tertiary.tone(10),
@@ -324,7 +495,7 @@ namespace neko::style {
             .error = error.tone(40),
             .on_error = error.tone(100),
             .error_container = error.tone(90),
-            .on_error_container = error.tone(10),
+            .on_error_container = error.tone(30),
             .surface = neutral.tone(98),
             .surface_dim = neutral.tone(87),
             .surface_bright = neutral.tone(98),

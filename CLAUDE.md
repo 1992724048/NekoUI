@@ -77,7 +77,7 @@ Engine::render_frame：consume_resize → 帧首合并重建(tree_dirty_) → ro
 | `MsgPump` | 线程安全消息队列（SPSC 32 槽 + 信号量 + jthread） |
 | `Backend` | 绘制抽象基类（策略模式）：`draw_rect_fill`/`draw_rect`/`draw_line`/`draw_circle_fill`/`draw_text`、`begin`/`end` |
 | `Platform` | 平台基类（单例 + 工厂注册宏 `NEKO_REGISTER_PLATFORM`）：事件翻译、IME(TSF)、11 个窗口操作 |
-| `ColorScheme` | Material You 36 色调色板；完整 HCT 引擎（sRGB↔XYZ↔CAM16↔HCT，牛顿迭代求解），`light(seed)`/`dark(seed)` 工厂 |
+| `ColorScheme` | Material You 47 色调字段（6 组 tonal palette）；完整 HCT 引擎（sRGB↔XYZ↔CAM16↔HCT，牛顿迭代 + 临界平面二分，对齐 MCU 0.13.0），`light(seed)`/`dark(seed)` 工厂 |
 | `Widget` | 基类：`layout`/`draw`/`build`/`event`/`input`/`hit_test` 虚方法；Builder API `build<T>()`/`children(fn)`/`parent()` |
 | `ValueState<T>` | 响应式值，赋值触发 `mark_dirty()` 回调 |
 | `Animation<T, Easing, Time>` | 12 种速率曲线 × in/out/in_out；`AnimationBase` 管理 `is_active()`/`bind(on_start, on_end)` |
