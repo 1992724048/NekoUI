@@ -306,8 +306,6 @@ body {
 
 .role-cell:hover,
 .role-cell:focus-visible {
-    outline: 2px solid #ffffff;
-    outline-offset: 2px;
     border-color: currentColor;
 }
 
@@ -360,10 +358,11 @@ body {
     opacity: 1;
 }
 
-.tooltip {
+.tip {
     position: fixed;
-    z-index: 10;
-    padding: 4px 10px;
+    z-index: 20;
+    max-width: 320px;
+    padding: 8px 12px;
     background: var(--panel);
     border: 1px solid var(--border);
     color: var(--text);
@@ -373,8 +372,72 @@ body {
     transition: opacity 0.15s ease;
 }
 
-.tooltip.visible {
+.tip.visible {
     opacity: 1;
+}
+
+.tip-title {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tip-hex {
+    margin-left: 8px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+.tip-divider {
+    border-top: 1px solid var(--border);
+    margin: 6px 0;
+}
+
+.tip-body {
+    color: var(--muted);
+    line-height: 1.4;
+}
+
+.tip-rgb {
+    margin-top: 4px;
+    color: var(--muted);
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    line-height: 1.4;
+}
+
+.ctx-menu {
+    position: fixed;
+    z-index: 30;
+    min-width: 180px;
+    padding: 4px 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+}
+
+.ctx-item {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: var(--text);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.ctx-item:hover {
+    background: var(--panel-2);
+}
+
+.ctx-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.ctx-sep {
+    border-top: 1px solid var(--border);
+    margin: 4px 12px;
 }
 
 @media (max-width: 900px) {
@@ -455,6 +518,12 @@ body {
             <div id="role-table"></div>
         </section>
     </div>
+</div>
+<div id="ctx-menu" class="ctx-menu" hidden>
+    <button type="button" class="ctx-item" id="ctx-picker">选色器…</button>
+    <div class="ctx-sep"></div>
+    <button type="button" class="ctx-item" id="ctx-random">随机种子</button>
+    <button type="button" class="ctx-item" id="ctx-copy-accent">复制页面主题色</button>
 </div>
 <script>
 'use strict';
@@ -1167,24 +1236,37 @@ function showToast(msg) {
     toastEl._timer = setTimeout(() => toastEl.classList.remove('visible'), 1200);
 }
 
-// 常用颜色 hover 名称提示：单例 fixed 定位 tooltip，样式跟随主题 CSS 变量，右/下边缘防溢出
-let tooltipEl = null;
+// 统一富提示框：标题区（名称 + 色值）+ 分隔线 + 内容区（用途说明 + RGB）；单例 fixed 定位，样式跟随主题 CSS 变量，右/下边缘防溢出
+let tipRef = null;
 
-function showTooltip(text, x, y) {
-    if (tooltipEl === null) {
-        tooltipEl = document.createElement('div');
-        tooltipEl.className = 'tooltip';
-        document.body.appendChild(tooltipEl);
+function showTip(title, hex, body, x, y) {
+    if (tipRef === null) {
+        const el = document.createElement('div');
+        el.className = 'tip';
+        el.innerHTML = '<div class="tip-title"><span class="tip-name"></span><span class="tip-hex"></span></div>'
+            + '<div class="tip-divider"></div><div class="tip-body"></div><div class="tip-rgb"></div>';
+        document.body.appendChild(el);
+        tipRef = {
+            el,
+            name: el.querySelector('.tip-name'),
+            hex: el.querySelector('.tip-hex'),
+            body: el.querySelector('.tip-body'),
+            rgb: el.querySelector('.tip-rgb'),
+        };
     }
-    tooltipEl.textContent = text;
-    tooltipEl.classList.add('visible');
-    tooltipEl.style.left = Math.min(x + 12, window.innerWidth - tooltipEl.offsetWidth - 8) + 'px';
-    tooltipEl.style.top = Math.min(y + 12, window.innerHeight - tooltipEl.offsetHeight - 8) + 'px';
+    tipRef.name.textContent = title;
+    tipRef.hex.textContent = hex;
+    tipRef.body.textContent = body;
+    const rgb = NekoHCT.hexToRgb(hex);
+    tipRef.rgb.textContent = rgb === null ? '' : 'RGB: ' + rgb.r + ', ' + rgb.g + ', ' + rgb.b;
+    tipRef.el.classList.add('visible');
+    tipRef.el.style.left = Math.min(x + 12, window.innerWidth - tipRef.el.offsetWidth - 8) + 'px';
+    tipRef.el.style.top = Math.min(y + 12, window.innerHeight - tipRef.el.offsetHeight - 8) + 'px';
 }
 
-function hideTooltip() {
-    if (tooltipEl !== null) {
-        tooltipEl.classList.remove('visible');
+function hideTip() {
+    if (tipRef !== null) {
+        tipRef.el.classList.remove('visible');
     }
 }
 
@@ -1209,13 +1291,18 @@ function renderPaletteRamps(seedHex) {
         container.textContent = '';
         for (let tone = 5; tone <= 95; tone += 5) {
             const rgb = pal.tone(tone);
+            const hex = NekoHCT.rgbToHex(rgb);
+            const hct = NekoHCT.hctFromColor(rgb);
+            const tipBody = name + ' 色板 · H:' + hct.hue.toFixed(0) + ' C:' + hct.chroma.toFixed(1) + ' T:' + hct.tone.toFixed(0);
             const cell = document.createElement('div');
             cell.className = 'tone-cell';
-            cell.style.background = NekoHCT.rgbToHex(rgb);
-            cell.title = 'tone ' + tone + '  ' + NekoHCT.rgbToHex(rgb);
+            cell.style.background = hex;
             cell.dataset.tone = tone;
-            cell.dataset.hex = NekoHCT.rgbToHex(rgb);
-            cell.addEventListener('click', () => copyText(cell.dataset.hex).then(() => showToast('已复制 ' + cell.dataset.hex)));
+            cell.dataset.hex = hex;
+            cell.addEventListener('click', () => copyText(hex).then(() => showToast('已复制 ' + hex)));
+            cell.addEventListener('mouseenter', (e) => showTip('tone ' + tone, hex, tipBody, e.clientX, e.clientY));
+            cell.addEventListener('mousemove', (e) => showTip('tone ' + tone, hex, tipBody, e.clientX, e.clientY));
+            cell.addEventListener('mouseleave', hideTip);
             container.appendChild(cell);
         }
     }
@@ -1246,6 +1333,13 @@ const COMMON_COLORS = [
     { name: '白色', hex: '#ffffff' },
 ];
 
+function commonColorDesc(name) {
+    if (name === '黑色' || name === '白色') {
+        return name === '黑色' ? '中性色，纯黑' : '中性色，纯白';
+    }
+    return 'Material Design ' + name + ' 500';
+}
+
 function renderCommonColors() {
     const wrap = document.getElementById('common-colors');
     wrap.textContent = '';
@@ -1255,8 +1349,10 @@ function renderCommonColors() {
         cell.className = 'common-color';
         cell.style.background = hex;
         cell.addEventListener('click', () => applySeed(hex));
-        cell.addEventListener('mousemove', (e) => showTooltip(name, e.clientX, e.clientY));
-        cell.addEventListener('mouseleave', hideTooltip);
+        const desc = commonColorDesc(name);
+        cell.addEventListener('mouseenter', (e) => showTip(name, hex, desc, e.clientX, e.clientY));
+        cell.addEventListener('mousemove', (e) => showTip(name, hex, desc, e.clientX, e.clientY));
+        cell.addEventListener('mouseleave', hideTip);
         wrap.appendChild(cell);
     }
 }
@@ -1289,6 +1385,112 @@ seedRandomButton.addEventListener('click', () => applySeed(randomSeedHex()));
 
 seedColorInput.addEventListener('input', () => applySeed(seedColorInput.value));
 
+// 原生选色弹层确认时兜底刷新 seed（拖动预览由 input 事件承担，change 保证点确定后状态一致）
+seedColorInput.addEventListener('change', () => applySeed(seedColorInput.value));
+
+// 自定义右键菜单：fixed 定位单例（右/下边缘防溢出），点击外部/ESC/执行菜单项后关闭
+const ctxMenu = document.getElementById('ctx-menu');
+
+function showCtxMenu(x, y) {
+    ctxMenu.hidden = false;
+    ctxMenu.style.left = Math.max(8, Math.min(x, window.innerWidth - ctxMenu.offsetWidth - 8)) + 'px';
+    ctxMenu.style.top = Math.max(8, Math.min(y, window.innerHeight - ctxMenu.offsetHeight - 8)) + 'px';
+}
+
+function hideCtxMenu() {
+    ctxMenu.hidden = true;
+}
+
+document.addEventListener('contextmenu', (e) => {
+    // 输入框内放行原生右键（hex 文本框粘贴/全选、取色器查看颜色值），其余位置拦截显示自定义菜单
+    if (e.target.closest('input')) {
+        return;
+    }
+    e.preventDefault();
+    showCtxMenu(e.clientX, e.clientY);
+});
+
+document.addEventListener('click', hideCtxMenu);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        hideCtxMenu();
+    }
+});
+
+document.getElementById('ctx-picker').addEventListener('click', () => {
+    hideCtxMenu();
+    seedColorInput.click();
+});
+
+document.getElementById('ctx-random').addEventListener('click', () => {
+    hideCtxMenu();
+    applySeed(randomSeedHex());
+});
+
+document.getElementById('ctx-copy-accent').addEventListener('click', () => {
+    hideCtxMenu();
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    copyText(accent).then(() => showToast('已复制主题色 ' + accent));
+});
+
+// 47 角色用途说明（Material Design 语义，与 SCHEME_ORDER 的 key 一一对应，提示框内容区数据源）
+const ROLE_INFO = {
+    // primary
+    primary: '主色，用于主要组件与强调',
+    onPrimary: '主色上的文字与图标',
+    primary_container: '主色容器背景（卡片、侧栏等）',
+    on_primary_container: '主色容器上的文字与图标',
+    primary_fixed: '固定主色（浅色主题强调）',
+    primary_fixed_dim: '固定主色的暗调变体',
+    on_primary_fixed: '固定主色上的文字',
+    on_primary_fixed_variant: '固定主色变体上的文字',
+    // secondary
+    secondary: '次色，用于次级组件与强调',
+    on_secondary: '次色上的文字与图标',
+    secondary_container: '次色容器背景',
+    on_secondary_container: '次色容器上的文字与图标',
+    secondary_fixed: '固定次色（浅色主题强调）',
+    secondary_fixed_dim: '固定次色的暗调变体',
+    on_secondary_fixed: '固定次色上的文字',
+    on_secondary_fixed_variant: '固定次色变体上的文字',
+    // tertiary
+    tertiary: '第三色，用于品牌区分与个性化点缀',
+    on_tertiary: '第三色上的文字与图标',
+    tertiary_container: '第三色容器背景',
+    on_tertiary_container: '第三色容器上的文字与图标',
+    tertiary_fixed: '固定第三色（浅色主题强调）',
+    tertiary_fixed_dim: '固定第三色的暗调变体',
+    on_tertiary_fixed: '固定第三色上的文字',
+    on_tertiary_fixed_variant: '固定第三色变体上的文字',
+    // error
+    error: '错误状态色，用于错误提示与校验反馈',
+    on_error: '错误色上的文字与图标',
+    error_container: '错误容器背景（错误消息区域）',
+    on_error_container: '错误容器上的文字与图标',
+    // surface
+    surface: '页面背景',
+    surface_dim: '降调表面（侧栏、面板等次要区域）',
+    surface_bright: '高亮表面',
+    surface_container_lowest: '表面容器最低层级（最贴近表面，用于层级分层）',
+    surface_container_low: '表面容器低层级',
+    surface_container: '表面容器中层级（默认表面容器）',
+    surface_container_high: '表面容器高层级',
+    surface_container_highest: '表面容器最高层级（层级对比最强）',
+    // other
+    on_surface: '表面上的主要文字与图标',
+    surface_variant: '表面变体（工具条、输入框等辅助表面）',
+    on_surface_variant: '表面变体上的文字与图标',
+    surface_tint: '表面着色（顶层表面色调，如侧栏浮层）',
+    outline: '描边（边框、分割线、分隔元素）',
+    outline_variant: '弱化描边（低强调分隔元素）',
+    shadow: '阴影色（元素投影）',
+    scrim: '遮罩色（弹层、抽屉背后的遮罩）',
+    inverse_surface: '反色表面（深色浮动层，如 Snackbar）',
+    inverse_on_surface: '反色表面上的文字与图标',
+    inverse_primary: '反色主色（浮动层上的主色强调）',
+};
+
 // 角色表：每行 = 色块，label 与 hex 上下居中，文字色按色块 tone 选深/浅
 function renderRoleTable(brightness) {
     const scheme = NekoHCT.scheme(state.seed, brightness);
@@ -1315,8 +1517,11 @@ function renderRoleTable(brightness) {
         cell.style.background = hex;
         cell.style.color = tone > 50 ? '#111111' : '#ffffff';
         cell.innerHTML = '<span class="role-cell-label">' + label + '</span><span class="role-cell-hex">' + hex + '</span>';
-        cell.title = key + '  ' + hex;
+        const roleInfo = ROLE_INFO[key] || 'Material Design 颜色角色';
         cell.addEventListener('click', () => copyText(hex).then(() => showToast('已复制 ' + key + ' ' + hex)));
+        cell.addEventListener('mouseenter', (e) => showTip(label, hex, roleInfo, e.clientX, e.clientY));
+        cell.addEventListener('mousemove', (e) => showTip(label, hex, roleInfo, e.clientX, e.clientY));
+        cell.addEventListener('mouseleave', hideTip);
         groupGrid.appendChild(cell);
     }
 }
