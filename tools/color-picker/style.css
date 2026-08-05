@@ -261,45 +261,52 @@ body,
     -webkit-backdrop-filter: blur(6px);
 }
 
-/* 流星雨背景装饰：fixed 底层容器，流星带拖尾斜向滑落；只动 transform/opacity（GPU 加速），不遮挡交互 */
+/* 流星雨背景装饰：细线渐变拖尾 + ::before/::after 双层模糊光晕 + 3D 视差分层（参考实现风格）；
+   --x 横向铺开、--z 深度分层、--d 延迟错开，固定 -45° 方向同向划过；fixed 底层不遮挡交互 */
 .meteors {
     position: fixed;
     inset: 0;
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
+    perspective: 800px;
+    transform-style: preserve-3d;
 }
 
 .meteor {
     position: absolute;
-    width: 160px;
-    height: 16px;
-    /* 头在左端（圆头 + 渐变亮端 + 三角形宽端三者同端），尖尾在右端向后渐隐；
-       rotate(θ) translateX(-d)：位移与头端（左端）同步旋转 → 头永远朝运动方向；
-       左边缘流星 --flip: -1 镜像整体（头/渐变/三角形同步翻到右端），配合 --dir: 1 向右下滑落仍头朝前 */
-    background:
-        radial-gradient(circle at 8px 8px, var(--mc) 0 3.5px, transparent 4.5px),
-        linear-gradient(270deg, transparent 0%, color-mix(in srgb, var(--mc) 70%, transparent) 45%, var(--mc) 100%);
-    clip-path: polygon(160px 8px, 8px 2px, 8px 14px);
-    opacity: 0;
-    will-change: transform, opacity;
-    animation: meteor-fall 4s linear infinite;
+    width: 200px;
+    height: 3px;
+    border-radius: 3px;
+    background-image: linear-gradient(to right, var(--mc), #ffffff50, transparent);
+    will-change: transform;
+    animation: meteor-fall 1s linear infinite both;
+    animation-delay: calc(var(--d) * 0.3s);
+}
+
+.meteor::before,
+.meteor::after {
+    position: absolute;
+    content: '';
+    width: inherit;
+    height: inherit;
+    background-image: inherit;
+}
+
+.meteor::before {
+    filter: blur(5px);
+}
+
+.meteor::after {
+    filter: blur(10px);
 }
 
 @keyframes meteor-fall {
     0% {
-        transform: rotate(var(--angle)) translateX(0) scaleX(var(--flip, 1));
-        opacity: 0;
-    }
-    8% {
-        opacity: 1;
-    }
-    75% {
-        opacity: 1;
+        transform: translateY(calc(var(--z) * 60px)) translateZ(calc(var(--z) * 100px)) rotate(-45deg) translateX(calc(var(--x) * 100px));
     }
     100% {
-        transform: rotate(var(--angle)) translateX(calc(var(--dir, -1) * 130vw)) scaleX(var(--flip, 1));
-        opacity: 0;
+        transform: translateY(calc(var(--z) * 60px)) translateZ(calc(var(--z) * 100px)) rotate(-45deg) translateX(calc(var(--x) * -100px));
     }
 }
 
@@ -679,7 +686,9 @@ body,
     min-width: 240px;
     padding: 4px 0;
     background: var(--panel);
-    background-color: color-mix(in srgb, var(--panel) 72%, transparent);
+    /* 嵌套在 .ctx-menu（有 backdrop-filter）内时子元素 backdrop-filter 失效（Chromium 限制），
+       提高不透明度保证二级菜单背景清晰可读；blur 规则保留，浏览器支持时生效 */
+    background-color: color-mix(in srgb, var(--panel) 95%, transparent);
     border: 1px solid var(--border);
     z-index: 31;
     backdrop-filter: blur(8px);
@@ -691,6 +700,16 @@ body,
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+}
+
+.ctx-fmt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ctx-fmt svg {
+    flex-shrink: 0;
 }
 
 .ctx-val {

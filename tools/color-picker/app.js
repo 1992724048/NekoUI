@@ -918,8 +918,9 @@ const seedColorInput = document.getElementById('seed-color');
 const seedHexInput = document.getElementById('seed-hex');
 const seedRandomButton = document.getElementById('seed-random');
 
-// 流星雨背景装饰：每颗流星颜色从当前 scheme 的 47 个角色中随机选取（过滤深色角色保证两种主题下可见）；seed/主题变更时重新生成；reduced-motion 时禁用
-const METEOR_COUNT = 18;
+// 流星雨背景装饰：参考实现风格——--x 横向铺开、--z 深度视差、--d 延迟错开，固定 -45° 同向划过；
+// 每颗流星颜色从当前 scheme 的 47 个角色中随机选取（过滤深色角色保证两种主题下可见）；seed/主题变更时重新生成；reduced-motion 时禁用
+const METEOR_COUNT = 15;
 let meteorContainer = null;
 
 function randomSchemeColor() {
@@ -942,29 +943,10 @@ function refreshMeteors() {
     for (let i = 0; i < METEOR_COUNT; i++) {
         const meteor = document.createElement('div');
         meteor.className = 'meteor';
-        // 四周边缘随机起始：上边缘整条（50%）向左下滑落，右边缘（25%）向左下滑落，左边缘（25%）向右下滑落（角度与 --dir 联动）
-        const roll = Math.random();
-        if (roll < 0.5) {
-            meteor.style.left = Math.random() * 100 + '%';
-            meteor.style.top = -10 + Math.random() * 10 + '%';
-            meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
-            meteor.style.setProperty('--dir', '-1');
-            meteor.style.setProperty('--flip', '1');
-        } else if (roll < 0.75) {
-            meteor.style.left = 95 + Math.random() * 10 + '%';
-            meteor.style.top = Math.random() * 60 + '%';
-            meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
-            meteor.style.setProperty('--dir', '-1');
-            meteor.style.setProperty('--flip', '1');
-        } else {
-            meteor.style.left = -10 + Math.random() * 5 + '%';
-            meteor.style.top = Math.random() * 60 + '%';
-            meteor.style.setProperty('--angle', 15 + Math.random() * 60 + 'deg');
-            meteor.style.setProperty('--dir', '1');
-            meteor.style.setProperty('--flip', '-1');
-        }
-        meteor.style.animationDelay = Math.random() * 8 + 's';
-        meteor.style.animationDuration = 2.5 + Math.random() * 2.5 + 's';
+        // 参考实现：无 left/top 锚点（元素默认容器静态位置），全靠 --x 横向位移 + --z 纵深视差铺开
+        meteor.style.setProperty('--x', (3 + Math.random() * 18).toFixed(1));
+        meteor.style.setProperty('--z', (3 - Math.random() * 12).toFixed(1));
+        meteor.style.setProperty('--d', (1 + Math.random() * 2).toFixed(1));
         meteor.style.setProperty('--mc', randomSchemeColor());
         meteorContainer.appendChild(meteor);
     }
