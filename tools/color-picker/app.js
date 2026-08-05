@@ -949,16 +949,19 @@ function refreshMeteors() {
             meteor.style.top = -10 + Math.random() * 10 + '%';
             meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
             meteor.style.setProperty('--dir', '-1');
+            meteor.style.setProperty('--flip', '1');
         } else if (roll < 0.75) {
             meteor.style.left = 95 + Math.random() * 10 + '%';
             meteor.style.top = Math.random() * 60 + '%';
             meteor.style.setProperty('--angle', -(15 + Math.random() * 60) + 'deg');
             meteor.style.setProperty('--dir', '-1');
+            meteor.style.setProperty('--flip', '1');
         } else {
             meteor.style.left = -10 + Math.random() * 5 + '%';
             meteor.style.top = Math.random() * 60 + '%';
             meteor.style.setProperty('--angle', 15 + Math.random() * 60 + 'deg');
             meteor.style.setProperty('--dir', '1');
+            meteor.style.setProperty('--flip', '-1');
         }
         meteor.style.animationDelay = Math.random() * 8 + 's';
         meteor.style.animationDuration = 2.5 + Math.random() * 2.5 + 's';
