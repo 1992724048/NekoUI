@@ -262,7 +262,7 @@ body,
 }
 
 /* 流星雨背景装饰：细线渐变拖尾 + ::before/::after 双层模糊光晕 + 3D 视差分层（参考实现风格）；
-   --x 横向铺开、--z 深度分层、--d 延迟错开，固定 -45° 方向同向划过；fixed 底层不遮挡交互 */
+   --x 横向铺开、--z 深度分层、--angle 随机斜向、--d 延迟错开；fixed 底层不遮挡交互 */
 .meteors {
     position: fixed;
     inset: 0;
@@ -273,7 +273,8 @@ body,
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 800px;
+    /* 1000px：降低近处（z 正值）透视放大倍数（z=2.5 时 1000/750≈1.33），远处 z=-9 仍 0.53 倍铺满全屏 */
+    perspective: 1000px;
     transform-style: preserve-3d;
 }
 
@@ -307,10 +308,10 @@ body,
 
 @keyframes meteor-fall {
     0% {
-        transform: translateY(calc(var(--z) * 60px)) translateZ(calc(var(--z) * 100px)) rotate(-45deg) translateX(calc(var(--x) * 100px));
+        transform: translateY(calc(var(--z) * 60px)) translateZ(calc(var(--z) * 100px)) rotate(var(--angle)) translateX(calc(var(--x) * 100px));
     }
     100% {
-        transform: translateY(calc(var(--z) * 60px)) translateZ(calc(var(--z) * 100px)) rotate(-45deg) translateX(calc(var(--x) * -100px));
+        transform: translateY(calc(var(--z) * 60px)) translateZ(calc(var(--z) * 100px)) rotate(var(--angle)) translateX(calc(var(--x) * -100px));
     }
 }
 
