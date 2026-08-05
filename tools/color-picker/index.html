@@ -4,21 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NekoUI HCT Color Picker</title>
+<script>
+    // 首帧即设置主题属性，避免系统深色用户先看到浅色闪屏；CSS 变量值随后由 JS 按 scheme() 派生覆盖
+    document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+</script>
 <style>
 :root {
     --bg: #f5f5f4;
-    --surface: #ffffff;
+    --panel: #ffffff;
+    --panel-2: #f0efe9;
     --text: #1c1b1f;
+    --muted: #49454f;
     --accent: #6750a4;
+    --on-accent: #ffffff;
+    --border: #c9c5d0;
+    color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg: #141218;
-        --surface: #211f26;
-        --text: #e6e0e9;
-        --accent: #d0bcff;
-    }
+:root[data-theme='dark'] {
+    --bg: #141218;
+    --panel: #211f26;
+    --panel-2: #2b2930;
+    --text: #e6e0e9;
+    --muted: #cac4d0;
+    --accent: #d0bcff;
+    --on-accent: #381e72;
+    --border: #49454f;
+    color-scheme: dark;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
@@ -26,28 +42,156 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.app-header {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.theme-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    background: var(--panel);
+}
+
+.theme-toggle button {
+    padding: 6px 16px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.theme-toggle button + button {
+    border-left: 1px solid var(--border);
+}
+
+.theme-toggle button[aria-pressed='true'] {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.theme-toggle button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 #app {
-    max-width: 960px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 24px 16px;
+    padding: 20px 24px 40px;
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
 .panel {
-    background: var(--surface);
-    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-    border-radius: 8px;
-    padding: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+}
+
+.panel h2 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.panel-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+}
+
+.section-sub {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.seed-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.seed-row input[type='text'] {
+    width: 150px;
+    padding: 8px 12px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+}
+
+.seed-row input[type='text']:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    border-color: var(--accent);
+}
+
+.btn {
+    background: var(--accent);
+    color: var(--on-accent);
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn:hover {
+    background: color-mix(in srgb, var(--accent) 88%, #000);
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.palette-ramp {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.ramp-label {
+    width: 110px;
+    flex-shrink: 0;
+    text-align: right;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.ramp-cells {
+    flex: 1;
+    display: flex;
+    gap: 3px;
 }
 
 .tone-cell {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
+    flex: 1;
+    height: 28px;
     cursor: pointer;
     border: none;
     padding: 0;
@@ -59,220 +203,76 @@ body {
     outline-offset: -2px;
 }
 
-.swatch {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-}
-
-.btn {
-    background: var(--accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.btn:hover {
-    filter: brightness(0.92);
-}
-
-.toast {
-    position: fixed;
-    right: 32px;
-    bottom: 32px;
-    padding: 8px 16px;
-    border-radius: 6px;
-    background: var(--surface);
-    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-    color: var(--text);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-}
-
-.toast.visible {
-    opacity: 1;
-}
-
-.panel h2 {
-    margin: 0 0 16px;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.seed-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.seed-row input[type="color"] {
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border: none;
-    border-radius: 6px;
-    background: none;
-    cursor: pointer;
-}
-
-.seed-row input[type="text"] {
-    width: 130px;
-    padding: 8px 12px;
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 14px;
-    color: var(--text);
-    background: var(--bg);
-    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-    border-radius: 6px;
-}
-
-.palette-ramp {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 8px;
-}
-
-.role-controls {
+.roles-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
-.toggle-group {
-    display: flex;
-    gap: 8px;
-}
-
-.toggle-group .btn {
-    background: color-mix(in srgb, var(--text) 10%, transparent);
-    color: var(--text);
-}
-
-.toggle-group .btn[aria-pressed="true"] {
-    background: var(--accent);
-    color: #ffffff;
-}
-
-.role-table {
-    display: flex;
-    flex-direction: column;
+.roles-head h2 {
+    margin: 0;
 }
 
 .group-title {
-    margin: 14px 0 6px;
-    font-size: 13px;
+    margin: 16px 0 8px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.4px;
-    color: var(--text);
-    opacity: 0.72;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--muted);
 }
 
 .group-title:first-child {
     margin-top: 0;
 }
 
-.role-row {
+.role-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.role-cell {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
-    padding: 6px 4px;
-    border-radius: 6px;
-}
-
-.role-row:hover {
-    background: color-mix(in srgb, var(--text) 6%, transparent);
-}
-
-.role-label {
-    flex: 1;
-    font-size: 14px;
-}
-
-.role-key {
-    min-width: 150px;
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 12px;
-    color: var(--text);
-    opacity: 0.72;
-}
-
-.role-hex {
-    min-width: 76px;
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 12px;
-}
-
-.role-row .swatch {
+    justify-content: center;
+    gap: 2px;
+    height: 72px;
+    padding: 4px 8px;
+    border: none;
     cursor: pointer;
+    font-family: inherit;
 }
 
-.hct-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
+.role-cell:hover {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
 }
 
-.hct-row label {
-    min-width: 60px;
-    font-size: 14px;
+.role-cell:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
-.hct-row input[type="range"] {
-    flex: 1;
-    accent-color: var(--accent);
-}
-
-.hct-row .hct-val {
-    min-width: 36px;
-    text-align: right;
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+.role-cell-label {
     font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
 }
 
-.hct-swatch {
-    width: 120px;
-    height: 120px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-}
-
-.hct-result {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.hct-result code {
+.role-cell-hex {
     font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 15px;
-}
-
-#gamut-badge {
-    display: none;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: var(--accent);
-    color: #ffffff;
     font-size: 12px;
+    opacity: 0.85;
 }
 
 .panel-desc {
-    margin: 0 0 12px;
+    margin: -8px 0 12px;
     font-size: 13px;
-    opacity: 0.72;
+    color: var(--muted);
 }
 
 .export-row {
@@ -286,66 +286,85 @@ body {
     padding: 12px;
     max-height: 320px;
     overflow: auto;
-    background: var(--bg);
-    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-    border-radius: 6px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
     font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
     font-size: 12px;
     line-height: 1.5;
     white-space: pre;
     user-select: text;
 }
+
+.toast {
+    position: fixed;
+    right: 32px;
+    bottom: 32px;
+    padding: 8px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.toast.visible {
+    opacity: 1;
+}
+
+@media (max-width: 760px) {
+    .role-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 </style>
 </head>
 <body>
+<header class="app-header">
+    <h1>NekoUI HCT 颜色工具</h1>
+    <div class="theme-toggle" role="group" aria-label="主题切换">
+        <button type="button" id="theme-light" aria-pressed="true">Light</button>
+        <button type="button" id="theme-dark" aria-pressed="false">Dark</button>
+    </div>
+</header>
 <div id="app">
     <section class="panel">
         <h2>Seed 颜色</h2>
         <div class="seed-row">
-            <input type="color" id="seed-color" value="#6750a4">
             <input type="text" id="seed-hex" value="#6750a4" maxlength="7" spellcheck="false">
             <button type="button" id="seed-random" class="btn">随机种子</button>
         </div>
-        <div class="palette-ramp" id="ramp-primary"></div>
-        <div class="palette-ramp" id="ramp-secondary"></div>
-        <div class="palette-ramp" id="ramp-tertiary"></div>
-        <div class="palette-ramp" id="ramp-neutral"></div>
-        <div class="palette-ramp" id="ramp-neutralVariant"></div>
-        <div class="palette-ramp" id="ramp-error"></div>
-    </section>
-    <section class="panel">
-        <h2>ColorScheme 角色</h2>
-        <div class="role-controls">
-            <div class="toggle-group">
-                <button type="button" class="btn" id="brightness-light" aria-pressed="true">Light</button>
-                <button type="button" class="btn" id="brightness-dark" aria-pressed="false">Dark</button>
-            </div>
+        <h3 class="section-sub">色调色带</h3>
+        <div class="palette-ramp">
+            <span class="ramp-label">primary</span>
+            <div class="ramp-cells" id="ramp-primary"></div>
+        </div>
+        <div class="palette-ramp">
+            <span class="ramp-label">secondary</span>
+            <div class="ramp-cells" id="ramp-secondary"></div>
+        </div>
+        <div class="palette-ramp">
+            <span class="ramp-label">tertiary</span>
+            <div class="ramp-cells" id="ramp-tertiary"></div>
+        </div>
+        <div class="palette-ramp">
+            <span class="ramp-label">neutral</span>
+            <div class="ramp-cells" id="ramp-neutral"></div>
+        </div>
+        <div class="palette-ramp">
+            <span class="ramp-label">neutralVariant</span>
+            <div class="ramp-cells" id="ramp-neutralVariant"></div>
+        </div>
+        <div class="palette-ramp">
+            <span class="ramp-label">error</span>
+            <div class="ramp-cells" id="ramp-error"></div>
+        </div>
+        <hr class="panel-divider">
+        <div class="roles-head">
+            <h2>ColorScheme 角色</h2>
             <button type="button" class="btn" id="copy-all">复制全部</button>
         </div>
         <div id="role-table"></div>
-    </section>
-    <section class="panel">
-        <h2>HCT 直接取色</h2>
-        <div class="hct-row">
-            <label for="hct-hue">Hue</label>
-            <input type="range" id="hct-hue" min="0" max="360" step="1" value="240">
-            <span class="hct-val" id="hct-hue-val">240</span>
-        </div>
-        <div class="hct-row">
-            <label for="hct-chroma">Chroma</label>
-            <input type="range" id="hct-chroma" min="0" max="130" step="1" value="40">
-            <span class="hct-val" id="hct-chroma-val">40</span>
-        </div>
-        <div class="hct-row">
-            <label for="hct-tone">Tone</label>
-            <input type="range" id="hct-tone" min="0" max="100" step="1" value="60">
-            <span class="hct-val" id="hct-tone-val">60</span>
-        </div>
-        <div class="hct-result">
-            <div class="hct-swatch" id="hct-swatch"></div>
-            <code id="hct-hex"></code>
-            <span id="gamut-badge">gamut-clipped</span>
-        </div>
     </section>
     <section class="panel">
         <h2>导出 C++</h2>
@@ -1043,11 +1062,12 @@ body {
     }
 })();
 
-// 面板①：Seed 选取 + 色调色带
+// 页面逻辑：主题（页面主题 + 角色表 brightness 联动）、Seed 选取、色带、角色表、导出
 
 const { copyText } = NekoHCT;
 
 const state = { seed: '#6750a4' };
+let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
 function showToast(msg) {
     let toastEl = document.querySelector('.toast');
@@ -1060,6 +1080,20 @@ function showToast(msg) {
     toastEl.classList.add('visible');
     clearTimeout(toastEl._timer);
     toastEl._timer = setTimeout(() => toastEl.classList.remove('visible'), 1200);
+}
+
+// 页面主题色由当前 seed 的 ColorScheme 角色派生，seed 或主题变更时统一走此函数刷新 CSS 变量
+function applyPageTheme(brightness, seedHex) {
+    const scheme = NekoHCT.scheme(seedHex, brightness);
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--bg', scheme.surface);
+    rootStyle.setProperty('--panel', scheme.surface_container_lowest);
+    rootStyle.setProperty('--panel-2', scheme.surface_container);
+    rootStyle.setProperty('--text', scheme.on_surface);
+    rootStyle.setProperty('--muted', scheme.on_surface_variant);
+    rootStyle.setProperty('--accent', scheme.primary);
+    rootStyle.setProperty('--on-accent', scheme.onPrimary);
+    rootStyle.setProperty('--border', scheme.outline_variant);
 }
 
 function renderPaletteRamps(seedHex) {
@@ -1081,21 +1115,18 @@ function renderPaletteRamps(seedHex) {
     }
 }
 
-const seedColorInput = document.getElementById('seed-color');
 const seedHexInput = document.getElementById('seed-hex');
 const seedRandomButton = document.getElementById('seed-random');
 
-// seed 变更需联动刷新面板②角色表与面板④导出预览，故三路输入统一走此管线
+// seed 变更需联动刷新页面主题、色带、角色表与导出预览，故各路输入统一走此管线
 function applySeed(hex) {
     state.seed = hex;
-    seedColorInput.value = hex;
     seedHexInput.value = hex;
     renderPaletteRamps(hex);
-    renderRoleTable(currentBrightness);
+    renderRoleTable(currentTheme);
     cppExportPre.textContent = buildCppExport(hex);
+    applyPageTheme(currentTheme, hex);
 }
-
-seedColorInput.addEventListener('input', () => applySeed(seedColorInput.value));
 
 seedHexInput.addEventListener('change', () => {
     const rgb = NekoHCT.hexToRgb(seedHexInput.value.trim());
@@ -1111,93 +1142,62 @@ seedRandomButton.addEventListener('click', () => {
     applySeed(randomHex);
 });
 
-renderPaletteRamps(state.seed);
-
-// 面板②：ColorScheme 角色表 + Light/Dark 切换 + 复制
-
-let currentBrightness = 'light';
-
+// 角色表：每行 = 色块，label 与 hex 上下居中，文字色按色块 tone 选深/浅
 function renderRoleTable(brightness) {
     const scheme = NekoHCT.scheme(state.seed, brightness);
     const wrap = document.getElementById('role-table');
     wrap.textContent = '';
     let groupTitle = null;
+    let groupGrid = null;
     for (const { key, label, group } of NekoHCT.SCHEME_ORDER) {
         if (group !== groupTitle) {
-            const groupHeading = document.createElement('h4');
-            groupHeading.className = 'group-title';
-            groupHeading.textContent = group;
-            wrap.appendChild(groupHeading);
+            const heading = document.createElement('h4');
+            heading.className = 'group-title';
+            heading.textContent = group;
+            groupGrid = document.createElement('div');
+            groupGrid.className = 'role-grid';
+            wrap.appendChild(heading);
+            wrap.appendChild(groupGrid);
             groupTitle = group;
         }
         const hex = scheme[key];
-        const row = document.createElement('div');
-        row.className = 'role-row';
-        row.innerHTML = `<span class="role-label">${label}</span><code class="role-key">${key}</code><span class="swatch" style="background:${hex}"></span><code class="role-hex">${hex}</code>`;
-        row.querySelector('.swatch').addEventListener('click', () => copyText(hex).then(() => showToast('已复制 ' + key + ' ' + hex)));
-        wrap.appendChild(row);
+        const tone = NekoHCT.hctFromColor(NekoHCT.hexToRgb(hex)).tone;
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'role-cell';
+        cell.style.background = hex;
+        cell.style.color = tone > 50 ? '#111111' : '#ffffff';
+        cell.innerHTML = '<span class="role-cell-label">' + label + '</span><span class="role-cell-hex">' + hex + '</span>';
+        cell.title = key + '  ' + hex;
+        cell.addEventListener('click', () => copyText(hex).then(() => showToast('已复制 ' + key + ' ' + hex)));
+        groupGrid.appendChild(cell);
     }
 }
 
-const brightnessLightButton = document.getElementById('brightness-light');
-const brightnessDarkButton = document.getElementById('brightness-dark');
+const themeLightButton = document.getElementById('theme-light');
+const themeDarkButton = document.getElementById('theme-dark');
 const copyAllButton = document.getElementById('copy-all');
 
-function setBrightness(brightness) {
-    currentBrightness = brightness;
-    brightnessLightButton.setAttribute('aria-pressed', String(brightness === 'light'));
-    brightnessDarkButton.setAttribute('aria-pressed', String(brightness === 'dark'));
+// 主题与角色表 brightness 联动：同一开关同时驱动 data-theme 属性、页面 CSS 变量与角色表数据
+function setTheme(brightness) {
+    currentTheme = brightness;
+    themeLightButton.setAttribute('aria-pressed', String(brightness === 'light'));
+    themeDarkButton.setAttribute('aria-pressed', String(brightness === 'dark'));
+    document.documentElement.dataset.theme = brightness;
+    applyPageTheme(brightness, state.seed);
     renderRoleTable(brightness);
 }
 
-brightnessLightButton.addEventListener('click', () => setBrightness('light'));
-brightnessDarkButton.addEventListener('click', () => setBrightness('dark'));
+themeLightButton.addEventListener('click', () => setTheme('light'));
+themeDarkButton.addEventListener('click', () => setTheme('dark'));
 
 copyAllButton.addEventListener('click', () => {
-    const scheme = NekoHCT.scheme(state.seed, currentBrightness);
+    const scheme = NekoHCT.scheme(state.seed, currentTheme);
     const text = NekoHCT.SCHEME_ORDER.map(({ key }) => key + ': ' + scheme[key]).join('\n');
     copyText(text).then(() => showToast('已复制全部 ' + NekoHCT.SCHEME_ORDER.length + ' 角色'));
 });
 
-renderRoleTable('light');
-
-// 面板③：HCT 滑杆直接取色（独立于 seed，seed 变更不扰动滑杆当前值）
-
-function renderHctSlider() {
-    const hue = +document.getElementById('hct-hue').value;
-    const chroma = +document.getElementById('hct-chroma').value;
-    const tone = +document.getElementById('hct-tone').value;
-    const rgb = NekoHCT.colorFromHct(hue, chroma, tone);
-    const hex = NekoHCT.rgbToHex(rgb);
-    const swatchEl = document.getElementById('hct-swatch');
-    swatchEl.style.background = hex;
-    document.getElementById('hct-hex').textContent = hex;
-    // gamut 判定：把 hex 转回 hct，若 chroma 明显低于请求值则标 gamut-clipped。
-    // 显示分支用 'inline' 而非 ''：'' 会移除 inline 样式，CSS 默认 display:none 重新生效，角标永不可见
-    const back = NekoHCT.hctFromColor(NekoHCT.hexToRgb(hex));
-    document.getElementById('gamut-badge').style.display = back.chroma < chroma - 1 ? 'inline' : 'none';
-    document.getElementById('hct-hue-val').textContent = hue;
-    document.getElementById('hct-chroma-val').textContent = chroma;
-    document.getElementById('hct-tone-val').textContent = tone;
-}
-
-const hueSlider = document.getElementById('hct-hue');
-const chromaSlider = document.getElementById('hct-chroma');
-const toneSlider = document.getElementById('hct-tone');
-const hctSwatch = document.getElementById('hct-swatch');
-
-hueSlider.addEventListener('input', () => renderHctSlider());
-chromaSlider.addEventListener('input', () => renderHctSlider());
-toneSlider.addEventListener('input', () => renderHctSlider());
-
-hctSwatch.addEventListener('click', () => {
-    const hex = document.getElementById('hct-hex').textContent;
-    copyText(hex).then(() => showToast('已复制 ' + hex));
-});
-
-renderHctSlider();
-
-// 面板④：导出 ColorScheme C++ 初始化代码（light/dark 两段，字段名逐字匹配 ColorScheme.hpp）
+// 导出 ColorScheme C++ 初始化代码（light/dark 两段，字段名逐字匹配 ColorScheme.hpp）
 
 // 显式 47 key → palette 映射，逐 key 对齐 ColorScheme.cpp 的 light()/dark() 赋值来源（不用字符串启发式推断）
 const ROLE_PALETTE = {
@@ -1251,7 +1251,11 @@ cppCopyButton.addEventListener('click', () => {
     copyText(exportText).then(() => showToast('已复制 C++ 代码'));
 });
 
+// 初始化：先按系统偏好渲染一帧，再以 scheme() 派生色覆盖页面主题变量
+renderPaletteRamps(state.seed);
+renderRoleTable(currentTheme);
 cppExportPre.textContent = buildCppExport(state.seed);
+applyPageTheme(currentTheme, state.seed);
 </script>
 </body>
 </html>
