@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NekoUI HCT Color Picker</title>
+<style>
+:root {
+    --bg: #f5f5f4;
+    --surface: #ffffff;
+    --text: #1c1b1f;
+    --accent: #6750a4;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #141218;
+        --surface: #211f26;
+        --text: #e6e0e9;
+        --accent: #d0bcff;
+    }
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#app {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.panel {
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.tone-cell {
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: none;
+}
+
+.tone-cell:hover {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+}
+
+.btn {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    filter: brightness(0.92);
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 32px;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: var(--text);
+    color: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.toast.show {
+    opacity: 1;
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+    'use strict';
+
+    // 基础转换：镜像 ColorScheme.cpp 的 linearized/delinearized/xyz_from_rgb/lstar_from_y/y_from_lstar
+
+    const K_EPSILON = 216 / 24389;
+    const K_KAPPA = 24389 / 27;
+
+    function linearized(value) {
+        return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+    }
+
+    function delinearized(channel) {
+        const clamped = Math.min(1, Math.max(0, channel));
+        const v = clamped <= 0.0031308 ? 12.92 * clamped : 1.055 * Math.pow(clamped, 1 / 2.4) - 0.055;
+        return Math.round(Math.min(255, Math.max(0, v * 255)));
+    }
+
+    function xyzFromRgb(r, g, b) {
+        const rl = linearized(r / 255) * 100;
+        const gl = linearized(g / 255) * 100;
+        const bl = linearized(b / 255) * 100;
+        return {
+            x: 0.41233895 * rl + 0.35762064 * gl + 0.18051042 * bl,
+            y: 0.2126 * rl + 0.7152 * gl + 0.0722 * bl,
+            z: 0.01932141 * rl + 0.11916382 * gl + 0.95034478 * bl,
+        };
+    }
+
+    function lstarFromY(y) {
+        const v = y / 100;
+        return v <= K_EPSILON ? K_KAPPA * v : 116 * Math.cbrt(v) - 16;
+    }
+
+    function yFromLstar(lstar) {
+        return lstar <= 8 ? 100 * lstar / K_KAPPA : 100 * Math.pow((lstar + 16) / 116, 3);
+    }
+
+    // CAM16 正向：镜像 ColorScheme.cpp 的 chromatic_adaptation/make_viewing_conditions/cam16_from_xyz。
+    // VIEWING_CONDITIONS 属性名保留 C++ ViewingConditions 结构体字段名（rgbD/fl/n/z/nbb/ncb/aw/c/nc），保证 1:1 可追溯。
+
+    function signedValue(value, magnitude) {
+        return value < 0 ? -magnitude : magnitude;
+    }
+
+    function chromaticAdaptation(component, flFactor) {
+        const p = Math.pow(flFactor * Math.abs(component) / 100, 0.42);
+        return signedValue(component, 400 * p / (p + 27.13));
+    }
+
+    function makeViewingConditions() {
+        const whiteX = 95.047;
+        const whiteY = 100.0;
+        const whiteZ = 108.883;
+
+        const adaptingLuma = 200 / Math.PI * yFromLstar(50) / 100;
+        const bgY = yFromLstar(50);
+
+        const whiteR = 0.401288 * whiteX + 0.650173 * whiteY - 0.051461 * whiteZ;
+        const whiteG = -0.250268 * whiteX + 1.204414 * whiteY + 0.045854 * whiteZ;
+        const whiteB = -0.002079 * whiteX + 0.048952 * whiteY + 0.953127 * whiteZ;
+
+        const discount = Math.min(1, Math.max(0, 1 - (1 / 3.6) * Math.exp((-adaptingLuma - 42) / 92)));
+
+        const adaptK = 1 / (5 * adaptingLuma + 1);
+        const kFourth = adaptK * adaptK * adaptK * adaptK;
+        const flFactor = 0.2 * kFourth * (5 * adaptingLuma) + 0.1 * (1 - kFourth) * (1 - kFourth) * Math.cbrt(5 * adaptingLuma);
+
+        const bgRatio = bgY / whiteY;
+        const nbb = 0.725 / Math.pow(bgRatio, 0.2);
+
+        const rgbD = [
+            discount * (whiteY / whiteR) + 1 - discount,
+            discount * (whiteY / whiteG) + 1 - discount,
+            discount * (whiteY / whiteB) + 1 - discount,
+        ];
+
+        // aw 无 -0.305：对齐当前 C++（MCU 0.13.0 修正）
+        const achromatic = (2 * chromaticAdaptation(rgbD[0] * whiteR, flFactor)
+            + chromaticAdaptation(rgbD[1] * whiteG, flFactor)
+            + 0.05 * chromaticAdaptation(rgbD[2] * whiteB, flFactor)) * nbb;
+
+        return {
+            rgbD,
+            fl: flFactor,
+            n: bgRatio,
+            z: 1.48 + Math.sqrt(bgRatio),
+            nbb,
+            ncb: nbb,
+            aw: achromatic,
+            c: 0.69,
+            nc: 1.0,
+        };
+    }
+
+    const VIEWING_CONDITIONS = makeViewingConditions();
+
+    function cam16FromXyz(xyz) {
+        const vc = VIEWING_CONDITIONS;
+
+        const lmsR = 0.401288 * xyz.x + 0.650173 * xyz.y - 0.051461 * xyz.z;
+        const lmsG = -0.250268 * xyz.x + 1.204414 * xyz.y + 0.045854 * xyz.z;
+        const lmsB = -0.002079 * xyz.x + 0.048952 * xyz.y + 0.953127 * xyz.z;
+
+        const adaptR = chromaticAdaptation(vc.rgbD[0] * lmsR, vc.fl);
+        const adaptG = chromaticAdaptation(vc.rgbD[1] * lmsG, vc.fl);
+        const adaptB = chromaticAdaptation(vc.rgbD[2] * lmsB, vc.fl);
+
+        const oppA = adaptR + (-12 * adaptG + adaptB) / 11;
+        const oppB = (adaptR + adaptG - 2 * adaptB) / 9;
+
+        let hue = Math.atan2(oppB, oppA) * 180 / Math.PI;
+        if (hue < 0) {
+            hue += 360;
+        }
+
+        const achromatic = (2 * adaptR + adaptG + 0.05 * adaptB) * vc.nbb;
+        const j = 100 * Math.pow(achromatic / vc.aw, vc.c * vc.z);
+
+        const hueRad = Math.atan2(oppB, oppA);
+        const eccentricity = 0.25 * (Math.cos(hueRad + 2) + 3.8);
+        const tFactor = 50000 / 13 * vc.nc * vc.ncb * eccentricity * Math.hypot(oppA, oppB) / (adaptR + adaptG + 1.05 * adaptB + 0.305);
+        const alpha = Math.pow(tFactor, 0.9) * Math.pow(1.64 - Math.pow(0.29, vc.n), 0.73);
+
+        return { hue, chroma: alpha * Math.sqrt(j / 100), j };
+    }
+
+    function hctFromColor(rgb) {
+        const xyz = xyzFromRgb(rgb.r, rgb.g, rgb.b);
+        const cam = cam16FromXyz(xyz);
+        return { hue: cam.hue, chroma: cam.chroma, tone: lstarFromY(xyz.y) };
+    }
+
+    // HCT 逆向：镜像 ColorScheme.cpp 的 find_linear_rgb + 临界平面色相二分回退
+
+    function inverseChromaticAdaptation(adapted) {
+        const absA = Math.abs(adapted);
+        const base = Math.max(0, 27.13 * absA / (400 - absA));
+        return signedValue(adapted, 100 / VIEWING_CONDITIONS.fl * Math.pow(base, 1 / 0.42));
+    }
+
+    function findLinearRgb(hueDeg, chroma, y) {
+        const vc = VIEWING_CONDITIONS;
+
+        if (chroma < 1e-4) {
+            return [y, y, y];
+        }
+
+        const hue = hueDeg * Math.PI / 180;
+        const tInner = 1 / Math.pow(1.64 - Math.pow(0.29, vc.n), 0.73);
+        const eHue = 0.25 * (Math.cos(hue + 2) + 3.8);
+        const coefHue = eHue * (50000 / 13) * vc.nc * vc.ncb;
+        const hSin = Math.sin(hue);
+        const hCos = Math.cos(hue);
+
+        let j = Math.sqrt(y) * 11;
+        for (let round = 0; round < 5; round++) {
+            const jNorm = j / 100;
+            const alpha = j <= 0 ? 0 : chroma / Math.sqrt(jNorm);
+            const tFactor = Math.pow(alpha * tInner, 1 / 0.9);
+            const awScaled = vc.aw * Math.pow(jNorm, 1 / vc.c / vc.z);
+            const achromNorm = awScaled / vc.nbb;
+            const gamma = 23 * (achromNorm + 0.305) * tFactor / (23 * coefHue + 11 * tFactor * hCos + 108 * tFactor * hSin);
+            const oppA = gamma * hCos;
+            const oppB = gamma * hSin;
+            const adaptR = (460 * achromNorm + 451 * oppA + 288 * oppB) / 1403;
+            const adaptG = (460 * achromNorm - 891 * oppA - 261 * oppB) / 1403;
+            const adaptB = (460 * achromNorm - 220 * oppA - 6300 * oppB) / 1403;
+
+            const coneR = inverseChromaticAdaptation(adaptR) / vc.rgbD[0];
+            const coneG = inverseChromaticAdaptation(adaptG) / vc.rgbD[1];
+            const coneB = inverseChromaticAdaptation(adaptB) / vc.rgbD[2];
+
+            const linX = 1.86206786 * coneR - 1.01125463 * coneG + 0.14918677 * coneB;
+            const linY = 0.38752654 * coneR + 0.62144744 * coneG - 0.00897398 * coneB;
+            const linZ = -0.0158415 * coneR - 0.03412294 * coneG + 1.04996444 * coneB;
+
+            const linR = 3.2413775 * linX - 1.5376652 * linY - 0.4988538 * linZ;
+            const linG = -0.9691453 * linX + 1.8758853 * linY + 0.0415659 * linZ;
+            const linB = 0.0556209 * linX - 0.2039552 * linY + 1.0571799 * linZ;
+
+            if (linR < 0 || linG < 0 || linB < 0) {
+                return null;
+            }
+            const fnj = 0.2126 * linR + 0.7152 * linG + 0.0722 * linB;
+            if (fnj <= 0) {
+                return null;
+            }
+            if (round === 4 || Math.abs(fnj - y) < 0.002) {
+                if (linR > 100.01 || linG > 100.01 || linB > 100.01) {
+                    return null;
+                }
+                return [linR, linG, linB];
+            }
+            j -= (fnj - y) * j / (2 * fnj);
+        }
+        return null;
+    }
+
+    const SCALED_DISCOUNT_FROM_LINRGB = [
+        [0.001200833568784504, 0.002389694492170889, 0.0002795742885861124],
+        [0.0005891086651375999, 0.0029785502573438758, 0.0003270666104008398],
+        [0.00010146692491640572, 0.0005364214359186694, 0.0032979401770712076],
+    ];
+    const Y_FROM_LINRGB = [0.2126, 0.7152, 0.0722];
+
+    // 等价生成 Dart 的 _criticalPlanes（255 项），阈值取 0.040449936 对齐 MCU
+    const CRITICAL_PLANES = (function () {
+        const planes = new Array(255);
+        for (let i = 0; i < 255; i++) {
+            const norm = (i + 0.5) / 255;
+            const lin = norm <= 0.040449936 ? norm / 12.92 : Math.pow((norm + 0.055) / 1.055, 2.4);
+            planes[i] = 100 * lin;
+        }
+        return planes;
+    })();
+
+    function trueDelinearized(rgbComponent) {
+        const normalized = rgbComponent / 100;
+        return (normalized <= 0.0031308 ? normalized * 12.92 : 1.055 * Math.pow(normalized, 1 / 2.4) - 0.055) * 255;
+    }
+
+    function criticalPlaneBelow(value) {
+        return Math.floor(value - 0.5);
+    }
+
+    function criticalPlaneAbove(value) {
+        return Math.ceil(value - 0.5);
+    }
+
+    function sanitizeRadians(angle) {
+        return (angle + 8 * Math.PI) % (2 * Math.PI);
+    }
+
+    function areInCyclicOrder(first, second, third) {
+        return sanitizeRadians(second - first) < sanitizeRadians(third - first);
+    }
+
+    // 缩放折扣版自适应（无 fl 因子，fl 已折入矩阵）
+    function scaledChromaticAdaptation(component) {
+        const adapted = Math.pow(Math.abs(component), 0.42);
+        return signedValue(component, 400 * adapted / (adapted + 27.13));
+    }
+
+    function hueOf(linrgb) {
+        const scaledR = linrgb[0] * SCALED_DISCOUNT_FROM_LINRGB[0][0]
+            + linrgb[1] * SCALED_DISCOUNT_FROM_LINRGB[0][1]
+            + linrgb[2] * SCALED_DISCOUNT_FROM_LINRGB[0][2];
+        const scaledG = linrgb[0] * SCALED_DISCOUNT_FROM_LINRGB[1][0]
+            + linrgb[1] * SCALED_DISCOUNT_FROM_LINRGB[1][1]
+            + linrgb[2] * SCALED_DISCOUNT_FROM_LINRGB[1][2];
+        const scaledB = linrgb[0] * SCALED_DISCOUNT_FROM_LINRGB[2][0]
+            + linrgb[1] * SCALED_DISCOUNT_FROM_LINRGB[2][1]
+            + linrgb[2] * SCALED_DISCOUNT_FROM_LINRGB[2][2];
+
+        const adaptR = scaledChromaticAdaptation(scaledR);
+        const adaptG = scaledChromaticAdaptation(scaledG);
+        const adaptB = scaledChromaticAdaptation(scaledB);
+
+        const opponentA = (11 * adaptR - 12 * adaptG + adaptB) / 11;
+        const opponentB = (adaptR + adaptG - 2 * adaptB) / 9;
+        return Math.atan2(opponentB, opponentA);
+    }
+
+    function isBounded(value) {
+        return 0 <= value && value <= 100;
+    }
+
+    const INVALID_VERTEX = [-1, -1, -1];
+
+    function nthVertex(planeY, vertexIndex) {
+        const coordA = vertexIndex % 4 <= 1 ? 0 : 100;
+        const coordB = vertexIndex % 2 === 0 ? 0 : 100;
+
+        if (vertexIndex < 4) {
+            const green = coordA;
+            const blue = coordB;
+            const red = (planeY - green * Y_FROM_LINRGB[1] - blue * Y_FROM_LINRGB[2]) / Y_FROM_LINRGB[0];
+            return isBounded(red) ? [red, green, blue] : INVALID_VERTEX;
+        }
+        if (vertexIndex < 8) {
+            const blue = coordA;
+            const red = coordB;
+            const green = (planeY - red * Y_FROM_LINRGB[0] - blue * Y_FROM_LINRGB[2]) / Y_FROM_LINRGB[1];
+            return isBounded(green) ? [red, green, blue] : INVALID_VERTEX;
+        }
+        const red = coordA;
+        const green = coordB;
+        const blue = (planeY - red * Y_FROM_LINRGB[0] - green * Y_FROM_LINRGB[1]) / Y_FROM_LINRGB[2];
+        return isBounded(blue) ? [red, green, blue] : INVALID_VERTEX;
+    }
+
+    function intercept(source, mid, target) {
+        return (mid - source) / (target - source);
+    }
+
+    function lerpPoint(source, factor, target) {
+        return [
+            source[0] + (target[0] - source[0]) * factor,
+            source[1] + (target[1] - source[1]) * factor,
+            source[2] + (target[2] - source[2]) * factor,
+        ];
+    }
+
+    function setCoordinate(source, coordinate, target, axis) {
+        return lerpPoint(source, intercept(source[axis], coordinate, target[axis]), target);
+    }
+
+    function midpoint(pointA, pointB) {
+        return [
+            (pointA[0] + pointB[0]) * 0.5,
+            (pointA[1] + pointB[1]) * 0.5,
+            (pointA[2] + pointB[2]) * 0.5,
+        ];
+    }
+
+    function bisectToSegment(planeY, targetHue) {
+        let left = INVALID_VERTEX;
+        let right = INVALID_VERTEX;
+        let leftHue = 0;
+        let rightHue = 0;
+        let initialized = false;
+        let uncut = true;
+
+        for (let vertexIndex = 0; vertexIndex < 12; vertexIndex++) {
+            const mid = nthVertex(planeY, vertexIndex);
+            if (mid[0] < 0) {
+                continue;
+            }
+            const midHue = hueOf(mid);
+            if (!initialized) {
+                left = mid;
+                right = mid;
+                leftHue = midHue;
+                rightHue = midHue;
+                initialized = true;
+                continue;
+            }
+            if (uncut || areInCyclicOrder(leftHue, midHue, rightHue)) {
+                uncut = false;
+                if (areInCyclicOrder(leftHue, targetHue, midHue)) {
+                    right = mid;
+                    rightHue = midHue;
+                } else {
+                    left = mid;
+                    leftHue = midHue;
+                }
+            }
+        }
+        return [left, right];
+    }
+
+    function bisectToLimit(planeY, targetHue) {
+        const segment = bisectToSegment(planeY, targetHue);
+        let left = segment[0];
+        let leftHue = hueOf(left);
+        let right = segment[1];
+
+        for (let axis = 0; axis < 3; axis++) {
+            if (left[axis] === right[axis]) {
+                continue;
+            }
+            let lPlane = -1;
+            let rPlane = 255;
+            if (left[axis] < right[axis]) {
+                lPlane = criticalPlaneBelow(trueDelinearized(left[axis]));
+                rPlane = criticalPlaneAbove(trueDelinearized(right[axis]));
+            } else {
+                lPlane = criticalPlaneAbove(trueDelinearized(left[axis]));
+                rPlane = criticalPlaneBelow(trueDelinearized(right[axis]));
+            }
+            for (let i = 0; i < 8; i++) {
+                if (Math.abs(rPlane - lPlane) <= 1) {
+                    break;
+                }
+                const mPlane = Math.floor((lPlane + rPlane) * 0.5);
+                const midPlaneCoordinate = CRITICAL_PLANES[mPlane];
+                const mid = setCoordinate(left, midPlaneCoordinate, right, axis);
+                const midHue = hueOf(mid);
+                if (areInCyclicOrder(leftHue, targetHue, midHue)) {
+                    right = mid;
+                    rPlane = mPlane;
+                } else {
+                    left = mid;
+                    leftHue = midHue;
+                    lPlane = mPlane;
+                }
+            }
+        }
+        return midpoint(left, right);
+    }
+
+    function colorFromHct(hue, chroma, tone) {
+        const clampedTone = Math.min(100, Math.max(0, tone));
+        if (clampedTone <= 1e-4) {
+            return { r: 0, g: 0, b: 0 };
+        }
+        if (clampedTone >= 99.9999) {
+            return { r: 255, g: 255, b: 255 };
+        }
+
+        const y = yFromLstar(clampedTone);
+        const normalizedHue = ((hue % 360) + 360) % 360;
+
+        // 牛顿失败 → 临界平面色相二分（对齐 C++）
+        const lin = findLinearRgb(normalizedHue, chroma, y) || bisectToLimit(y, normalizedHue * Math.PI / 180);
+
+        return {
+            r: delinearized(lin[0] / 100),
+            g: delinearized(lin[1] / 100),
+            b: delinearized(lin[2] / 100),
+        };
+    }
+
+    // 调色板与配色方案：镜像 ColorScheme.cpp 的 make_palettes/light/dark
+
+    const PRIMARY_CHROMA = 36;
+    const SECONDARY_CHROMA = 16;
+    const TERTIARY_CHROMA = 24;
+    const TERTIARY_HUE_SHIFT = 60;
+    const NEUTRAL_CHROMA = 6;
+    const NEUTRAL_VARIANT_CHROMA = 8;
+    const ERROR_HUE = 25;
+    const ERROR_CHROMA = 84;
+
+    function makePalettes(seedRgb) {
+        const seedHct = hctFromColor(seedRgb);
+        const tonalPalette = (hue, chroma) => ({
+            hue,
+            chroma,
+            tone: (tone) => colorFromHct(hue, chroma, tone),
+        });
+        return {
+            primary: tonalPalette(seedHct.hue, PRIMARY_CHROMA),
+            secondary: tonalPalette(seedHct.hue, SECONDARY_CHROMA),
+            tertiary: tonalPalette((seedHct.hue + TERTIARY_HUE_SHIFT) % 360, TERTIARY_CHROMA),
+            neutral: tonalPalette(seedHct.hue, NEUTRAL_CHROMA),
+            neutralVariant: tonalPalette(seedHct.hue, NEUTRAL_VARIANT_CHROMA),
+            error: tonalPalette(ERROR_HUE, ERROR_CHROMA),
+        };
+    }
+
+    const SCHEME_GROUPS = {
+        primary: [
+            'primary', 'onPrimary', 'primary_container', 'on_primary_container',
+            'primary_fixed', 'primary_fixed_dim', 'on_primary_fixed', 'on_primary_fixed_variant',
+        ],
+        secondary: [
+            'secondary', 'on_secondary', 'secondary_container', 'on_secondary_container',
+            'secondary_fixed', 'secondary_fixed_dim', 'on_secondary_fixed', 'on_secondary_fixed_variant',
+        ],
+        tertiary: [
+            'tertiary', 'on_tertiary', 'tertiary_container', 'on_tertiary_container',
+            'tertiary_fixed', 'tertiary_fixed_dim', 'on_tertiary_fixed', 'on_tertiary_fixed_variant',
+        ],
+        error: ['error', 'on_error', 'error_container', 'on_error_container'],
+        surface: [
+            'surface', 'surface_dim', 'surface_bright', 'surface_container_lowest',
+            'surface_container_low', 'surface_container', 'surface_container_high', 'surface_container_highest',
+        ],
+        other: [
+            'on_surface', 'surface_variant', 'on_surface_variant', 'surface_tint',
+            'outline', 'outline_variant', 'shadow', 'scrim',
+            'inverse_surface', 'inverse_on_surface', 'inverse_primary',
+        ],
+    };
+
+    const SCHEME_ORDER = Object.entries(SCHEME_GROUPS).flatMap(([group, keys]) => keys.map((key) => ({
+        key,
+        label: key.replace(/_([a-z])/g, (_, char) => char.toUpperCase()),
+        group,
+    })));
+
+    // tone 值逐字段照抄 ColorScheme.cpp light()/dark()（浅色 on-container = 30）
+    const TONE_SPEC = {
+        light: {
+            primary: ['primary', 40],
+            onPrimary: ['primary', 100],
+            primary_container: ['primary', 90],
+            on_primary_container: ['primary', 30],
+            primary_fixed: ['primary', 90],
+            primary_fixed_dim: ['primary', 80],
+            on_primary_fixed: ['primary', 10],
+            on_primary_fixed_variant: ['primary', 30],
+            secondary: ['secondary', 40],
+            on_secondary: ['secondary', 100],
+            secondary_container: ['secondary', 90],
+            on_secondary_container: ['secondary', 30],
+            secondary_fixed: ['secondary', 90],
+            secondary_fixed_dim: ['secondary', 80],
+            on_secondary_fixed: ['secondary', 10],
+            on_secondary_fixed_variant: ['secondary', 30],
+            tertiary: ['tertiary', 40],
+            on_tertiary: ['tertiary', 100],
+            tertiary_container: ['tertiary', 90],
+            on_tertiary_container: ['tertiary', 30],
+            tertiary_fixed: ['tertiary', 90],
+            tertiary_fixed_dim: ['tertiary', 80],
+            on_tertiary_fixed: ['tertiary', 10],
+            on_tertiary_fixed_variant: ['tertiary', 30],
+            error: ['error', 40],
+            on_error: ['error', 100],
+            error_container: ['error', 90],
+            on_error_container: ['error', 30],
+            surface: ['neutral', 98],
+            surface_dim: ['neutral', 87],
+            surface_bright: ['neutral', 98],
+            surface_container_lowest: ['neutral', 100],
+            surface_container_low: ['neutral', 96],
+            surface_container: ['neutral', 94],
+            surface_container_high: ['neutral', 92],
+            surface_container_highest: ['neutral', 90],
+            on_surface: ['neutral', 10],
+            surface_variant: ['neutralVariant', 90],
+            on_surface_variant: ['neutralVariant', 30],
+            surface_tint: ['primary', 40],
+            outline: ['neutralVariant', 50],
+            outline_variant: ['neutralVariant', 80],
+            shadow: ['neutral', 0],
+            scrim: ['neutral', 0],
+            inverse_surface: ['neutral', 20],
+            inverse_on_surface: ['neutral', 95],
+            inverse_primary: ['primary', 80],
+        },
+        dark: {
+            primary: ['primary', 80],
+            onPrimary: ['primary', 20],
+            primary_container: ['primary', 30],
+            on_primary_container: ['primary', 90],
+            primary_fixed: ['primary', 90],
+            primary_fixed_dim: ['primary', 80],
+            on_primary_fixed: ['primary', 10],
+            on_primary_fixed_variant: ['primary', 30],
+            secondary: ['secondary', 80],
+            on_secondary: ['secondary', 20],
+            secondary_container: ['secondary', 30],
+            on_secondary_container: ['secondary', 90],
+            secondary_fixed: ['secondary', 90],
+            secondary_fixed_dim: ['secondary', 80],
+            on_secondary_fixed: ['secondary', 10],
+            on_secondary_fixed_variant: ['secondary', 30],
+            tertiary: ['tertiary', 80],
+            on_tertiary: ['tertiary', 20],
+            tertiary_container: ['tertiary', 30],
+            on_tertiary_container: ['tertiary', 90],
+            tertiary_fixed: ['tertiary', 90],
+            tertiary_fixed_dim: ['tertiary', 80],
+            on_tertiary_fixed: ['tertiary', 10],
+            on_tertiary_fixed_variant: ['tertiary', 30],
+            error: ['error', 80],
+            on_error: ['error', 20],
+            error_container: ['error', 30],
+            on_error_container: ['error', 90],
+            surface: ['neutral', 6],
+            surface_dim: ['neutral', 6],
+            surface_bright: ['neutral', 24],
+            surface_container_lowest: ['neutral', 4],
+            surface_container_low: ['neutral', 10],
+            surface_container: ['neutral', 12],
+            surface_container_high: ['neutral', 17],
+            surface_container_highest: ['neutral', 22],
+            on_surface: ['neutral', 90],
+            surface_variant: ['neutralVariant', 30],
+            on_surface_variant: ['neutralVariant', 80],
+            surface_tint: ['primary', 80],
+            outline: ['neutralVariant', 60],
+            outline_variant: ['neutralVariant', 30],
+            shadow: ['neutral', 0],
+            scrim: ['neutral', 0],
+            inverse_surface: ['neutral', 90],
+            inverse_on_surface: ['neutral', 20],
+            inverse_primary: ['primary', 40],
+        },
+    };
+
+    function palettes(seedHex) {
+        const seedRgb = hexToRgb(seedHex);
+        if (seedRgb === null) {
+            throw new Error('palettes: 非法 hex 输入: ' + seedHex);
+        }
+        return makePalettes(seedRgb);
+    }
+
+    function scheme(seedHex, brightness) {
+        const spec = TONE_SPEC[brightness] || TONE_SPEC.light;
+        const paletteSet = palettes(seedHex);
+        const result = {};
+        for (const [key, [paletteName, tone]] of Object.entries(spec)) {
+            result[key] = rgbToHex(paletteSet[paletteName].tone(tone));
+        }
+        return result;
+    }
+
+    // 工具函数
+
+    function hexToRgb(hex) {
+        const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex);
+        if (match === null) {
+            return null;
+        }
+        const digits = match[1];
+        if (digits.length === 3) {
+            return {
+                r: parseInt(digits[0] + digits[0], 16),
+                g: parseInt(digits[1] + digits[1], 16),
+                b: parseInt(digits[2] + digits[2], 16),
+            };
+        }
+        return {
+            r: parseInt(digits.slice(0, 2), 16),
+            g: parseInt(digits.slice(2, 4), 16),
+            b: parseInt(digits.slice(4, 6), 16),
+        };
+    }
+
+    function rgbToHex(rgb) {
+        const channel = (value) => Math.min(255, Math.max(0, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + channel(rgb.r) + channel(rgb.g) + channel(rgb.b);
+    }
+
+    async function copyText(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            const ok = document.execCommand('copy');
+            textarea.remove();
+            return ok;
+        }
+    }
+
+    function selfCheck() {
+        const failures = [];
+        const samples = ['#ff0000', '#00ff00', '#0000ff', '#ffffff', '#000000', '#808080', '#6750a4', '#ffc107'];
+        for (const hex of samples) {
+            const rgb = NekoHCT.hexToRgb(hex);
+            const hct = NekoHCT.hctFromColor(rgb);
+            const back = NekoHCT.colorFromHct(hct.hue, hct.chroma, hct.tone);
+            const maxErr = Math.max(Math.abs(rgb.r - back.r), Math.abs(rgb.g - back.g), Math.abs(rgb.b - back.b));
+            if (maxErr > 2) {
+                failures.push(hex + ' round-trip err=' + maxErr);
+            }
+        }
+        for (const brightness of ['light', 'dark']) {
+            const scheme = NekoHCT.scheme('#6750a4', brightness);
+            for (const { key } of NekoHCT.SCHEME_ORDER) {
+                if (!/^#[0-9a-f]{6}$/.test(scheme[key])) {
+                    failures.push(key + ' missing/invalid in ' + brightness);
+                }
+            }
+        }
+        if (failures.length === 0) {
+            console.log('[selfCheck] PASS');
+        } else {
+            console.error('[selfCheck] FAIL', failures);
+        }
+        return { pass: failures.length === 0, failures };
+    }
+
+    const NekoHCT = {
+        hexToRgb,
+        rgbToHex,
+        hctFromColor,
+        colorFromHct,
+        palettes,
+        scheme,
+        selfCheck,
+        copyText,
+        SCHEME_ORDER,
+    };
+    window.NekoHCT = NekoHCT;
+
+    // 页面加载自检：失败时在标题给出可见标记（供人工验证兜底）
+    const __sc = NekoHCT.selfCheck();
+    if (!__sc.pass) {
+        document.title = '⚠ selfCheck FAIL';
+    }
+})();
+</script>
+</body>
+</html>
