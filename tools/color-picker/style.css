@@ -548,6 +548,30 @@ body,
     user-select: text;
 }
 
+/* 导出代码框自定义滚动条：轨道/滑块配色跟随主题 CSS 变量，5px 圆角与全场风格一致 */
+#cpp-export::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+#cpp-export::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--border) 25%, transparent);
+    border-radius: 5px;
+}
+
+#cpp-export::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted) 60%, transparent);
+    border-radius: 5px;
+}
+
+#cpp-export::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+}
+
+#cpp-export::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 .toast {
     position: fixed;
     right: 32px;
