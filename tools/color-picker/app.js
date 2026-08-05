@@ -918,6 +918,38 @@ const seedColorInput = document.getElementById('seed-color');
 const seedHexInput = document.getElementById('seed-hex');
 const seedRandomButton = document.getElementById('seed-random');
 
+// 流星雨背景装饰：每颗流星颜色从当前 scheme 的 47 个角色中随机选取；seed/主题变更时重新生成；reduced-motion 时禁用
+const METEOR_COUNT = 10;
+let meteorContainer = null;
+
+function randomSchemeColor() {
+    const scheme = NekoHCT.scheme(state.seed, currentTheme);
+    const keys = Object.keys(scheme);
+    return scheme[keys[Math.floor(Math.random() * keys.length)]];
+}
+
+function refreshMeteors() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+    if (meteorContainer === null) {
+        meteorContainer = document.createElement('div');
+        meteorContainer.className = 'meteors';
+        document.body.appendChild(meteorContainer);
+    }
+    meteorContainer.textContent = '';
+    for (let i = 0; i < METEOR_COUNT; i++) {
+        const meteor = document.createElement('div');
+        meteor.className = 'meteor';
+        meteor.style.left = Math.random() * 100 + '%';
+        meteor.style.top = Math.random() * 60 + '%';
+        meteor.style.animationDelay = Math.random() * 8 + 's';
+        meteor.style.animationDuration = 2.5 + Math.random() * 2.5 + 's';
+        meteor.style.setProperty('--mc', randomSchemeColor());
+        meteorContainer.appendChild(meteor);
+    }
+}
+
 // seed 变更需联动刷新页面主题、色带、角色表与导出预览，故各路输入统一走此管线
 function applySeed(hex) {
     state.seed = hex;
@@ -927,6 +959,7 @@ function applySeed(hex) {
     renderRoleTable(currentTheme);
     cppExportPre.textContent = buildExport(hex, currentExportLang);
     applyPageTheme(currentTheme, hex);
+    refreshMeteors();
     if (refPage.hidden === false) {
         renderRefControls();
     }
@@ -1453,6 +1486,7 @@ function setTheme(brightness) {
     document.documentElement.dataset.theme = brightness;
     applyPageTheme(brightness, state.seed);
     renderRoleTable(brightness);
+    refreshMeteors();
     if (refPage.hidden === false) {
         renderRefControls();
     }
@@ -1698,3 +1732,4 @@ seedHexInput.value = state.seed;
 renderPaletteRamps(state.seed);
 setTheme(currentTheme);
 refreshExport();
+refreshMeteors();
