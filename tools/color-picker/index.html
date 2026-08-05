@@ -118,9 +118,19 @@ body {
 }
 
 .panel h2 {
-    margin: 0 0 16px;
+    margin: 0;
     font-size: 16px;
     font-weight: 600;
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
 }
 
 .section-sub {
@@ -128,6 +138,31 @@ body {
     font-size: 13px;
     font-weight: 600;
     color: var(--muted);
+}
+
+.common-colors {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.common-color {
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: none;
+}
+
+.common-color:hover {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.common-color:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .seed-row {
@@ -235,18 +270,6 @@ body {
     outline-offset: -2px;
 }
 
-.roles-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.roles-head h2 {
-    margin: 0;
-}
-
 .group-title {
     margin: 16px 0 8px;
     font-size: 12px;
@@ -302,15 +325,9 @@ body {
 }
 
 .panel-desc {
-    margin: -8px 0 12px;
+    margin: 0 0 12px;
     font-size: 13px;
     color: var(--muted);
-}
-
-.export-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 12px;
 }
 
 #cpp-export {
@@ -344,6 +361,23 @@ body {
     opacity: 1;
 }
 
+.tooltip {
+    position: fixed;
+    z-index: 10;
+    padding: 4px 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.tooltip.visible {
+    opacity: 1;
+}
+
 @media (max-width: 900px) {
     .layout {
         grid-template-columns: 1fr;
@@ -369,12 +403,16 @@ body {
     <div class="layout">
         <div class="left-col">
             <section class="panel">
-                <h2>Seed 颜色</h2>
+                <div class="panel-head">
+                    <h2>Seed 颜色</h2>
+                </div>
                 <div class="seed-row">
                     <input type="color" id="seed-color" value="#6750a4">
                     <input type="text" id="seed-hex" value="#6750a4" maxlength="7" spellcheck="false">
                     <button type="button" id="seed-random" class="btn">随机种子</button>
                 </div>
+                <h3 class="section-sub">常用颜色</h3>
+                <div class="common-colors" id="common-colors"></div>
                 <h3 class="section-sub">色调色带</h3>
                 <div class="palette-ramp">
                     <span class="ramp-label">primary</span>
@@ -402,16 +440,16 @@ body {
                 </div>
             </section>
             <section class="panel">
-                <h2>导出 C++</h2>
-                <p class="panel-desc">生成 ColorScheme::light()/dark() 初始化块，字段名逐字匹配 ColorScheme.hpp</p>
-                <div class="export-row">
+                <div class="panel-head">
+                    <h2>导出 C++</h2>
                     <button type="button" class="btn" id="cpp-copy">复制代码</button>
                 </div>
+                <p class="panel-desc">生成 ColorScheme::light()/dark() 初始化块，字段名逐字匹配 ColorScheme.hpp</p>
                 <pre id="cpp-export"></pre>
             </section>
         </div>
         <section class="panel">
-            <div class="roles-head">
+            <div class="panel-head">
                 <h2>ColorScheme 角色</h2>
                 <button type="button" class="btn" id="copy-all">复制全部</button>
             </div>
@@ -1130,6 +1168,27 @@ function showToast(msg) {
     toastEl._timer = setTimeout(() => toastEl.classList.remove('visible'), 1200);
 }
 
+// 常用颜色 hover 名称提示：单例 fixed 定位 tooltip，样式跟随主题 CSS 变量，右/下边缘防溢出
+let tooltipEl = null;
+
+function showTooltip(text, x, y) {
+    if (tooltipEl === null) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'tooltip';
+        document.body.appendChild(tooltipEl);
+    }
+    tooltipEl.textContent = text;
+    tooltipEl.classList.add('visible');
+    tooltipEl.style.left = Math.min(x + 12, window.innerWidth - tooltipEl.offsetWidth - 8) + 'px';
+    tooltipEl.style.top = Math.min(y + 12, window.innerHeight - tooltipEl.offsetHeight - 8) + 'px';
+}
+
+function hideTooltip() {
+    if (tooltipEl !== null) {
+        tooltipEl.classList.remove('visible');
+    }
+}
+
 // 页面主题色由当前 seed 的 ColorScheme 角色派生，seed 或主题变更时统一走此函数刷新 CSS 变量
 function applyPageTheme(brightness, seedHex) {
     const scheme = NekoHCT.scheme(seedHex, brightness);
@@ -1149,7 +1208,7 @@ function renderPaletteRamps(seedHex) {
     for (const [name, pal] of Object.entries(palettes)) {
         const container = document.getElementById('ramp-' + name);
         container.textContent = '';
-        for (let tone = 0; tone <= 100; tone += 5) {
+        for (let tone = 5; tone <= 95; tone += 5) {
             const rgb = pal.tone(tone);
             const cell = document.createElement('div');
             cell.className = 'tone-cell';
@@ -1160,6 +1219,46 @@ function renderPaletteRamps(seedHex) {
             cell.addEventListener('click', () => copyText(cell.dataset.hex).then(() => showToast('已复制 ' + cell.dataset.hex)));
             container.appendChild(cell);
         }
+    }
+}
+
+// 常用颜色：Material Design 500 级 + 中性色，点击选作 seed（走 applySeed 统一管线），hover 显示名称
+const COMMON_COLORS = [
+    { name: '红色', hex: '#f44336' },
+    { name: '粉色', hex: '#e91e63' },
+    { name: '紫色', hex: '#9c27b0' },
+    { name: '深紫', hex: '#673ab7' },
+    { name: '靛蓝', hex: '#3f51b5' },
+    { name: '蓝色', hex: '#2196f3' },
+    { name: '浅蓝', hex: '#03a9f4' },
+    { name: '青色', hex: '#00bcd4' },
+    { name: '蓝绿', hex: '#009688' },
+    { name: '绿色', hex: '#4caf50' },
+    { name: '浅绿', hex: '#8bc34a' },
+    { name: '黄绿', hex: '#cddc39' },
+    { name: '黄色', hex: '#ffeb3b' },
+    { name: '琥珀', hex: '#ffc107' },
+    { name: '橙色', hex: '#ff9800' },
+    { name: '深橙', hex: '#ff5722' },
+    { name: '棕色', hex: '#795548' },
+    { name: '灰色', hex: '#9e9e9e' },
+    { name: '蓝灰', hex: '#607d8b' },
+    { name: '黑色', hex: '#000000' },
+    { name: '白色', hex: '#ffffff' },
+];
+
+function renderCommonColors() {
+    const wrap = document.getElementById('common-colors');
+    wrap.textContent = '';
+    for (const { name, hex } of COMMON_COLORS) {
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'common-color';
+        cell.style.background = hex;
+        cell.addEventListener('click', () => applySeed(hex));
+        cell.addEventListener('mousemove', (e) => showTooltip(name, e.clientX, e.clientY));
+        cell.addEventListener('mouseleave', hideTooltip);
+        wrap.appendChild(cell);
     }
 }
 
@@ -1301,6 +1400,7 @@ cppCopyButton.addEventListener('click', () => {
 });
 
 // 初始化：随机 seed 同步取色器/hex 输入框，setTheme 统一按钮高亮、data-theme、页面主题变量与角色表数据
+renderCommonColors();
 seedColorInput.value = state.seed;
 seedHexInput.value = state.seed;
 renderPaletteRamps(state.seed);
