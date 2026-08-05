@@ -1459,10 +1459,236 @@ const REF_CONTROLS = [
             return track;
         },
     },
+    {
+        name: 'Tabs',
+        roles: ['primary', 'on_surface_variant'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-tabs';
+            const labels = ['概览', '项目', '设置'];
+            for (let i = 0; i < labels.length; i++) {
+                const tab = document.createElement('span');
+                tab.className = 'ref-tab' + (i === 0 ? ' ref-tab-active' : '');
+                tab.style.color = i === 0 ? scheme.primary : scheme.on_surface_variant;
+                tab.textContent = labels[i];
+                wrap.appendChild(tab);
+            }
+            const indicator = document.createElement('span');
+            indicator.className = 'ref-tab-indicator';
+            indicator.style.background = scheme.primary;
+            wrap.appendChild(indicator);
+            return wrap;
+        },
+    },
+    {
+        name: 'Menu',
+        roles: ['surface_container_lowest', 'on_surface', 'primary_container', 'outline'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-menu';
+            wrap.style.background = scheme.surface_container_lowest;
+            wrap.style.borderColor = scheme.outline;
+            const items = [
+                { label: '新建项目', hot: true },
+                { label: '打开文件' },
+                { label: '导出配色' },
+            ];
+            for (const item of items) {
+                const row = document.createElement('div');
+                row.className = 'ref-menu-item';
+                if (item.hot) {
+                    row.style.background = scheme.primary_container;
+                    row.style.color = scheme.on_primary_container;
+                } else {
+                    row.style.color = scheme.on_surface;
+                }
+                row.textContent = item.label;
+                wrap.appendChild(row);
+            }
+            return wrap;
+        },
+    },
+    {
+        name: 'Breadcrumb',
+        roles: ['primary', 'on_surface', 'on_surface_variant'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-breadcrumb';
+            const parts = [
+                { label: '首页', link: true },
+                { label: '组件' },
+                { label: '当前页', current: true },
+            ];
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
+                if (i > 0) {
+                    const sep = document.createElement('span');
+                    sep.className = 'ref-breadcrumb-sep';
+                    sep.style.color = scheme.on_surface_variant;
+                    sep.textContent = '/';
+                    wrap.appendChild(sep);
+                }
+                const span = document.createElement('span');
+                span.className = 'ref-breadcrumb-item';
+                span.style.color = part.link ? scheme.primary : (part.current ? scheme.on_surface : scheme.on_surface_variant);
+                span.textContent = part.label;
+                wrap.appendChild(span);
+            }
+            return wrap;
+        },
+    },
+    {
+        name: 'Pagination',
+        roles: ['primary', 'onPrimary', 'on_surface_variant', 'outline'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-pagination';
+            const pages = ['‹', '1', '2', '3', '4', '›'];
+            for (let i = 0; i < pages.length; i++) {
+                const page = document.createElement('span');
+                page.className = 'ref-page-item';
+                if (pages[i] === '2') {
+                    page.style.background = scheme.primary;
+                    page.style.color = scheme.onPrimary;
+                    page.style.borderColor = scheme.primary;
+                } else {
+                    page.style.color = pages[i] === '‹' || pages[i] === '›' ? scheme.on_surface_variant : scheme.on_surface_variant;
+                    page.style.borderColor = scheme.outline;
+                }
+                page.textContent = pages[i];
+                wrap.appendChild(page);
+            }
+            return wrap;
+        },
+    },
+    {
+        name: 'Badge',
+        roles: ['error', 'on_error', 'surface_container_highest'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-badge-wrap';
+            const btn = document.createElement('span');
+            btn.className = 'ref-badge-btn';
+            btn.style.background = scheme.surface_container_highest;
+            btn.textContent = '消息';
+            const badge = document.createElement('span');
+            badge.className = 'ref-badge';
+            badge.style.background = scheme.error;
+            badge.style.color = scheme.on_error;
+            badge.textContent = '3';
+            wrap.appendChild(btn);
+            wrap.appendChild(badge);
+            return wrap;
+        },
+    },
+    {
+        name: 'Avatar',
+        roles: ['primary_container', 'on_primary_container'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-avatar-wrap';
+            for (const initial of ['N', 'K', 'U']) {
+                const avatar = document.createElement('span');
+                avatar.className = 'ref-avatar';
+                avatar.style.background = scheme.primary_container;
+                avatar.style.color = scheme.on_primary_container;
+                avatar.textContent = initial;
+                wrap.appendChild(avatar);
+            }
+            return wrap;
+        },
+    },
+    {
+        name: 'Stepper',
+        roles: ['primary', 'primary_container', 'on_primary_container', 'outline', 'on_surface_variant'],
+        preview: (scheme) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'ref-stepper';
+            const steps = [
+                { label: '完成', state: 'done' },
+                { label: '进行中', state: 'current' },
+                { label: '待开始', state: 'todo' },
+            ];
+            for (let i = 0; i < steps.length; i++) {
+                if (i > 0) {
+                    const line = document.createElement('span');
+                    line.className = 'ref-step-line';
+                    line.style.borderTopColor = i === 1 ? scheme.primary : scheme.outline;
+                    wrap.appendChild(line);
+                }
+                const step = document.createElement('span');
+                step.className = 'ref-step';
+                const dot = document.createElement('span');
+                dot.className = 'ref-step-dot';
+                if (steps[i].state === 'done') {
+                    dot.style.background = scheme.primary;
+                    dot.style.color = scheme.onPrimary;
+                    dot.textContent = '✓';
+                } else if (steps[i].state === 'current') {
+                    dot.style.background = scheme.primary_container;
+                    dot.style.color = scheme.on_primary_container;
+                    dot.style.borderColor = scheme.primary;
+                    dot.textContent = '2';
+                } else {
+                    dot.style.borderColor = scheme.outline;
+                    dot.style.color = scheme.on_surface_variant;
+                    dot.textContent = '3';
+                }
+                const label = document.createElement('span');
+                label.className = 'ref-step-label';
+                label.style.color = steps[i].state === 'todo' ? scheme.on_surface_variant : scheme.on_surface;
+                label.textContent = steps[i].label;
+                step.appendChild(dot);
+                step.appendChild(label);
+                wrap.appendChild(step);
+            }
+            return wrap;
+        },
+    },
+    {
+        name: 'Table',
+        roles: ['surface_container', 'outline_variant', 'on_surface', 'on_surface_variant'],
+        preview: (scheme) => {
+            const table = document.createElement('div');
+            table.className = 'ref-table';
+            const head = document.createElement('div');
+            head.className = 'ref-table-head';
+            head.style.background = scheme.surface_container;
+            head.style.color = scheme.on_surface;
+            const headCells = ['名称', '角色', '色值'];
+            for (const text of headCells) {
+                const cell = document.createElement('span');
+                cell.className = 'ref-table-cell';
+                cell.textContent = text;
+                head.appendChild(cell);
+            }
+            table.appendChild(head);
+            const rows = [
+                { name: 'primary', role: '主色', hex: '#6750A4', dim: false },
+                { name: 'surface', role: '页面背景', hex: '#FDF7FF', dim: true },
+            ];
+            for (const row of rows) {
+                const line = document.createElement('div');
+                line.className = 'ref-table-row';
+                line.style.borderTopColor = scheme.outline_variant;
+                line.style.color = row.dim ? scheme.on_surface_variant : scheme.on_surface;
+                const cells = [row.name, row.role, row.hex];
+                for (const text of cells) {
+                    const cell = document.createElement('span');
+                    cell.className = 'ref-table-cell';
+                    cell.textContent = text;
+                    line.appendChild(cell);
+                }
+                table.appendChild(line);
+            }
+            return table;
+        },
+    },
 ];
 
-// 页面切换：取色工具 / 控件配色（tab 组驱动，.page 容器显隐）
+// 页面切换：取色工具 / 控件配色 / 页面预览（tab 组驱动，.page 容器显隐）
 const refPage = document.getElementById('page-ref');
+const previewPage = document.getElementById('page-preview');
 
 function renderRefControls() {
     const scheme = NekoHCT.scheme(state.seed, currentTheme);
@@ -1490,6 +1716,9 @@ function renderRefControls() {
 function switchPage(pageId) {
     document.getElementById('page-picker').hidden = pageId !== 'picker';
     refPage.hidden = pageId !== 'ref';
+    if (previewPage !== null) {
+        previewPage.hidden = pageId !== 'preview';
+    }
     for (const tab of document.querySelectorAll('.page-tab')) {
         tab.setAttribute('aria-selected', String(tab.dataset.page === pageId));
     }

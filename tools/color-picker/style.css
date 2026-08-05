@@ -81,7 +81,7 @@ body {
     gap: 12px;
 }
 
-/* 页面切换分段滑块：滑块在「取色工具/控件配色」之间平移，选中按钮文字为滑块上的 on-accent */
+/* 页面切换分段滑块：滑块在「取色工具/控件配色/页面预览」之间平移，选中按钮文字为滑块上的 on-accent */
 .page-tabs {
     position: relative;
     display: flex;
@@ -94,7 +94,7 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    width: 50%;
+    width: 33.3333%;
     height: 100%;
     background: var(--accent);
     pointer-events: none;
@@ -103,6 +103,10 @@ body {
 
 .page-tabs[data-page='ref'] .page-slider {
     transform: translateX(100%);
+}
+
+.page-tabs[data-page='preview'] .page-slider {
+    transform: translateX(200%);
 }
 
 .page-tab {
@@ -946,6 +950,165 @@ body,
     width: 40%;
 }
 
+/* 参考控件：Tabs（指示条 + 选中色） */
+.ref-tabs {
+    position: relative;
+    display: flex;
+    gap: 20px;
+    padding-bottom: 8px;
+    font-size: 13px;
+}
+
+.ref-tab-indicator {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 32px;
+    height: 2px;
+}
+
+/* 参考控件：Menu（下拉菜单，首项高亮） */
+.ref-menu {
+    min-width: 160px;
+    padding: 4px 0;
+    border: 1px solid;
+    font-size: 13px;
+}
+
+.ref-menu-item {
+    padding: 6px 14px;
+}
+
+/* 参考控件：Breadcrumb（链接 / 分隔 / 当前页） */
+.ref-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.ref-breadcrumb-sep {
+    opacity: 0.7;
+}
+
+/* 参考控件：Pagination（当前页高亮） */
+.ref-pagination {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ref-page-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 4px;
+    border: 1px solid;
+    font-size: 12px;
+}
+
+/* 参考控件：Badge（右上角标，胶囊形） */
+.ref-badge-wrap {
+    position: relative;
+}
+
+.ref-badge-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 14px;
+    font-size: 13px;
+}
+
+.ref-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    font-size: 11px;
+    line-height: 1;
+}
+
+/* 参考控件：Avatar（圆形头像，语义形状） */
+.ref-avatar-wrap {
+    display: flex;
+    gap: 10px;
+}
+
+.ref-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* 参考控件：Stepper（完成/进行中/待开始，圆点语义形状） */
+.ref-stepper {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+}
+
+.ref-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ref-step-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.ref-step-line {
+    width: 28px;
+    border-top: 1px solid;
+    margin: 0 6px;
+}
+
+/* 参考控件：Table（表头 + 行分隔 + 数据行） */
+.ref-table {
+    min-width: 300px;
+    font-size: 12px;
+}
+
+.ref-table-head,
+.ref-table-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.ref-table-head {
+    font-weight: 600;
+}
+
+.ref-table-row {
+    border-top: 1px solid;
+}
+
+.ref-table-cell {
+    padding: 6px 10px;
+}
+
 .export-actions {
     display: flex;
     align-items: center;
@@ -964,6 +1127,334 @@ body,
 .export-select:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
+}
+
+/* 页面预览：浏览器窗口示意（假地址栏 + 完整示例站），配色全部走 CSS 变量，随 seed / 主题自动刷新 */
+.preview-frame {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.preview-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.preview-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.35;
+}
+
+.preview-url {
+    margin-left: 8px;
+    padding: 2px 12px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.preview-site {
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+}
+
+.pv-nav {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 12px 32px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+}
+
+.pv-logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.pv-links {
+    display: flex;
+    gap: 18px;
+    flex: 1;
+}
+
+.pv-links a {
+    color: var(--muted);
+    cursor: default;
+}
+
+.pv-links a:hover {
+    color: var(--text);
+}
+
+.pv-btn {
+    padding: 7px 16px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.pv-btn-primary {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+}
+
+.pv-btn-primary:hover {
+    background: color-mix(in srgb, var(--accent) 88%, #000);
+}
+
+.pv-btn-ghost {
+    background: none;
+    color: var(--accent);
+}
+
+.pv-btn-ghost:hover {
+    background: var(--panel-2);
+}
+
+.pv-btn-onaccent {
+    background: var(--on-accent);
+    color: var(--accent);
+    border-color: var(--on-accent);
+}
+
+.pv-btn-onaccent:hover {
+    background: color-mix(in srgb, var(--on-accent) 88%, #000);
+}
+
+.pv-hero {
+    padding: 44px 32px;
+    text-align: center;
+    background: var(--panel);
+}
+
+.pv-hero h3 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.pv-hero p {
+    margin: 0 auto 20px;
+    max-width: 520px;
+    color: var(--muted);
+}
+
+.pv-hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pv-stats {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    padding: 20px 32px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.pv-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.pv-stat b {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.pv-stat span {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.pv-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding: 28px 32px;
+}
+
+.pv-feature {
+    padding: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.pv-ficon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: var(--on-accent);
+    background: var(--accent);
+    border-radius: 5px;
+}
+
+.pv-feature b {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.pv-feature p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.pv-pricing {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding: 28px 32px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+}
+
+.pv-plan {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.pv-plan-hot {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+}
+
+.pv-hot-tag {
+    position: absolute;
+    top: -9px;
+    right: 12px;
+    padding: 1px 8px;
+    font-size: 11px;
+    background: var(--on-accent);
+    color: var(--accent);
+    border-radius: 5px;
+}
+
+.pv-plan b {
+    font-size: 14px;
+}
+
+.pv-price {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.pv-price em {
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.75;
+}
+
+.pv-plan ul {
+    margin: 4px 0 10px;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.pv-plan-hot ul {
+    opacity: 0.92;
+}
+
+.pv-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 24px 32px;
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.pv-cta b {
+    font-size: 16px;
+}
+
+.pv-footer {
+    padding: 24px 32px 16px;
+    background: var(--panel-2);
+    border-top: 1px solid var(--border);
+}
+
+.pv-footer-cols {
+    display: flex;
+    gap: 48px;
+}
+
+.pv-footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pv-footer-col b {
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.pv-footer-col a {
+    font-size: 12px;
+    color: var(--muted);
+    cursor: default;
+}
+
+.pv-footer-col a:hover {
+    color: var(--text);
+}
+
+.pv-copyright {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+}
+
+@media (max-width: 760px) {
+    .pv-features,
+    .pv-pricing {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-links {
+        display: none;
+    }
 }
 
 /* 全场统一 5px 圆角（用户要求：直角扁平化改为 5px；流星光线 .meteor 3px 与圆形语义元素 ref-radio/ref-radio-dot/ref-slider-thumb 50% 保持原样） */
