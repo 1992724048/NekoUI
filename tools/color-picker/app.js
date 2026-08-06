@@ -2443,7 +2443,7 @@ function initBackToTop() {
 
 initBackToTop();
 
-// 鼠标光晕：rAF 插值平滑跟随（0.15 lerp），首帧直接定位避免从原点飞入；
+// 鼠标光晕：rAF 插值平滑跟随（0.12 lerp 柔滑拖尾），首帧直接定位避免从原点飞入；
 // 移出窗口隐藏 / 移入恢复；reduced-motion 或无 rAF 时直接定位；桩环境缺失 API 时静默跳过
 function initCursorGlow() {
     if (typeof document.createElement !== 'function' || typeof document.body === 'undefined') {
@@ -2457,7 +2457,7 @@ function initCursorGlow() {
     document.body.appendChild(glow);
     const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hasRaf = typeof requestAnimationFrame === 'function';
-    const half = 130;
+    const half = 150;
     let targetX = 0;
     let targetY = 0;
     let currentX = 0;
@@ -2468,8 +2468,8 @@ function initCursorGlow() {
     };
     const step = () => {
         rafId = null;
-        currentX += (targetX - currentX) * 0.15;
-        currentY += (targetY - currentY) * 0.15;
+        currentX += (targetX - currentX) * 0.12;
+        currentY += (targetY - currentY) * 0.12;
         glow.style.transform = 'translate(' + (currentX - half) + 'px, ' + (currentY - half) + 'px)';
         if (Math.abs(targetX - currentX) < 0.5 && Math.abs(targetY - currentY) < 0.5) {
             return;
