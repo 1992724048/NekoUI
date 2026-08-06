@@ -673,6 +673,27 @@ body,
     }
 }
 
+/* 鼠标光晕：跟随光标的柔和 accent 光斑（LED 科技感点缀，与流星雨/标题栏风格协调）；
+   z-index 1 在内容之上但低透明度不干扰阅读，pointer-events none 不遮挡交互 */
+.cursor-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    will-change: transform;
+}
+
+.cursor-glow.visible {
+    opacity: 1;
+}
+
 /* 回到顶部按钮：右下悬浮圆形（玻璃背景），滚动超过阈值后淡入，所有页面通用 */
 .back-to-top {
     position: fixed;
