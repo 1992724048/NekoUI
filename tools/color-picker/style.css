@@ -32,6 +32,12 @@ html {
     scrollbar-gutter: stable;
 }
 
+/* 全局准星光标（用户要求：所有元素统一准星，控件上不恢复默认）；!important 覆盖各元素显式 pointer/text；
+   白体黑边 SVG 深浅主题可辨；hotspot 中心 (12,12) */
+* {
+    cursor: url('cursor.svg') 12 12, auto !important;
+}
+
 body {
     margin: 0;
     background: var(--bg);
@@ -41,21 +47,27 @@ body {
     line-height: 1.5;
     user-select: none;
     -webkit-user-select: none;
-    /* 系统光标：自绘 4 脚星形（黑主体 + 白描边，深浅主题可辨），hotspot 中心；交互元素保留语义光标 */
-    cursor: url('cursor.svg') 10 10, auto;
 }
 
-/* 页面大部分区域禁用文字选中（鼠标拖动不选中），可编辑/可选区域例外；输入框保留 text 光标 */
+/* 标题栏玻璃参照层：header 背后固定极淡 accent 渐晕（z 39 在 header 40 之下、内容之上），
+   滚动到顶部时 header 也有彩色内容可模糊——修复「同色叠同色视觉不透明」；pointer-events none 不挡交互 */
+body::before {
+    content: '';
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 96px;
+    z-index: 39;
+    pointer-events: none;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 28%, transparent), transparent 100%);
+}
+
+/* 页面大部分区域禁用文字选中（鼠标拖动不选中），可编辑/可选区域例外（光标统一全局准星） */
 .seed-row input[type='text'],
 #cpp-export {
     user-select: text;
     -webkit-user-select: text;
-    cursor: text;
-}
-
-/* 链接保留指针光标（星形为全局默认） */
-a {
-    cursor: pointer;
 }
 
 /* LED 数码点阵标题栏：半透明模糊底 + 坐标纸网格 + 网格交点灯点（纯 CSS 多层背景，亮/暗主题随 CSS 变量联动） */
@@ -72,14 +84,14 @@ a {
     border-bottom: 1px solid var(--border);
     /* 降级：不支持 color-mix/backdrop-filter 的浏览器保持不透明底，保证可读 */
     background: var(--bg);
-    background-color: color-mix(in srgb, var(--bg) 58%, transparent);
+    background-color: color-mix(in srgb, var(--bg) 52%, transparent);
     background-image:
-        radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--accent) 55%, transparent) 1px, transparent 1.6px),
-        linear-gradient(color-mix(in srgb, var(--border) 30%, transparent) 1px, transparent 1px),
-        linear-gradient(90deg, color-mix(in srgb, var(--border) 30%, transparent) 1px, transparent 1px);
+        radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--accent) 38%, transparent) 1px, transparent 1.6px),
+        linear-gradient(color-mix(in srgb, var(--border) 18%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--border) 18%, transparent) 1px, transparent 1px);
     background-size: 20px 20px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 /* 标题与版本号徽章：flex 容器使徽章与标题文本严格垂直居中 */
