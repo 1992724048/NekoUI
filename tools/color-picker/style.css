@@ -2239,8 +2239,9 @@ body,
     border-radius: 8px;
 }
 
-/* 卡片侧边光晕：JS 按鼠标相对卡片位置切换 glow-top/right/bottom/left class，
-   只有鼠标所在侧的边框转 accent 并定向外发光（box-shadow 负扩散贴边）；深浅主题随 --accent */
+/* 卡片 spotlight 边框光晕（Chokcoco/iCSS 方案）：conic 渐变边框层 + mask 圆形窗口跟随鼠标（--x/--y 由 JS 写入），
+   环版（mask-composite exclude 只留边框光带，玻璃卡片背景上不叠加内发光）；
+   亮度由 --glow-opacity 控制（JS 进卡隐藏、mousemove 定位后显示，防首帧闪烁）；深浅主题随 --accent */
 .panel,
 .ref-item,
 .about-hero,
@@ -2248,27 +2249,42 @@ body,
 .about-link,
 .about-metric,
 .about-toc {
+    position: relative;
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.glow-top {
-    border-color: var(--accent);
-    box-shadow: 0 -8px 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.glow-right {
-    border-color: var(--accent);
-    box-shadow: 8px 0 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.glow-bottom {
-    border-color: var(--accent);
-    box-shadow: 0 8px 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.glow-left {
-    border-color: var(--accent);
-    box-shadow: -8px 0 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
+.panel::before,
+.ref-item::before,
+.about-hero::before,
+.about-card::before,
+.about-link::before,
+.about-metric::before,
+.about-toc::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+        color-mix(in srgb, var(--accent) 25%, transparent) 0%,
+        var(--accent) 30%,
+        color-mix(in srgb, var(--accent) 25%, transparent) 60%,
+        var(--accent) 90%,
+        color-mix(in srgb, var(--accent) 25%, transparent) 100%
+    );
+    opacity: var(--glow-opacity, 0);
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    -webkit-mask:
+        linear-gradient(#000 0 0),
+        linear-gradient(#000 0 0) content-box,
+        -webkit-radial-gradient(circle 240px at var(--x, 50%) var(--y, 50%), #000 0%, #000 25%, transparent 60%);
+    -webkit-mask-composite: xor, source-in;
+    mask:
+        linear-gradient(#000 0 0),
+        linear-gradient(#000 0 0) content-box,
+        radial-gradient(circle 240px at var(--x, 50%) var(--y, 50%), #000 0%, #000 25%, transparent 60%);
+    mask-composite: exclude, intersect;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2279,6 +2295,16 @@ body,
     .about-link,
     .about-metric,
     .about-toc {
+        transition: none;
+    }
+
+    .panel::before,
+    .ref-item::before,
+    .about-hero::before,
+    .about-card::before,
+    .about-link::before,
+    .about-metric::before,
+    .about-toc::before {
         transition: none;
     }
 }
