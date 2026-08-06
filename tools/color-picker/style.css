@@ -41,13 +41,21 @@ body {
     line-height: 1.5;
     user-select: none;
     -webkit-user-select: none;
+    /* 系统光标：自绘 4 脚星形（黑主体 + 白描边，深浅主题可辨），hotspot 中心；交互元素保留语义光标 */
+    cursor: url('cursor.svg') 10 10, auto;
 }
 
-/* 页面大部分区域禁用文字选中（鼠标拖动不选中），可编辑/可选区域例外 */
+/* 页面大部分区域禁用文字选中（鼠标拖动不选中），可编辑/可选区域例外；输入框保留 text 光标 */
 .seed-row input[type='text'],
 #cpp-export {
     user-select: text;
     -webkit-user-select: text;
+    cursor: text;
+}
+
+/* 链接保留指针光标（星形为全局默认） */
+a {
+    cursor: pointer;
 }
 
 /* LED 数码点阵标题栏：半透明模糊底 + 坐标纸网格 + 网格交点灯点（纯 CSS 多层背景，亮/暗主题随 CSS 变量联动） */
@@ -1430,12 +1438,49 @@ body,
 
 .about h2 {
     margin: 26px 0 10px;
-    padding-bottom: 6px;
-    font-size: 18px;
-    font-weight: 700;
-    border-bottom: 1px solid var(--border);
     /* 锚点跳转时补偿 sticky 标题栏高度 */
     scroll-margin-top: 72px;
+}
+
+/* About 章节标题：markdown tips 风格（左侧 accent 竖条 + 弱化玻璃底 + 5px 圆角），可点击折叠内容 */
+.about-h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: left;
+    background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 55%, transparent);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.about-h2:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.about-h2-arrow {
+    margin-left: auto;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+}
+
+.about-h2[aria-expanded='false'] .about-h2-arrow {
+    transform: rotate(-90deg);
+}
+
+.about-section {
+    margin-bottom: 4px;
 }
 
 .about h3 {
@@ -1689,18 +1734,6 @@ body,
 .about-toc a.about-toc-active .about-toc-idx {
     color: var(--on-accent);
     opacity: 0.8;
-}
-
-/* About 美化：h2 前缀 accent 竖条徽标 */
-.about h2::before {
-    content: '';
-    display: inline-block;
-    width: 4px;
-    height: 15px;
-    margin-right: 8px;
-    vertical-align: -2px;
-    border-radius: 2px;
-    background: var(--accent);
 }
 
 /* About 项目信息卡（hero）：2×2 色板徽标 + 标题 + 描述；玻璃效果与 .panel/.ref-item 一致 */

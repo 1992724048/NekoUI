@@ -2363,6 +2363,15 @@ function initAboutToc() {
             if (typeof target.scrollIntoView !== 'function') {
                 return;
             }
+            // 目录跳转兼容折叠：目标章节已折叠时先展开再滚动
+            const section = target.nextElementSibling;
+            if (section != null && section.classList != null && section.classList.contains('about-section') && section.hidden) {
+                section.hidden = false;
+                const btn = target.querySelector('.about-h2');
+                if (btn != null) {
+                    btn.setAttribute('aria-expanded', 'true');
+                }
+            }
             e.preventDefault();
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             for (const other of links) {
@@ -2389,6 +2398,73 @@ function initAboutToc() {
 }
 
 initAboutToc();
+
+// About 章节折叠：点击 tips 风格标题切换内容显隐（hidden + aria-expanded；目录跳转会先展开目标章节）
+function initAboutCollapse() {
+    const buttons = document.querySelectorAll('.about-h2');
+    if (buttons == null) {
+        return;
+    }
+    for (const btn of buttons) {
+        const section = btn.parentElement == null ? null : btn.parentElement.nextElementSibling;
+        if (section == null || section.classList == null || !section.classList.contains('about-section')) {
+            continue;
+        }
+        btn.addEventListener('click', () => {
+            const collapsed = section.hidden;
+            section.hidden = !collapsed;
+            btn.setAttribute('aria-expanded', String(collapsed));
+        });
+    }
+}
+
+initAboutCollapse();
+
+// 标题栏拖动切页：空白区域按住左右拖动超过 50px 触发循环切页（左拖下一页 / 右拖上一页）；按钮区域不响应
+function initHeaderDrag() {
+    const header = document.querySelector('.app-header');
+    if (header == null) {
+        return;
+    }
+    const pageOrder = ['picker', 'ref', 'preview', 'about'];
+    let startX = 0;
+    let dragging = false;
+    const isInteractive = (target) => {
+        if (target == null || typeof target.closest !== 'function') {
+            return false;
+        }
+        return target.closest('button, a, input, select') !== null;
+    };
+    header.addEventListener('mousedown', (e) => {
+        if (isInteractive(e.target)) {
+            return;
+        }
+        startX = typeof e.clientX === 'number' ? e.clientX : 0;
+        dragging = true;
+    });
+    if (typeof window.addEventListener === 'function') {
+        window.addEventListener('mousemove', (e) => {
+            if (!dragging) {
+                return;
+            }
+            const dx = (typeof e.clientX === 'number' ? e.clientX : 0) - startX;
+            if (Math.abs(dx) <= 50) {
+                return;
+            }
+            dragging = false;
+            const activeTab = document.querySelector('.page-tab[aria-selected="true"]');
+            const current = activeTab == null || activeTab.dataset == null ? 'picker' : (activeTab.dataset.page || 'picker');
+            const index = pageOrder.indexOf(current);
+            const next = dx < 0 ? (index + 1) % pageOrder.length : (index - 1 + pageOrder.length) % pageOrder.length;
+            switchPage(pageOrder[next]);
+        });
+        window.addEventListener('mouseup', () => {
+            dragging = false;
+        });
+    }
+}
+
+initHeaderDrag();
 
 // 技术说明提示：指标卡 / 徽章 hover 弹出详细信息（复用 .tip 富提示框，data-tip-title/body 驱动；桩环境查询为空时静默跳过）
 function initTechTip() {

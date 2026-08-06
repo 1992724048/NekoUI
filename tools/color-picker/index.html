@@ -148,8 +148,9 @@
                 <a href="#about-roles"><span class="about-toc-idx">04</span>角色分组</a>
                 <a href="#about-links"><span class="about-toc-idx">05</span>相关链接</a>
             </nav>
-            <h2 id="about-features">功能特性</h2>
-            <div class="about-grid">
+            <h2 id="about-features"><button type="button" class="about-h2" aria-expanded="true" aria-controls="about-sec-features">功能特性<span class="about-h2-arrow">▾</span></button></h2>
+            <div class="about-section" id="about-sec-features">
+                <div class="about-grid">
                 <div class="about-card"><span class="about-card-idx">01</span><b>seed 选取</b><p>取色器 / 十六进制输入 / 常用颜色 / 随机种子</p></div>
                 <div class="about-card"><span class="about-card-idx">02</span><b>色调色带</b><p>primary · secondary · tertiary · neutral · neutralVariant · error（tone 5–95）</p></div>
                 <div class="about-card"><span class="about-card-idx">03</span><b>角色表格</b><p>47 个 ColorScheme 角色，hover 显示 RGB / HSL / HSV / CMYK / VEC4 五色值</p></div>
@@ -160,8 +161,10 @@
                 <div class="about-card"><span class="about-card-idx">08</span><b>页面预览</b><p>通用设置界面，实时预览界面配色效果</p></div>
                 <div class="about-card"><span class="about-card-idx">09</span><b>开箱即用</b><p>无需构建、无需服务器，浏览器直接打开即可使用</p></div>
             </div>
-            <h2 id="about-usage">使用说明</h2>
-            <div class="about-stepper">
+            </div>
+            <h2 id="about-usage"><button type="button" class="about-h2" aria-expanded="true" aria-controls="about-sec-usage">使用说明<span class="about-h2-arrow">▾</span></button></h2>
+            <div class="about-section" id="about-sec-usage">
+                <div class="about-stepper">
                 <div class="as-step">
                     <span class="as-dot">1</span>
                     <div class="as-body"><b>选择 seed 颜色</b><p>打开「取色工具」页，选取一个种子颜色</p></div>
@@ -187,8 +190,10 @@
                     <div class="as-body"><b>导出字典</b><p>在导出面板选择语言，生成角色字典代码</p></div>
                 </div>
             </div>
-            <h2 id="about-tech">技术说明</h2>
-            <div class="about-metrics">
+            </div>
+            <h2 id="about-tech"><button type="button" class="about-h2" aria-expanded="true" aria-controls="about-sec-tech">技术说明<span class="about-h2-arrow">▾</span></button></h2>
+            <div class="about-section" id="about-sec-tech">
+                <div class="about-metrics">
                 <div class="about-metric" data-tip-title="47 配色角色" data-tip-body="ColorScheme 的 47 个角色字段逐字匹配 ColorScheme.hpp，亮暗双主题各一套">
                     <b>47</b>
                     <span>配色角色</span>
@@ -213,8 +218,10 @@
                 <span class="about-badge" data-tip-title="开箱即用" data-tip-body="零构建零服务器，浏览器直接打开本地文件即可使用"><i class="badge-dot"></i>file:// 开箱即用 · 零配置</span>
                 <span class="about-badge" data-tip-title="配色联动" data-tip-body="页面 CSS 变量由当前 seed 的 scheme() 派生，亮暗主题自动刷新"><i class="badge-dot"></i>配色随 seed 与主题联动</span>
             </div>
-            <h2 id="about-roles">角色分组</h2>
-            <table>
+            </div>
+            <h2 id="about-roles"><button type="button" class="about-h2" aria-expanded="true" aria-controls="about-sec-roles">角色分组<span class="about-h2-arrow">▾</span></button></h2>
+            <div class="about-section" id="about-sec-roles">
+                <table>
                 <thead>
                     <tr><th>分组</th><th>角色数</th><th>用途</th></tr>
                 </thead>
@@ -227,8 +234,10 @@
                     <tr><td>other</td><td>11</td><td>文字 / 描边 / 反色</td></tr>
                 </tbody>
             </table>
-            <h2 id="about-links">相关链接</h2>
-            <div class="about-links">
+            </div>
+            <h2 id="about-links"><button type="button" class="about-h2" aria-expanded="true" aria-controls="about-sec-links">相关链接<span class="about-h2-arrow">▾</span></button></h2>
+            <div class="about-section" id="about-sec-links">
+                <div class="about-links">
                 <a class="about-link" href="https://github.com/1992724048/NekoUI" target="_blank" rel="noopener">
                     <span class="about-link-name">NekoUI 开源仓库</span>
                     <span class="about-link-desc">项目源码与文档 · github.com/1992724048/NekoUI</span>
@@ -241,6 +250,7 @@
                     <span class="about-link-name">Material 3 色彩系统</span>
                     <span class="about-link-desc">设计规范 · m3.material.io</span>
                 </a>
+            </div>
             </div>
         </div>
     </div>
