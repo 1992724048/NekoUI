@@ -2278,9 +2278,12 @@ setTheme(currentTheme);
 refreshExport();
 refreshMeteors();
 
-// 预览页互动（纯视觉状态切换，无全局副作用）：侧栏导航切换激活、分段选择器切换、开关切换
+// 预览页互动（纯视觉状态切换，无全局副作用）：侧栏导航切换激活、分段选择器切换、开关切换；桩环境查询为空时静默跳过
 function initPreviewInteractions() {
     const sideItems = document.querySelectorAll('.pv-side-item');
+    if (sideItems == null) {
+        return;
+    }
     for (const item of sideItems) {
         item.addEventListener('click', () => {
             for (const other of sideItems) {
@@ -2290,6 +2293,9 @@ function initPreviewInteractions() {
         });
     }
     const segItems = document.querySelectorAll('.pv-seg-item');
+    if (segItems == null) {
+        return;
+    }
     for (const item of segItems) {
         item.addEventListener('click', () => {
             for (const other of segItems) {
@@ -2299,6 +2305,9 @@ function initPreviewInteractions() {
         });
     }
     const switches = document.querySelectorAll('.pv-switch');
+    if (switches == null) {
+        return;
+    }
     for (const sw of switches) {
         sw.addEventListener('click', () => sw.classList.toggle('pv-switch-on'));
     }
@@ -2306,24 +2315,26 @@ function initPreviewInteractions() {
 
 initPreviewInteractions();
 
-// About 目录导航：点击平滑滚动到章节 + IntersectionObserver scroll-spy 高亮当前项（桩环境缺失 API 时静默跳过）
+// About 目录导航：左上角悬浮导航列表，点击平滑滚动到章节 + scroll-spy 高亮；
+// 桩环境 DOM 查询返回 null/undefined 时静默跳过（== null 同时覆盖两者）
 function initAboutToc() {
     const toc = document.querySelector('.about-toc');
-    if (toc === null) {
+    if (toc == null) {
         return;
     }
     const links = toc.querySelectorAll('a');
-    if (links.length === 0) {
+    if (links == null || links.length === 0) {
         return;
     }
     const sections = [];
     for (const link of links) {
         const target = document.querySelector(link.getAttribute('href'));
-        if (target !== null) {
-            sections.push(target);
+        if (target == null) {
+            continue;
         }
+        sections.push(target);
         link.addEventListener('click', (e) => {
-            if (target === null || typeof target.scrollIntoView !== 'function') {
+            if (typeof target.scrollIntoView !== 'function') {
                 return;
             }
             e.preventDefault();
@@ -2353,13 +2364,46 @@ function initAboutToc() {
 
 initAboutToc();
 
+// 回到顶部按钮：滚动超过 400px 淡入显示，点击平滑回顶（reduced-motion 直接跳转）；所有页面通用
+function initBackToTop() {
+    const btn = document.getElementById('back-to-top');
+    if (btn == null || typeof window.addEventListener !== 'function') {
+        return;
+    }
+    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let ticking = false;
+    const update = () => {
+        ticking = false;
+        const scrollY = typeof window.scrollY === 'number' ? window.scrollY : 0;
+        btn.classList.toggle('visible', scrollY > 400);
+    };
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            ticking = true;
+            if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(update);
+            } else {
+                update();
+            }
+        }
+    });
+    btn.addEventListener('click', () => {
+        if (typeof window.scrollTo === 'function') {
+            window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+        }
+    });
+    update();
+}
+
+initBackToTop();
+
 // 加载引导提示：聚焦核心功能，4s 自动消失 + 手动关闭；reduced-motion 下直接显示
 function showOnboardTip() {
     if (typeof document.createElement !== 'function' || typeof document.body === 'undefined') {
         return;
     }
     const tip = document.createElement('div');
-    if (tip === null || tip.className === undefined) {
+    if (tip == null || tip.className === undefined) {
         return;
     }
     tip.className = 'onboard-tip';

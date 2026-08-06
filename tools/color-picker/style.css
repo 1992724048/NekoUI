@@ -673,6 +673,41 @@ body,
     }
 }
 
+/* 回到顶部按钮：右下悬浮圆形（玻璃背景），滚动超过阈值后淡入，所有页面通用 */
+.back-to-top {
+    position: fixed;
+    right: 20px;
+    bottom: 24px;
+    z-index: 55;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 72%, transparent);
+    color: var(--text);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: opacity 0.2s ease;
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.back-to-top:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
 .tip {
     position: fixed;
     z-index: 20;
@@ -1567,13 +1602,17 @@ body,
     border-bottom: 1px solid var(--border);
 }
 
-/* About 目录导航：横排胶囊条（玻璃背景 + 当前项 accent 高亮），与徽章墙风格呼应 */
+/* About 目录导航：视口左上角悬浮导航列表（fixed，避开 sticky 标题栏），直接显示章节项，scroll-spy 高亮 */
 .about-toc {
+    position: fixed;
+    left: 14px;
+    top: 72px;
+    z-index: 25;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 16px;
-    padding: 10px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 148px;
+    padding: 8px;
     background: var(--panel);
     background-color: color-mix(in srgb, var(--panel) 58%, transparent);
     background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
@@ -1585,18 +1624,26 @@ body,
 }
 
 .about-toc a {
-    padding: 5px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
     font-size: 12px;
     color: var(--muted);
-    border: 1px solid transparent;
-    border-radius: 999px;
+    border-radius: 5px;
     text-decoration: none;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.about-toc-idx {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.7;
 }
 
 .about-toc a:hover {
     color: var(--accent);
-    border-color: var(--border);
     background: var(--panel-2);
     text-decoration: none;
 }
@@ -1604,7 +1651,11 @@ body,
 .about-toc a.about-toc-active {
     color: var(--on-accent);
     background: var(--accent);
-    border-color: var(--accent);
+}
+
+.about-toc a.about-toc-active .about-toc-idx {
+    color: var(--on-accent);
+    opacity: 0.8;
 }
 
 /* About 美化：h2 前缀 accent 竖条徽标 */
