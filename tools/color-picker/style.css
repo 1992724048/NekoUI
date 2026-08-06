@@ -49,20 +49,6 @@ body {
     -webkit-user-select: none;
 }
 
-/* 标题栏玻璃参照层：header 背后固定极淡 accent 渐晕（z 39 在 header 40 之下、内容之上），
-   滚动到顶部时 header 也有彩色内容可模糊——修复「同色叠同色视觉不透明」；pointer-events none 不挡交互 */
-body::before {
-    content: '';
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 96px;
-    z-index: 39;
-    pointer-events: none;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 28%, transparent), transparent 100%);
-}
-
 /* 页面大部分区域禁用文字选中（鼠标拖动不选中），可编辑/可选区域例外（光标统一全局准星） */
 .seed-row input[type='text'],
 #cpp-export {

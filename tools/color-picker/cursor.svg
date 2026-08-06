@@ -1,12 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <!-- 准星光标：细十字线贯穿 + 中心圆点，白色主体 + 黑色描边，深浅主题背景均可辨识；hotspot 中心 (12,12) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- 准星光标：四向短线（上下左右各一段，中心留空），白色主体 + 黑色描边，深浅主题背景均可辨识；hotspot 位于 (8,8) -->
   <g stroke="#111111" stroke-width="3" stroke-linecap="round">
-    <line x1="0" y1="12" x2="24" y2="12" />
-    <line x1="12" y1="0" x2="12" y2="24" />
+    <line x1="8" y1="0" x2="8" y2="5" />
+    <line x1="8" y1="11" x2="8" y2="16" />
+    <line x1="0" y1="8" x2="5" y2="8" />
+    <line x1="11" y1="8" x2="16" y2="8" />
   </g>
   <g stroke="#ffffff" stroke-width="1.5" stroke-linecap="round">
-    <line x1="0" y1="12" x2="24" y2="12" />
-    <line x1="12" y1="0" x2="12" y2="24" />
+    <line x1="8" y1="0" x2="8" y2="5" />
+    <line x1="8" y1="11" x2="8" y2="16" />
+    <line x1="0" y1="8" x2="5" y2="8" />
+    <line x1="11" y1="8" x2="16" y2="8" />
   </g>
-  <circle cx="12" cy="12" r="2" fill="#ffffff" stroke="#111111" stroke-width="1.5" />
 </svg>
