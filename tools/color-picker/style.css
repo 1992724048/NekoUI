@@ -673,17 +673,17 @@ body,
     }
 }
 
-/* 鼠标光晕：双层结构——外层大光晕（300px 低透明度 accent 淡晕）+ ::before 内层灯芯（白色光心 + accent 亮圈），
-   形成「灯芯 + 光晕」层次；z-index 1 在内容之上但低透明度不干扰阅读，pointer-events none 不遮挡交互 */
+/* 鼠标光晕：双层结构——外层大光晕（230px 低透明度 accent 淡晕）+ ::before 内层灯芯（白色光心 + accent 亮圈），
+   存在感刻意压低（几乎无感的柔光点缀）；z-index 1 在内容之上但低透明度不干扰阅读，pointer-events none 不遮挡交互 */
 .cursor-glow {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1;
-    width: 300px;
-    height: 300px;
+    width: 230px;
+    height: 230px;
     border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 70%);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.25s ease;
@@ -695,11 +695,11 @@ body,
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 110px;
-    height: 110px;
-    margin: -55px 0 0 -55px;
+    width: 85px;
+    height: 85px;
+    margin: -42.5px 0 0 -42.5px;
     border-radius: 50%;
-    background: radial-gradient(circle, #ffffff1a 0%, color-mix(in srgb, var(--accent) 22%, transparent) 40%, transparent 70%);
+    background: radial-gradient(circle, #ffffff0d 0%, color-mix(in srgb, var(--accent) 10%, transparent) 40%, transparent 70%);
 }
 
 .cursor-glow.visible {

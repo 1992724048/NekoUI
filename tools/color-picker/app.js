@@ -2457,7 +2457,7 @@ function initCursorGlow() {
     document.body.appendChild(glow);
     const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hasRaf = typeof requestAnimationFrame === 'function';
-    const half = 150;
+    const half = 115;
     let targetX = 0;
     let targetY = 0;
     let currentX = 0;
