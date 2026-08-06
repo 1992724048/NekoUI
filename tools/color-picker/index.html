@@ -129,27 +129,38 @@
         <div class="about">
             <h1>关于项目</h1>
             <p>NekoUI HCT 颜色工具是 <a href="https://github.com/1992724048/NekoUI" target="_blank" rel="noopener">NekoUI</a> 开源项目附带的交互式取色与配色调试工具，基于 <code>Material You HCT</code> 色彩引擎。</p>
-            <blockquote>NekoUI 是一个使用 DirectX 11 渲染的 Windows C++ GUI 框架；本工具是其 ColorScheme（HCT 色彩引擎）的可视化调试入口——从单一 seed 生成 6 组色调色板与 47 个配色角色。</blockquote>
+            <div class="about-hero">
+                <div class="about-logo" aria-hidden="true">
+                    <span class="about-logo-dot about-logo-a"></span>
+                    <span class="about-logo-dot about-logo-b"></span>
+                    <span class="about-logo-dot about-logo-c"></span>
+                    <span class="about-logo-dot about-logo-d"></span>
+                </div>
+                <div class="about-hero-body">
+                    <b>NekoUI HCT 颜色工具</b>
+                    <p>NekoUI 是一个使用 DirectX 11 渲染的 Windows C++ GUI 框架；本工具是其 ColorScheme（HCT 色彩引擎）的可视化调试入口——从单一 seed 生成 6 组色调色板与 47 个配色角色。</p>
+                </div>
+            </div>
             <h2>功能特性</h2>
-            <ul>
-                <li>seed 选取：取色器 / 十六进制输入 / 常用颜色 / 随机种子</li>
-                <li>色调色带：primary · secondary · tertiary · neutral · neutralVariant · error（tone 5–95）</li>
-                <li>角色表格：47 个 ColorScheme 角色，hover 显示 RGB / HSL / HSV / CMYK / VEC4 五色值</li>
-                <li>主题切换：亮 / 暗主题联动，页面配色随 seed 实时刷新</li>
-                <li>右键菜单：按格式复制色值（Hex / RGB / HSL / HSV / CMYK / VEC4）</li>
-                <li>17 语言导出：C++ / JSON / CSS / Python / JavaScript 等角色字典</li>
-                <li>控件配色参考：23 个 MD3 风格控件，可交互体验</li>
-                <li>页面预览：通用设置界面，实时预览界面配色效果</li>
-                <li>流星雨背景：动态装饰，随主题与 seed 换色</li>
-            </ul>
+            <div class="about-grid">
+                <div class="about-card"><span class="about-card-idx">01</span><b>seed 选取</b><p>取色器 / 十六进制输入 / 常用颜色 / 随机种子</p></div>
+                <div class="about-card"><span class="about-card-idx">02</span><b>色调色带</b><p>primary · secondary · tertiary · neutral · neutralVariant · error（tone 5–95）</p></div>
+                <div class="about-card"><span class="about-card-idx">03</span><b>角色表格</b><p>47 个 ColorScheme 角色，hover 显示 RGB / HSL / HSV / CMYK / VEC4 五色值</p></div>
+                <div class="about-card"><span class="about-card-idx">04</span><b>主题切换</b><p>亮 / 暗主题联动，页面配色随 seed 实时刷新</p></div>
+                <div class="about-card"><span class="about-card-idx">05</span><b>右键菜单</b><p>按格式复制色值（Hex / RGB / HSL / HSV / CMYK / VEC4）</p></div>
+                <div class="about-card"><span class="about-card-idx">06</span><b>17 语言导出</b><p>C++ / JSON / CSS / Python / JavaScript 等角色字典</p></div>
+                <div class="about-card"><span class="about-card-idx">07</span><b>控件配色参考</b><p>23 个 MD3 风格控件，可交互体验</p></div>
+                <div class="about-card"><span class="about-card-idx">08</span><b>页面预览</b><p>通用设置界面，实时预览界面配色效果</p></div>
+                <div class="about-card"><span class="about-card-idx">09</span><b>流星雨背景</b><p>动态装饰，随主题与 seed 换色</p></div>
+            </div>
             <h2>使用说明</h2>
-            <ol>
-                <li>打开「取色工具」页，选择一个 seed 颜色</li>
-                <li>观察 6 组色调色带与 47 角色表的联动刷新</li>
-                <li>切换亮 / 暗主题，对比两种配色方案</li>
-                <li>右键任意色块，按所需格式复制色值</li>
-                <li>在「控件配色」与「页面预览」页查看整体效果</li>
-                <li>在导出面板选择语言，生成角色字典代码</li>
+            <ol class="about-steps">
+                <li><span class="about-step-idx">1</span><p>打开「取色工具」页，选择一个 seed 颜色</p></li>
+                <li><span class="about-step-idx">2</span><p>观察 6 组色调色带与 47 角色表的联动刷新</p></li>
+                <li><span class="about-step-idx">3</span><p>切换亮 / 暗主题，对比两种配色方案</p></li>
+                <li><span class="about-step-idx">4</span><p>右键任意色块，按所需格式复制色值</p></li>
+                <li><span class="about-step-idx">5</span><p>在「控件配色」与「页面预览」页查看整体效果</p></li>
+                <li><span class="about-step-idx">6</span><p>在导出面板选择语言，生成角色字典代码</p></li>
             </ol>
             <h2>技术说明</h2>
             <ul>

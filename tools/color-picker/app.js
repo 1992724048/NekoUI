@@ -2305,3 +2305,43 @@ function initPreviewInteractions() {
 }
 
 initPreviewInteractions();
+
+// 加载引导提示：聚焦核心功能，4s 自动消失 + 手动关闭；reduced-motion 下直接显示
+function showOnboardTip() {
+    if (typeof document.createElement !== 'function' || typeof document.body === 'undefined') {
+        return;
+    }
+    const tip = document.createElement('div');
+    if (tip === null || tip.className === undefined) {
+        return;
+    }
+    tip.className = 'onboard-tip';
+    const text = document.createElement('span');
+    text.textContent = '从左侧选取 Seed 颜色，实时预览色带与角色配色；右键色块可复制多种格式色值';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'onboard-close';
+    close.setAttribute('aria-label', '关闭提示');
+    close.textContent = '×';
+    tip.appendChild(text);
+    tip.appendChild(close);
+    document.body.appendChild(tip);
+    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduced && typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => tip.classList.add('visible'));
+    } else {
+        tip.classList.add('visible');
+    }
+    let timer = null;
+    const dismiss = () => {
+        if (timer !== null) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        tip.classList.remove('visible');
+    };
+    close.addEventListener('click', dismiss);
+    timer = setTimeout(dismiss, 4000);
+}
+
+showOnboardTip();
