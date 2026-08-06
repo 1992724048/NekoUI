@@ -86,7 +86,7 @@ body {
     gap: 12px;
 }
 
-/* 页面切换分段滑块：滑块在「取色工具/控件配色/页面预览」之间平移，选中按钮文字为滑块上的 on-accent */
+/* 页面切换分段滑块：滑块在「取色工具/控件配色/页面预览/关于」之间平移，选中按钮文字为滑块上的 on-accent */
 .page-tabs {
     position: relative;
     display: flex;
@@ -99,7 +99,7 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    width: 33.3333%;
+    width: 25%;
     height: 100%;
     background: var(--accent);
     pointer-events: none;
@@ -112,6 +112,10 @@ body {
 
 .page-tabs[data-page='preview'] .page-slider {
     transform: translateX(200%);
+}
+
+.page-tabs[data-page='about'] .page-slider {
+    transform: translateX(300%);
 }
 
 .page-tab {
@@ -772,9 +776,15 @@ body,
     display: flex;
     flex-direction: column;
     padding: 14px;
+    /* 与 .panel 同款：58% 半透明 + 模糊 + 网状点阵，流星透出；不支持 color-mix/backdrop-filter 时降级为不透明 */
     background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
     border: 1px solid var(--border);
     border-radius: 5px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .ref-item-name {
@@ -1262,6 +1272,111 @@ body,
     margin: 0 0 4px;
     font-size: 16px;
     font-weight: 600;
+}
+
+/* 关于页：markdown 风格排版（标题层级 / 列表 / 引用 / 代码块 / 表格 / 链接），行宽适中居中，全部 CSS 变量配色 */
+.about {
+    max-width: 720px;
+    margin: 0 auto;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.about h1 {
+    margin: 0 0 12px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.about h2 {
+    margin: 26px 0 10px;
+    padding-bottom: 6px;
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+}
+
+.about h3 {
+    margin: 18px 0 8px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.about p {
+    margin: 0 0 12px;
+}
+
+.about ul,
+.about ol {
+    margin: 0 0 12px;
+    padding-left: 22px;
+}
+
+.about li {
+    margin-bottom: 4px;
+}
+
+.about code {
+    padding: 1px 6px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.about pre {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.about pre code {
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.about blockquote {
+    margin: 0 0 14px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--panel);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 5px 5px 0;
+}
+
+.about a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.about a:hover {
+    text-decoration: underline;
+}
+
+.about table {
+    width: 100%;
+    margin: 0 0 14px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.about th {
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.about td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
 }
 
 .preview-frame {

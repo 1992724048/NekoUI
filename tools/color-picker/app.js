@@ -1931,9 +1931,10 @@ const REF_CONTROLS = [
     },
 ];
 
-// 页面切换：取色工具 / 控件配色 / 页面预览（tab 组驱动，.page 容器显隐）
+// 页面切换：取色工具 / 控件配色 / 页面预览 / 关于（tab 组驱动，.page 容器显隐）
 const refPage = document.getElementById('page-ref');
 const previewPage = document.getElementById('page-preview');
+const aboutPage = document.getElementById('page-about');
 
 function renderRefControls() {
     const scheme = NekoHCT.scheme(state.seed, currentTheme);
@@ -1963,6 +1964,9 @@ function switchPage(pageId) {
     refPage.hidden = pageId !== 'ref';
     if (previewPage !== null) {
         previewPage.hidden = pageId !== 'preview';
+    }
+    if (aboutPage !== null) {
+        aboutPage.hidden = pageId !== 'about';
     }
     for (const tab of document.querySelectorAll('.page-tab')) {
         tab.setAttribute('aria-selected', String(tab.dataset.page === pageId));
