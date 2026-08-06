@@ -189,29 +189,29 @@
             </div>
             <h2 id="about-tech">技术说明</h2>
             <div class="about-metrics">
-                <div class="about-metric">
+                <div class="about-metric" data-tip-title="47 配色角色" data-tip-body="ColorScheme 的 47 个角色字段逐字匹配 ColorScheme.hpp，亮暗双主题各一套">
                     <b>47</b>
                     <span>配色角色</span>
                 </div>
-                <div class="about-metric">
+                <div class="about-metric" data-tip-title="17 导出语言" data-tip-body="C++ / JSON / CSS / Python / JavaScript 等 17 种语言，字段名与角色 key 一致">
                     <b>17</b>
                     <span>导出语言</span>
                 </div>
-                <div class="about-metric">
+                <div class="about-metric" data-tip-title="6 色调色板" data-tip-body="primary / secondary / tertiary / neutral / neutralVariant / error 六组色调色板">
                     <b>6</b>
                     <span>色调色板</span>
                 </div>
-                <div class="about-metric">
+                <div class="about-metric" data-tip-title="0 外部依赖" data-tip-body="不依赖任何第三方库与包管理器，file:// 直接打开即用">
                     <b>0</b>
                     <span>外部依赖</span>
                 </div>
             </div>
             <div class="about-badges">
-                <span class="about-badge"><i class="badge-dot"></i>HCT 色彩管线 sRGB → XYZ → CAM16</span>
-                <span class="about-badge"><i class="badge-dot"></i>引擎与 ColorScheme.cpp 同源 · MCU 0.13.0</span>
-                <span class="about-badge"><i class="badge-dot"></i>纯 DOM 渲染 · 无 Canvas</span>
-                <span class="about-badge"><i class="badge-dot"></i>file:// 开箱即用 · 零配置</span>
-                <span class="about-badge"><i class="badge-dot"></i>配色随 seed 与主题联动</span>
+                <span class="about-badge" data-tip-title="HCT 色彩管线" data-tip-body="sRGB 线性化 → XYZ → CAM16 色适应，输出 HCT 色相 / 彩度 / 明度三通道"><i class="badge-dot"></i>HCT 色彩管线 sRGB → XYZ → CAM16</span>
+                <span class="about-badge" data-tip-title="引擎同源 · MCU 0.13.0" data-tip-body="HCT 数学与 material_color_utilities 0.13.0 逐锚点一致（aw 无 −0.305、牛顿无 j 钳位、临界平面二分）"><i class="badge-dot"></i>引擎与 ColorScheme.cpp 同源 · MCU 0.13.0</span>
+                <span class="about-badge" data-tip-title="纯 DOM 渲染" data-tip-body="全部界面由 HTML/CSS 渲染，无 Canvas / WebGL，文本可选中复制"><i class="badge-dot"></i>纯 DOM 渲染 · 无 Canvas</span>
+                <span class="about-badge" data-tip-title="开箱即用" data-tip-body="零构建零服务器，浏览器直接打开本地文件即可使用"><i class="badge-dot"></i>file:// 开箱即用 · 零配置</span>
+                <span class="about-badge" data-tip-title="配色联动" data-tip-body="页面 CSS 变量由当前 seed 的 scheme() 派生，亮暗主题自动刷新"><i class="badge-dot"></i>配色随 seed 与主题联动</span>
             </div>
             <h2 id="about-roles">角色分组</h2>
             <table>

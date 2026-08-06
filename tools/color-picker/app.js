@@ -2364,6 +2364,26 @@ function initAboutToc() {
 
 initAboutToc();
 
+// 技术说明提示：指标卡 / 徽章 hover 弹出详细信息（复用 .tip 富提示框，data-tip-title/body 驱动；桩环境查询为空时静默跳过）
+function initTechTip() {
+    const targets = document.querySelectorAll('.about-metric, .about-badge');
+    if (targets == null) {
+        return;
+    }
+    for (const el of targets) {
+        const title = el.dataset.tipTitle;
+        const body = el.dataset.tipBody;
+        if (title == null || body == null) {
+            continue;
+        }
+        el.addEventListener('mouseenter', (e) => showTip(title, '', body, e.clientX, e.clientY));
+        el.addEventListener('mousemove', (e) => showTip(title, '', body, e.clientX, e.clientY));
+        el.addEventListener('mouseleave', hideTip);
+    }
+}
+
+initTechTip();
+
 // 回到顶部按钮：滚动超过 400px 淡入显示，点击平滑回顶（reduced-motion 直接跳转）；所有页面通用
 function initBackToTop() {
     const btn = document.getElementById('back-to-top');
