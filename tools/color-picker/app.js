@@ -2363,10 +2363,10 @@ function initAboutToc() {
             if (typeof target.scrollIntoView !== 'function') {
                 return;
             }
-            // 目录跳转兼容折叠：目标章节已折叠时先展开再滚动
+            // 目录跳转兼容折叠：目标章节已折叠时先展开（走同一 open class 动画）再滚动
             const section = target.nextElementSibling;
-            if (section != null && section.classList != null && section.classList.contains('about-section') && section.hidden) {
-                section.hidden = false;
+            if (section != null && section.classList != null && section.classList.contains('about-section') && !section.classList.contains('open')) {
+                section.classList.add('open');
                 const btn = target.querySelector('.about-h2');
                 if (btn != null) {
                     btn.setAttribute('aria-expanded', 'true');
@@ -2399,7 +2399,7 @@ function initAboutToc() {
 
 initAboutToc();
 
-// About 章节折叠：点击 tips 风格标题切换内容显隐（hidden + aria-expanded；目录跳转会先展开目标章节）
+// About 章节折叠：点击 tips 风格标题切换内容（open class 驱动 grid 0fr/1fr 平滑动画；目录跳转会先展开目标章节）
 function initAboutCollapse() {
     const buttons = document.querySelectorAll('.about-h2');
     if (buttons == null) {
@@ -2411,9 +2411,8 @@ function initAboutCollapse() {
             continue;
         }
         btn.addEventListener('click', () => {
-            const collapsed = section.hidden;
-            section.hidden = !collapsed;
-            btn.setAttribute('aria-expanded', String(collapsed));
+            const open = section.classList.toggle('open');
+            btn.setAttribute('aria-expanded', String(open));
         });
     }
 }
@@ -2465,6 +2464,62 @@ function initHeaderDrag() {
 }
 
 initHeaderDrag();
+
+// 卡片侧边光晕：鼠标相对卡片位置取最近边，切换 glow-top/right/bottom/left class（只有该侧边框发光）；
+// document 级事件委托 + closest 匹配玻璃卡；桩环境缺失 API 时静默跳过
+function initSideGlow() {
+    if (typeof document.addEventListener !== 'function') {
+        return;
+    }
+    const cardSelector = '.panel, .ref-item, .about-hero, .about-card, .about-link, .about-metric, .about-toc';
+    const sides = ['glow-top', 'glow-right', 'glow-bottom', 'glow-left'];
+    let glowCard = null;
+    let glowSide = '';
+    const clearGlow = () => {
+        if (glowCard != null && glowCard.classList != null) {
+            for (const side of sides) {
+                glowCard.classList.remove(side);
+            }
+        }
+        glowCard = null;
+        glowSide = '';
+    };
+    document.addEventListener('mouseover', (e) => {
+        const card = e.target != null && typeof e.target.closest === 'function' ? e.target.closest(cardSelector) : null;
+        if (card === glowCard) {
+            return;
+        }
+        clearGlow();
+        glowCard = card;
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (glowCard == null || glowCard.classList == null || typeof glowCard.getBoundingClientRect !== 'function') {
+            return;
+        }
+        const rect = glowCard.getBoundingClientRect();
+        if (typeof rect.left !== 'number') {
+            return;
+        }
+        const x = typeof e.clientX === 'number' ? e.clientX : 0;
+        const y = typeof e.clientY === 'number' ? e.clientY : 0;
+        const left = x - rect.left;
+        const right = rect.right - x;
+        const top = y - rect.top;
+        const bottom = rect.bottom - y;
+        const min = Math.min(left, right, top, bottom);
+        const side = min === top ? 'glow-top' : min === right ? 'glow-right' : min === bottom ? 'glow-bottom' : 'glow-left';
+        if (side !== glowSide) {
+            if (glowSide !== '') {
+                glowCard.classList.remove(glowSide);
+            }
+            glowCard.classList.add(side);
+            glowSide = side;
+        }
+    });
+    document.addEventListener('mouseleave', clearGlow);
+}
+
+initSideGlow();
 
 // 技术说明提示：指标卡 / 徽章 hover 弹出详细信息（复用 .tip 富提示框，data-tip-title/body 驱动；桩环境查询为空时静默跳过）
 function initTechTip() {

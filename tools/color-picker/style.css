@@ -1447,7 +1447,27 @@ body,
 }
 
 .about-section {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
     margin-bottom: 4px;
+    transition: grid-template-rows 0.3s ease, opacity 0.3s ease;
+}
+
+.about-section.open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.about-section > * {
+    overflow: hidden;
+    min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .about-section {
+        transition: none;
+    }
 }
 
 .about h3 {
@@ -2219,8 +2239,8 @@ body,
     border-radius: 8px;
 }
 
-/* 卡片 hover 边框光晕：鼠标悬停玻璃卡片时边框转 accent + 外发光（用户要求，取代鼠标跟随光晕）；
-   box-shadow 无位移 = 纯光晕；深浅主题随 --accent；过渡合并保留主题变色 */
+/* 卡片侧边光晕：JS 按鼠标相对卡片位置切换 glow-top/right/bottom/left class，
+   只有鼠标所在侧的边框转 accent 并定向外发光（box-shadow 负扩散贴边）；深浅主题随 --accent */
 .panel,
 .ref-item,
 .about-hero,
@@ -2231,15 +2251,24 @@ body,
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.panel:hover,
-.ref-item:hover,
-.about-hero:hover,
-.about-card:hover,
-.about-link:hover,
-.about-metric:hover,
-.about-toc:hover {
+.glow-top {
     border-color: var(--accent);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+    box-shadow: 0 -8px 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.glow-right {
+    border-color: var(--accent);
+    box-shadow: 8px 0 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.glow-bottom {
+    border-color: var(--accent);
+    box-shadow: 0 8px 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.glow-left {
+    border-color: var(--accent);
+    box-shadow: -8px 0 16px -6px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
