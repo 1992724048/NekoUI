@@ -72,7 +72,7 @@ a {
     border-bottom: 1px solid var(--border);
     /* 降级：不支持 color-mix/backdrop-filter 的浏览器保持不透明底，保证可读 */
     background: var(--bg);
-    background-color: color-mix(in srgb, var(--bg) 72%, transparent);
+    background-color: color-mix(in srgb, var(--bg) 58%, transparent);
     background-image:
         radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--accent) 55%, transparent) 1px, transparent 1.6px),
         linear-gradient(color-mix(in srgb, var(--border) 30%, transparent) 1px, transparent 1px),
@@ -519,7 +519,9 @@ body,
 }
 
 .group-title {
-    margin: 16px 0 8px;
+    margin: 16px 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.6px;
@@ -2247,8 +2249,7 @@ body,
 .about-hero,
 .about-card,
 .about-link,
-.about-metric,
-.about-toc {
+.about-metric {
     position: relative;
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
@@ -2275,16 +2276,17 @@ body,
     opacity: var(--glow-opacity, 0);
     transition: opacity 0.3s ease;
     pointer-events: none;
+    /* 参考文章原始层序：radial 窗口在顶层（中心 #000 显示 → 边缘 transparent 隐藏）、content-box 环裁剪居中、全区域垫底，单值 composite */
     -webkit-mask:
-        linear-gradient(#000 0 0),
+        -webkit-radial-gradient(circle 240px at var(--x, 50%) var(--y, 50%), #000 0%, #000 20%, transparent 55%, transparent 100%),
         linear-gradient(#000 0 0) content-box,
-        -webkit-radial-gradient(circle 240px at var(--x, 50%) var(--y, 50%), #000 0%, #000 25%, transparent 60%);
-    -webkit-mask-composite: xor, source-in;
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
     mask:
-        linear-gradient(#000 0 0),
+        radial-gradient(circle 240px at var(--x, 50%) var(--y, 50%), #000 0%, #000 20%, transparent 55%, transparent 100%),
         linear-gradient(#000 0 0) content-box,
-        radial-gradient(circle 240px at var(--x, 50%) var(--y, 50%), #000 0%, #000 25%, transparent 60%);
-    mask-composite: exclude, intersect;
+        linear-gradient(#000 0 0);
+    mask-composite: exclude;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2293,8 +2295,7 @@ body,
     .about-hero,
     .about-card,
     .about-link,
-    .about-metric,
-    .about-toc {
+    .about-metric {
         transition: none;
     }
 
