@@ -19,7 +19,7 @@
             <button type="button" class="page-tab" data-page="picker" aria-selected="true">取色工具</button>
             <button type="button" class="page-tab" data-page="ref" aria-selected="false">控件配色</button>
             <button type="button" class="page-tab" data-page="preview" aria-selected="false">页面预览</button>
-            <button type="button" class="page-tab" data-page="about" aria-selected="false">关于</button>
+            <button type="button" class="page-tab" data-page="about" aria-selected="false">关于项目</button>
         </nav>
         <span class="header-sep"></span>
         <div class="theme-toggle" id="theme-toggle" role="group" aria-label="主题切换">
@@ -127,37 +127,35 @@
     </div>
     <div class="page" id="page-about" hidden>
         <div class="about">
-            <h1>关于 NekoUI HCT 颜色工具</h1>
-            <p>这是一个基于 <code>Material You HCT</code> 色彩引擎的交互式取色与配色调试工具。从单个 seed 颜色出发，生成 6 组色调色板与 47 个 ColorScheme 角色，并可在真实界面中预览配色效果。</p>
-            <blockquote>JS 端色彩引擎与 <code>ColorScheme.cpp</code> 同源实现，逐字段对齐 material_color_utilities 0.13.0。</blockquote>
+            <h1>关于项目</h1>
+            <p>NekoUI HCT 颜色工具是 <a href="https://github.com/1992724048/NekoUI" target="_blank" rel="noopener">NekoUI</a> 开源项目附带的交互式取色与配色调试工具，基于 <code>Material You HCT</code> 色彩引擎。</p>
+            <blockquote>NekoUI 是一个使用 DirectX 11 渲染的 Windows C++ GUI 框架；本工具是其 ColorScheme（HCT 色彩引擎）的可视化调试入口——从单一 seed 生成 6 组色调色板与 47 个配色角色。</blockquote>
             <h2>功能特性</h2>
             <ul>
                 <li>seed 选取：取色器 / 十六进制输入 / 常用颜色 / 随机种子</li>
                 <li>色调色带：primary · secondary · tertiary · neutral · neutralVariant · error（tone 5–95）</li>
-                <li>角色表格：47 个 ColorScheme 角色，hover 显示五色值</li>
-                <li>主题切换：亮 / 暗主题，页面配色随 seed 联动</li>
-                <li>右键菜单：复制任意格式色值（Hex / RGB / HSL / HSV / CMYK / VEC4）</li>
-                <li>17 语言导出：C++ / JSON / CSS / Python / JavaScript 等</li>
+                <li>角色表格：47 个 ColorScheme 角色，hover 显示 RGB / HSL / HSV / CMYK / VEC4 五色值</li>
+                <li>主题切换：亮 / 暗主题联动，页面配色随 seed 实时刷新</li>
+                <li>右键菜单：按格式复制色值（Hex / RGB / HSL / HSV / CMYK / VEC4）</li>
+                <li>17 语言导出：C++ / JSON / CSS / Python / JavaScript 等角色字典</li>
                 <li>控件配色参考：23 个 MD3 风格控件，可交互体验</li>
-                <li>页面预览：通用设置界面，实时预览配色效果</li>
+                <li>页面预览：通用设置界面，实时预览界面配色效果</li>
+                <li>流星雨背景：动态装饰，随主题与 seed 换色</li>
             </ul>
             <h2>使用说明</h2>
             <ol>
-                <li>在「取色工具」页选择一个 seed 颜色</li>
-                <li>观察色带与角色表的联动刷新</li>
-                <li>在「控件配色」页体验控件交互状态</li>
-                <li>在「页面预览」页查看界面整体效果</li>
+                <li>打开「取色工具」页，选择一个 seed 颜色</li>
+                <li>观察 6 组色调色带与 47 角色表的联动刷新</li>
+                <li>切换亮 / 暗主题，对比两种配色方案</li>
+                <li>右键任意色块，按所需格式复制色值</li>
+                <li>在「控件配色」与「页面预览」页查看整体效果</li>
+                <li>在导出面板选择语言，生成角色字典代码</li>
             </ol>
-            <h2>快速上手</h2>
-            <p>在开发者控制台直接调用引擎 API：</p>
-            <pre><code>const scheme = NekoHCT.scheme('#6750a4', 'light');
-console.log(scheme.primary);            // 主色
-console.log(scheme.onPrimary);          // 主色上的文字
-console.log(scheme.primary_container);  // 主色容器背景</code></pre>
             <h2>技术说明</h2>
             <ul>
                 <li>色彩管线：sRGB → XYZ → CAM16 → HCT，含临界平面色相二分回退</li>
-                <li>零外部依赖，<code>file://</code> 直接打开即用</li>
+                <li>JS 端引擎与 <code>ColorScheme.cpp</code> 同源，逐字段对齐 material_color_utilities 0.13.0</li>
+                <li>零外部依赖、无 Canvas，纯 DOM 渲染，<code>file://</code> 直接打开即用</li>
                 <li>页面配色全部由当前 seed 的 <code>scheme()</code> 派生，随主题联动</li>
             </ul>
             <h2>角色分组</h2>
@@ -174,7 +172,12 @@ console.log(scheme.primary_container);  // 主色容器背景</code></pre>
                     <tr><td>other</td><td>11</td><td>文字 / 描边 / 反色</td></tr>
                 </tbody>
             </table>
-            <p>相关链接：<a href="#">NekoUI 项目</a> · <a href="#">Material 3 规范</a> · <a href="#">HCT 色彩论文</a></p>
+            <h2>相关链接</h2>
+            <ul>
+                <li><a href="https://github.com/1992724048/NekoUI" target="_blank" rel="noopener">NekoUI 开源仓库</a>——项目源码与文档</li>
+                <li><a href="https://github.com/material-foundation/material-color-utilities" target="_blank" rel="noopener">material_color_utilities</a>——HCT 算法参考实现</li>
+                <li><a href="https://m3.material.io/styles/color/system/overview" target="_blank" rel="noopener">Material 3 色彩系统</a>——设计规范</li>
+            </ul>
         </div>
     </div>
     <div class="page" id="page-preview" hidden>
