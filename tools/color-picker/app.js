@@ -2053,13 +2053,13 @@ function hexToArgb(hex) {
     return '0xFF' + channel(rgb.r) + channel(rgb.g) + channel(rgb.b);
 }
 
-// 共享中间结构：{ light: [{key, hex}...], dark: [...] }，14 个语言生成器消费同一数据
+// 共享中间结构：{ light: [{key, hex}...], dark: [...], seed: '#RRGGBB' }，17 个语言生成器消费同一数据
 function schemeData(seedHex) {
     const entries = (brightness) => {
         const scheme = NekoHCT.scheme(seedHex, brightness);
         return NekoHCT.SCHEME_ORDER.map(({ key }) => ({ key, hex: scheme[key] }));
     };
-    return { light: entries('light'), dark: entries('dark') };
+    return { light: entries('light'), dark: entries('dark'), seed: seedHex };
 }
 
 const EXPORT_LANGUAGES = [
@@ -2070,6 +2070,9 @@ const EXPORT_LANGUAGES = [
             const lines = [];
             for (const brightness of ['light', 'dark']) {
                 const mapName = brightness === 'light' ? 'kSchemeLight' : 'kSchemeDark';
+                if (brightness === 'light') {
+                    lines.push('// seed: ' + data.seed);
+                }
                 lines.push('// ' + brightness + '(seed) 角色字典（名称 → 0xAARRGGBB，字段名逐字匹配 ColorScheme.hpp）');
                 lines.push('static const std::unordered_map<std::string, uint32_t> ' + mapName + ' = {');
                 for (const { key, hex } of data[brightness]) {
@@ -2085,8 +2088,10 @@ const EXPORT_LANGUAGES = [
         id: 'json',
         name: 'JSON',
         generate: (data) => {
+            // JSON 无注释语法，seed 以顶层条目输出（与角色值同为 0xAARRGGBB）
             const block = (entries) => entries.map(({ key, hex }) => '        "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
             return '{\n'
+                + '    "seed": ' + hexToArgb(data.seed) + ',\n'
                 + '    "light": {\n' + block(data.light) + '\n    },\n'
                 + '    "dark": {\n' + block(data.dark) + '\n    }\n'
                 + '}';
@@ -2098,6 +2103,9 @@ const EXPORT_LANGUAGES = [
         generate: (data) => {
             const lines = [];
             for (const brightness of ['light', 'dark']) {
+                if (brightness === 'light') {
+                    lines.push('/* seed: ' + data.seed + ' */');
+                }
                 lines.push('/* ' + brightness + '(seed) 角色变量（#RRGGBB） */');
                 lines.push(":root[data-theme='" + brightness + "'] {");
                 for (const { key, hex } of data[brightness]) {
@@ -2114,7 +2122,8 @@ const EXPORT_LANGUAGES = [
         name: 'Python',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
-            return 'LIGHT_SCHEME = {\n' + block(data.light) + '\n}\n\nDARK_SCHEME = {\n' + block(data.dark) + '\n}';
+            return '# seed: ' + data.seed + '\n'
+                + 'LIGHT_SCHEME = {\n' + block(data.light) + '\n}\n\nDARK_SCHEME = {\n' + block(data.dark) + '\n}';
         },
     },
     {
@@ -2122,7 +2131,8 @@ const EXPORT_LANGUAGES = [
         name: 'JavaScript',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    ' + key + ': ' + hexToArgb(hex) + ',').join('\n');
-            return 'const kSchemeLight = {\n' + block(data.light) + '\n};\n\nconst kSchemeDark = {\n' + block(data.dark) + '\n};';
+            return '// seed: ' + data.seed + '\n'
+                + 'const kSchemeLight = {\n' + block(data.light) + '\n};\n\nconst kSchemeDark = {\n' + block(data.dark) + '\n};';
         },
     },
     {
@@ -2131,7 +2141,8 @@ const EXPORT_LANGUAGES = [
         generate: (data) => {
             const len = data.light.length;
             const block = (entries) => entries.map(({ key, hex }) => '    ("' + key + '", ' + hexToArgb(hex) + '),').join('\n');
-            return 'pub const LIGHT_SCHEME: [(&str, u32); ' + len + '] = [\n' + block(data.light) + '\n];\n\n'
+            return '// seed: ' + data.seed + '\n'
+                + 'pub const LIGHT_SCHEME: [(&str, u32); ' + len + '] = [\n' + block(data.light) + '\n];\n\n'
                 + 'pub const DARK_SCHEME: [(&str, u32); ' + len + '] = [\n' + block(data.dark) + '\n];';
         },
     },
@@ -2140,7 +2151,8 @@ const EXPORT_LANGUAGES = [
         name: 'Go',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
-            return 'var lightScheme = map[string]uint32{\n' + block(data.light) + '\n}\n\nvar darkScheme = map[string]uint32{\n' + block(data.dark) + '\n}';
+            return '// seed: ' + data.seed + '\n'
+                + 'var lightScheme = map[string]uint32{\n' + block(data.light) + '\n}\n\nvar darkScheme = map[string]uint32{\n' + block(data.dark) + '\n}';
         },
     },
     {
@@ -2148,7 +2160,8 @@ const EXPORT_LANGUAGES = [
         name: 'Java',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '        put("' + key + '", ' + hexToArgb(hex) + ');').join('\n');
-            return 'Map<String, Integer> lightScheme = new HashMap<>() {{\n' + block(data.light) + '\n    }};\n\n'
+            return '// seed: ' + data.seed + '\n'
+                + 'Map<String, Integer> lightScheme = new HashMap<>() {{\n' + block(data.light) + '\n    }};\n\n'
                 + 'Map<String, Integer> darkScheme = new HashMap<>() {{\n' + block(data.dark) + '\n    }};';
         },
     },
@@ -2157,7 +2170,8 @@ const EXPORT_LANGUAGES = [
         name: 'Dart',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => "    '" + key + "': " + hexToArgb(hex) + ',').join('\n');
-            return 'const lightScheme = <String, int>{\n' + block(data.light) + '\n};\n\nconst darkScheme = <String, int>{\n' + block(data.dark) + '\n};';
+            return '// seed: ' + data.seed + '\n'
+                + 'const lightScheme = <String, int>{\n' + block(data.light) + '\n};\n\nconst darkScheme = <String, int>{\n' + block(data.dark) + '\n};';
         },
     },
     {
@@ -2165,7 +2179,8 @@ const EXPORT_LANGUAGES = [
         name: 'C#',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    ["' + key + '"] = ' + hexToArgb(hex) + ',').join('\n');
-            return 'var lightScheme = new Dictionary<string, uint> {\n' + block(data.light) + '\n};\n\nvar darkScheme = new Dictionary<string, uint> {\n' + block(data.dark) + '\n};';
+            return '// seed: ' + data.seed + '\n'
+                + 'var lightScheme = new Dictionary<string, uint> {\n' + block(data.light) + '\n};\n\nvar darkScheme = new Dictionary<string, uint> {\n' + block(data.dark) + '\n};';
         },
     },
     {
@@ -2173,7 +2188,8 @@ const EXPORT_LANGUAGES = [
         name: 'PHP',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => "    '" + key + "' => " + hexToArgb(hex) + ',').join('\n');
-            return '$lightScheme = [\n' + block(data.light) + '\n];\n\n$darkScheme = [\n' + block(data.dark) + '\n];';
+            return '// seed: ' + data.seed + '\n'
+                + '$lightScheme = [\n' + block(data.light) + '\n];\n\n$darkScheme = [\n' + block(data.dark) + '\n];';
         },
     },
     {
@@ -2181,7 +2197,8 @@ const EXPORT_LANGUAGES = [
         name: 'Kotlin',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '" to ' + hexToArgb(hex) + ',').join('\n');
-            return 'val lightScheme = mapOf(\n' + block(data.light) + '\n)\n\nval darkScheme = mapOf(\n' + block(data.dark) + '\n)';
+            return '// seed: ' + data.seed + '\n'
+                + 'val lightScheme = mapOf(\n' + block(data.light) + '\n)\n\nval darkScheme = mapOf(\n' + block(data.dark) + '\n)';
         },
     },
     {
@@ -2189,7 +2206,8 @@ const EXPORT_LANGUAGES = [
         name: 'TypeScript',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    ' + key + ': ' + hexToArgb(hex) + ',').join('\n');
-            return 'export const lightScheme: Record<string, number> = {\n' + block(data.light) + '\n};\n\nexport const darkScheme: Record<string, number> = {\n' + block(data.dark) + '\n};';
+            return '// seed: ' + data.seed + '\n'
+                + 'export const lightScheme: Record<string, number> = {\n' + block(data.light) + '\n};\n\nexport const darkScheme: Record<string, number> = {\n' + block(data.dark) + '\n};';
         },
     },
     {
@@ -2197,7 +2215,8 @@ const EXPORT_LANGUAGES = [
         name: 'Swift',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    "' + key + '": ' + hexToArgb(hex) + ',').join('\n');
-            return 'let lightScheme: [String: UInt32] = [\n' + block(data.light) + '\n]\n\nlet darkScheme: [String: UInt32] = [\n' + block(data.dark) + '\n]';
+            return '// seed: ' + data.seed + '\n'
+                + 'let lightScheme: [String: UInt32] = [\n' + block(data.light) + '\n]\n\nlet darkScheme: [String: UInt32] = [\n' + block(data.dark) + '\n]';
         },
     },
     {
@@ -2206,6 +2225,9 @@ const EXPORT_LANGUAGES = [
         generate: (data) => {
             const lines = [];
             for (const brightness of ['light', 'dark']) {
+                if (brightness === 'light') {
+                    lines.push('# seed: ' + data.seed);
+                }
                 lines.push('# ' + brightness + '(seed) 角色字典');
                 lines.push('[' + brightness + ']');
                 for (const { key, hex } of data[brightness]) {
@@ -2222,6 +2244,9 @@ const EXPORT_LANGUAGES = [
         generate: (data) => {
             const lines = [];
             for (const brightness of ['light', 'dark']) {
+                if (brightness === 'light') {
+                    lines.push('# seed: ' + data.seed);
+                }
                 lines.push('# ' + brightness + '(seed) 角色字典');
                 lines.push(brightness + ':');
                 for (const { key, hex } of data[brightness]) {
@@ -2236,7 +2261,8 @@ const EXPORT_LANGUAGES = [
         name: 'XAML',
         generate: (data) => {
             const block = (entries) => entries.map(({ key, hex }) => '    <Color x:Key="' + key + '">#' + hexToArgb(hex).slice(2) + '</Color>').join('\n');
-            return '<!-- light(seed) 角色字典 -->\n<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\n'
+            return '<!-- seed: ' + data.seed + ' -->\n'
+                + '<!-- light(seed) 角色字典 -->\n<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\n'
                 + block(data.light) + '\n</ResourceDictionary>\n\n'
                 + '<!-- dark(seed) 角色字典 -->\n<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">\n'
                 + block(data.dark) + '\n</ResourceDictionary>';
