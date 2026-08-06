@@ -1466,6 +1466,74 @@ body,
     color: var(--muted);
 }
 
+/* About 技术说明：指标数字卡（大数字 + 说明）+ 技术徽章墙（胶囊 + accent 强调点），玻璃效果与其余卡片一致 */
+.about-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 0 0 12px;
+}
+
+.about-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 14px 10px;
+    background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.about-metric b {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--accent);
+}
+
+.about-metric span {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.about-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 14px;
+}
+
+.about-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
 .about table {
     width: 100%;
     margin: 0 0 14px;

@@ -181,12 +181,31 @@
                 </div>
             </div>
             <h2>技术说明</h2>
-            <ul>
-                <li>色彩管线：sRGB → XYZ → CAM16 → HCT，含临界平面色相二分回退</li>
-                <li>JS 端引擎与 <code>ColorScheme.cpp</code> 同源，逐字段对齐 material_color_utilities 0.13.0</li>
-                <li>零外部依赖、无 Canvas，纯 DOM 渲染，<code>file://</code> 直接打开即用</li>
-                <li>页面配色全部由当前 seed 的 <code>scheme()</code> 派生，随主题联动</li>
-            </ul>
+            <div class="about-metrics">
+                <div class="about-metric">
+                    <b>47</b>
+                    <span>配色角色</span>
+                </div>
+                <div class="about-metric">
+                    <b>17</b>
+                    <span>导出语言</span>
+                </div>
+                <div class="about-metric">
+                    <b>6</b>
+                    <span>色调色板</span>
+                </div>
+                <div class="about-metric">
+                    <b>0</b>
+                    <span>外部依赖</span>
+                </div>
+            </div>
+            <div class="about-badges">
+                <span class="about-badge"><i class="badge-dot"></i>HCT 色彩管线 sRGB → XYZ → CAM16</span>
+                <span class="about-badge"><i class="badge-dot"></i>引擎与 ColorScheme.cpp 同源 · MCU 0.13.0</span>
+                <span class="about-badge"><i class="badge-dot"></i>纯 DOM 渲染 · 无 Canvas</span>
+                <span class="about-badge"><i class="badge-dot"></i>file:// 开箱即用 · 零配置</span>
+                <span class="about-badge"><i class="badge-dot"></i>配色随 seed 与主题联动</span>
+            </div>
             <h2>角色分组</h2>
             <table>
                 <thead>
