@@ -72,7 +72,6 @@ body {
     background: var(--bg);
     background-color: color-mix(in srgb, var(--bg) 52%, transparent);
     background-image:
-        radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--accent) 38%, transparent) 1px, transparent 1.6px),
         linear-gradient(color-mix(in srgb, var(--border) 18%, transparent) 1px, transparent 1px),
         linear-gradient(90deg, color-mix(in srgb, var(--border) 18%, transparent) 1px, transparent 1px);
     background-size: 20px 20px;
