@@ -74,16 +74,19 @@ body {
     -webkit-backdrop-filter: blur(10px);
 }
 
+/* 标题与版本号徽章：flex 容器使徽章与标题文本严格垂直居中 */
 .app-header h1 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* 标题旁版本号：胶囊徽章（用户指定圆形包裹），与标题水平居中对齐 */
+/* 标题旁版本号：胶囊徽章（用户指定圆包裹） */
 .version-badge {
     display: inline-block;
-    margin-left: 10px;
     padding: 3px 10px;
     border: 1px solid var(--border);
     border-radius: 999px;
@@ -93,7 +96,6 @@ body {
     font-size: 11px;
     font-weight: 400;
     line-height: 1.4;
-    vertical-align: middle;
 }
 
 .header-actions {
@@ -1423,6 +1425,47 @@ body,
     text-decoration: underline;
 }
 
+/* About 相关链接：玻璃链接卡片（auto-fill 并排，整卡可点击） */
+.about-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+    margin: 0 0 14px;
+}
+
+.about-link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: border-color 0.15s ease;
+}
+
+.about-link:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+}
+
+.about-link-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.about-link-desc {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--muted);
+}
+
 .about table {
     width: 100%;
     margin: 0 0 14px;
@@ -1432,6 +1475,13 @@ body,
     border-radius: 5px;
     overflow: hidden;
     font-size: 13px;
+    /* 玻璃效果与 .ref-item/.about-card 一致；表头保持 surface_container 实色保可读 */
+    background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .about th {
