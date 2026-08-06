@@ -1366,6 +1366,8 @@ body,
     font-size: 18px;
     font-weight: 700;
     border-bottom: 1px solid var(--border);
+    /* 锚点跳转时补偿 sticky 标题栏高度 */
+    scroll-margin-top: 72px;
 }
 
 .about h3 {
@@ -1563,6 +1565,46 @@ body,
 .about td {
     padding: 7px 12px;
     border-bottom: 1px solid var(--border);
+}
+
+/* About 目录导航：横排胶囊条（玻璃背景 + 当前项 accent 高亮），与徽章墙风格呼应 */
+.about-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 10px;
+    background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.about-toc a {
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.about-toc a:hover {
+    color: var(--accent);
+    border-color: var(--border);
+    background: var(--panel-2);
+    text-decoration: none;
+}
+
+.about-toc a.about-toc-active {
+    color: var(--on-accent);
+    background: var(--accent);
+    border-color: var(--accent);
 }
 
 /* About 美化：h2 前缀 accent 竖条徽标 */

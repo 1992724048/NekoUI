@@ -2306,6 +2306,53 @@ function initPreviewInteractions() {
 
 initPreviewInteractions();
 
+// About 目录导航：点击平滑滚动到章节 + IntersectionObserver scroll-spy 高亮当前项（桩环境缺失 API 时静默跳过）
+function initAboutToc() {
+    const toc = document.querySelector('.about-toc');
+    if (toc === null) {
+        return;
+    }
+    const links = toc.querySelectorAll('a');
+    if (links.length === 0) {
+        return;
+    }
+    const sections = [];
+    for (const link of links) {
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target !== null) {
+            sections.push(target);
+        }
+        link.addEventListener('click', (e) => {
+            if (target === null || typeof target.scrollIntoView !== 'function') {
+                return;
+            }
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            for (const other of links) {
+                other.classList.remove('about-toc-active');
+            }
+            link.classList.add('about-toc-active');
+        });
+    }
+    if (typeof IntersectionObserver === 'function') {
+        const observer = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) {
+                    const id = '#' + entry.target.id;
+                    for (const link of links) {
+                        link.classList.toggle('about-toc-active', link.getAttribute('href') === id);
+                    }
+                }
+            }
+        }, { rootMargin: '-80px 0px -70% 0px' });
+        for (const section of sections) {
+            observer.observe(section);
+        }
+    }
+}
+
+initAboutToc();
+
 // 加载引导提示：聚焦核心功能，4s 自动消失 + 手动关闭；reduced-motion 下直接显示
 function showOnboardTip() {
     if (typeof document.createElement !== 'function' || typeof document.body === 'undefined') {
