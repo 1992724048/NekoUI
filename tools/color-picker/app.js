@@ -2519,69 +2519,6 @@ function initBackToTop() {
 
 initBackToTop();
 
-// 鼠标光晕：rAF 插值平滑跟随（0.12 lerp 柔滑拖尾），首帧直接定位避免从原点飞入；
-// 移出窗口隐藏 / 移入恢复；reduced-motion 或无 rAF 时直接定位；桩环境缺失 API 时静默跳过
-function initCursorGlow() {
-    if (typeof document.createElement !== 'function' || typeof document.body === 'undefined') {
-        return;
-    }
-    const glow = document.createElement('div');
-    if (glow == null || glow.className === undefined) {
-        return;
-    }
-    glow.className = 'cursor-glow';
-    document.body.appendChild(glow);
-    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const hasRaf = typeof requestAnimationFrame === 'function';
-    const half = 115;
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let rafId = null;
-    const place = () => {
-        glow.style.transform = 'translate(' + (targetX - half) + 'px, ' + (targetY - half) + 'px)';
-    };
-    const step = () => {
-        rafId = null;
-        currentX += (targetX - currentX) * 0.12;
-        currentY += (targetY - currentY) * 0.12;
-        glow.style.transform = 'translate(' + (currentX - half) + 'px, ' + (currentY - half) + 'px)';
-        if (Math.abs(targetX - currentX) < 0.5 && Math.abs(targetY - currentY) < 0.5) {
-            return;
-        }
-        rafId = requestAnimationFrame(step);
-    };
-    const onMove = (e) => {
-        const x = typeof e.clientX === 'number' ? e.clientX : 0;
-        const y = typeof e.clientY === 'number' ? e.clientY : 0;
-        if (!glow.classList.contains('visible')) {
-            glow.classList.add('visible');
-            currentX = x;
-            currentY = y;
-            place();
-        }
-        targetX = x;
-        targetY = y;
-        if (!reduced && hasRaf) {
-            if (rafId === null) {
-                rafId = requestAnimationFrame(step);
-            }
-        } else {
-            currentX = x;
-            currentY = y;
-            place();
-        }
-    };
-    if (typeof document.addEventListener === 'function') {
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseleave', () => glow.classList.remove('visible'));
-        document.addEventListener('mouseenter', () => glow.classList.add('visible'));
-    }
-}
-
-initCursorGlow();
-
 // 加载引导提示：聚焦核心功能，4s 自动消失 + 手动关闭；reduced-motion 下直接显示
 function showOnboardTip() {
     if (typeof document.createElement !== 'function' || typeof document.body === 'undefined') {

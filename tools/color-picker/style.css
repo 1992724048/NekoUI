@@ -681,39 +681,6 @@ body,
     }
 }
 
-/* 鼠标光晕：双层结构——外层大光晕（230px 低透明度 accent 淡晕）+ ::before 内层灯芯（白色光心 + accent 亮圈），
-   存在感刻意压低（几乎无感的柔光点缀）；z-index 1 在内容之上但低透明度不干扰阅读，pointer-events none 不遮挡交互 */
-.cursor-glow {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1;
-    width: 230px;
-    height: 230px;
-    border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 70%);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.25s ease;
-    will-change: transform;
-}
-
-.cursor-glow::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 85px;
-    height: 85px;
-    margin: -42.5px 0 0 -42.5px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #ffffff0d 0%, color-mix(in srgb, var(--accent) 10%, transparent) 40%, transparent 70%);
-}
-
-.cursor-glow.visible {
-    opacity: 1;
-}
-
 /* 回到顶部按钮：右下悬浮圆形（玻璃背景），滚动超过阈值后淡入，所有页面通用 */
 .back-to-top {
     position: fixed;
@@ -2250,6 +2217,41 @@ body,
 
 .ref-chip {
     border-radius: 8px;
+}
+
+/* 卡片 hover 边框光晕：鼠标悬停玻璃卡片时边框转 accent + 外发光（用户要求，取代鼠标跟随光晕）；
+   box-shadow 无位移 = 纯光晕；深浅主题随 --accent；过渡合并保留主题变色 */
+.panel,
+.ref-item,
+.about-hero,
+.about-card,
+.about-link,
+.about-metric,
+.about-toc {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.panel:hover,
+.ref-item:hover,
+.about-hero:hover,
+.about-card:hover,
+.about-link:hover,
+.about-metric:hover,
+.about-toc:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .panel,
+    .ref-item,
+    .about-hero,
+    .about-card,
+    .about-link,
+    .about-metric,
+    .about-toc {
+        transition: none;
+    }
 }
 
 @media (max-width: 900px) {
