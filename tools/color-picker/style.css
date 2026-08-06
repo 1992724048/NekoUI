@@ -80,6 +80,22 @@ body {
     font-weight: 600;
 }
 
+/* 标题旁版本号：胶囊徽章（用户指定圆形包裹），与标题水平居中对齐 */
+.version-badge {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--panel);
+    color: var(--muted);
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -1443,7 +1459,7 @@ body,
     background: var(--accent);
 }
 
-/* About 项目信息卡（hero）：2×2 色板徽标 + 标题 + 描述 */
+/* About 项目信息卡（hero）：2×2 色板徽标 + 标题 + 描述；玻璃效果与 .panel/.ref-item 一致 */
 .about-hero {
     display: flex;
     align-items: center;
@@ -1451,8 +1467,13 @@ body,
     margin: 0 0 16px;
     padding: 16px 18px;
     background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
     border: 1px solid var(--border);
     border-radius: 5px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .about-logo {
@@ -1506,9 +1527,15 @@ body,
 
 .about-card {
     padding: 12px 14px;
+    /* 玻璃效果与 .panel/.ref-item 一致：58% 半透明 + 模糊 + 网状点阵；不支持时降级不透明 */
     background: var(--panel);
+    background-color: color-mix(in srgb, var(--panel) 58%, transparent);
+    background-image: radial-gradient(circle at 0.5px 0.5px, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1.6px);
+    background-size: 12px 12px;
     border: 1px solid var(--border);
     border-radius: 5px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     transition: border-color 0.15s ease;
 }
 
@@ -1535,41 +1562,64 @@ body,
     color: var(--muted);
 }
 
-/* About 使用说明：步骤卡片 + 圆形序号徽标 */
-.about-steps {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 14px;
+/* About 使用说明：纵向 Stepper（MD3 风格：primary 填充圆环 + 标题 + 说明 + 竖线连接） */
+.about-stepper {
+    margin: 0 0 16px;
 }
 
-.about-steps li {
+.as-step {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 5px;
+    gap: 14px;
+    padding-bottom: 20px;
 }
 
-.about-steps li p {
-    margin: 0;
-    font-size: 13px;
+.as-step:last-child {
+    padding-bottom: 0;
 }
 
-.about-step-idx {
+/* 竖线连接：从当前圆环底部延伸到下一步圆环顶部 */
+.as-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 26px;
+    bottom: -4px;
+    width: 2px;
+    background: var(--border);
+}
+
+.as-dot {
+    position: relative;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     flex-shrink: 0;
     border-radius: 50%;
     background: var(--accent);
     color: var(--on-accent);
     font-size: 12px;
     font-weight: 600;
+}
+
+.as-body {
+    padding-top: 3px;
+}
+
+.as-body b {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.as-body p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
 }
 
 .preview-frame {
