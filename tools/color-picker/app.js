@@ -2465,52 +2465,6 @@ function initHeaderDrag() {
 
 initHeaderDrag();
 
-// 卡片 spotlight 边框光晕（iCSS 方案）：document 委托，mousemove 将鼠标位置按百分比写入 --x/--y（mask 窗口跟随），
-// 进卡先隐藏、定位后显示（防首帧闪烁）；移出隐藏；桩环境缺失 API 时静默跳过
-function initSpotlightGlow() {
-    if (typeof document.addEventListener !== 'function') {
-        return;
-    }
-    const cardSelector = '.panel, .ref-item, .about-hero, .about-card, .about-link, .about-metric, .about-toc';
-    let glowCard = null;
-    const hide = () => {
-        if (glowCard != null && glowCard.style != null) {
-            glowCard.style.setProperty('--glow-opacity', '0');
-        }
-        glowCard = null;
-    };
-    document.addEventListener('mouseover', (e) => {
-        const card = e.target != null && typeof e.target.closest === 'function' ? e.target.closest(cardSelector) : null;
-        if (card === glowCard) {
-            return;
-        }
-        hide();
-        glowCard = card;
-        if (card != null && card.style != null) {
-            card.style.setProperty('--glow-opacity', '0');
-        }
-    });
-    document.addEventListener('mousemove', (e) => {
-        if (glowCard == null || glowCard.style == null || typeof glowCard.getBoundingClientRect !== 'function') {
-            return;
-        }
-        const rect = glowCard.getBoundingClientRect();
-        if (typeof rect.left !== 'number' || typeof rect.width !== 'number') {
-            return;
-        }
-        const x = typeof e.clientX === 'number' ? e.clientX : 0;
-        const y = typeof e.clientY === 'number' ? e.clientY : 0;
-        const px = Math.min(Math.max((x - rect.left) / rect.width, 0), 1) * 100;
-        const py = Math.min(Math.max((y - rect.top) / rect.height, 0), 1) * 100;
-        glowCard.style.setProperty('--x', px.toFixed(2) + '%');
-        glowCard.style.setProperty('--y', py.toFixed(2) + '%');
-        glowCard.style.setProperty('--glow-opacity', '1');
-    });
-    document.addEventListener('mouseleave', hide);
-}
-
-initSpotlightGlow();
-
 // 技术说明提示：指标卡 / 徽章 hover 弹出详细信息（复用 .tip 富提示框，data-tip-title/body 驱动；桩环境查询为空时静默跳过）
 function initTechTip() {
     const targets = document.querySelectorAll('.about-metric, .about-badge');
