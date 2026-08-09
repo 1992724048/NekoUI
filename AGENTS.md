@@ -93,9 +93,10 @@ WM_* → Win32::handle_message() → translate_event() → MsgPump::push_msg()
 
 ### 6. Widget 系统 (`neko::widget`)
 
-- **Widget** 基类：虚方法 `layout(Vec4I, Context&)`、`draw(Vec4I, Context&, backend::DirectX11&) -> Rect`、`build(Context&)`、`event(Context&)`、`input(Context&, Event)`、`hit_test(Mouse) -> bool`。Protected 成员：`bounds`（`Vec4I`）、`isFocus`（`std::atomic_bool`）、`isDirty`（`std::atomic_bool`）、`context_`（`std::weak_ptr<Context>`，所有使用点 lock，失败降级）、`set_bounds()`。私有成员：`children_`（`MutableWidget`，变体存储 `shared_ptr<Widget>`）、`z_index_`、`id_`、`path_`
+- **Widget** 基类：虚方法 `layout(Vec4I, Context&)`、`draw(Vec4I, Context&, backend::DirectX11&) -> Rect`、`input(Context&, Event)`、`hit_test(Mouse) -> bool`（build/event 已删除），默认实现遍历 `behaviors_` 容器按类型委托给行为组件（无对应行为时空操作/`draw` 返回 `{}`/`hit_test` 返回 false）。Public：`add_behavior<T>(Args&&...) -> T&`（make_unique 存入容器并返回引用，自动注入 `*this` 为首参）、`get_hovered()/set_hovered()`（`std::atomic_bool hovered_`，relaxed 内存序）、`get_bounds()/set_bounds()`。Protected 成员：`bounds`（`Vec4I`）、`isFocus`（`std::atomic_bool`）、`isDirty`（`std::atomic_bool`）、`context_`（`std::weak_ptr<Context>`，所有使用点 lock，失败降级）、`behaviors_`（`std::vector<std::unique_ptr<Behavior>>`）、`hovered_`。私有成员：`children_`（`MutableWidget`，变体存储 `shared_ptr<Widget>`）、`z_index_`、`id_`、`path_`
+  - **行为接口层**（`Widget/Behavior/`）：`Behavior` 基类（持 `Widget& owner_` 访问控件数据，Rule of Five delete）+ 4 纯虚接口——`LayoutBehavior`（layout）、`DrawBehavior`（draw -> Rect）、`InputBehavior`（input）、`HitTestBehavior`（hit_test const -> bool）。具体行为实现放各控件目录（如 `Widget/Button/`）
   - **Builder API**：`build<T>(Args...) -> T&`（创建子 Widget 并链式配置）、`children(fn)`（lambda 作用域批量创建子节点）、`parent()`（获取父 Widget）
-  - **build\<T\> 内部流程**（`Widget.hpp`）：`context_.lock()` 取 Context → `make_shared` 创建子控件（lock 失败时用临时 shared_ptr Context 构造孤儿控件，仅拷贝回调不依赖 Context 存活）→ 设 `parent_` → 插入 `children_` 前经 `context->tree_manager.lock()` 取 `std::unique_lock(tree->mutex_)`（children_ 突变与渲染线程 layout/draw 遍历互斥，lock 失败跳过加锁）→ `std::visit` 按当前变体插入 `children_`（monostate → 存为单子；shared_ptr 变体 → 升级为 list；list/vector → `emplace_back`）→ 调用 `context->widget_tree_changed()`（→ `Engine::schedule_rebuild` 置标志，帧首合并重建）→ 返回 `T&` 供链式配置。**限制**：自定义 Widget 的 `build(Context&)`（在 register_widget 锁内调用）中禁止调用 `build<T>()`（同线程重锁死锁）
+  - **build\<T\> 内部流程**（`Widget.hpp`）：`context_.lock()` 取 Context → `make_shared` 创建子控件（lock 失败时用临时 shared_ptr Context 构造孤儿控件，仅拷贝回调不依赖 Context 存活）→ 设 `parent_` → 插入 `children_` 前经 `context->tree_manager.lock()` 取 `std::unique_lock(tree->mutex_)`（children_ 突变与渲染线程 layout/draw 遍历互斥，lock 失败跳过加锁）→ `std::visit` 按当前变体插入 `children_`（monostate → 存为单子；shared_ptr 变体 → 升级为 list；list/vector → `emplace_back`）→ 调用 `context->widget_tree_changed()`（→ `Engine::schedule_rebuild` 置标志，帧首合并重建）→ 返回 `T&` 供链式配置。
   - `children_` 为 `shared_ptr` 强持有，`build<T>` 返回的引用不悬垂（曾因 `weak_ptr` 无强持有者导致子控件创建后立即销毁）
   - **Style Mixin 继承**：Widget 通过继承 `style::BackgroundStyle`、`style::SizeStyle`、`style::BorderStyle`、`style::TextStyle` 等 mixin 结构体获得样式属性，零运行时开销
 - **Button**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`、`BorderStyle`、`TextStyle`。构造函数 `Button(const Context&, text="", onClick=nullptr)`（参数 move 构造），链式 setter `on_click()`（返回 `Button&`）。`layout`：SizeStyle 回退 → 固定尺寸/父尺寸；`draw`：Style 回退 → 背景（hover 时 `scheme.secondary_container`，否则 `scheme.primary`）/边框/文字居中，按 `scale_.tick()` 中心缩放矩形，返回实际绘制 Rect；`input`：`MouseMoveEvent` → hover 检测（`is_inside` 与 `hover_` 对比，变化时 `scale_.to_value(1.06F/1.0F)` + `mark_dirty()`）、`MouseButtonEvent` 左键按下且命中 → `on_click_()`；`hit_test`：`Mouse::is_inside(bounds)`。私有成员 `hover_` + `component::Animation<float> scale_{1.0F, 200}`（200ms 缩放动画，构造时 `scale_.bind(context.anim_inc, context.anim_dec)`）
@@ -128,7 +129,7 @@ WM_* → Win32::handle_message() → translate_event() → MsgPump::push_msg()
 | 模式 | 使用位置 |
 | --- | --- |
 | 单例模式 | `viewing_conditions()` 缓存单例（HCT 引擎） |
-| 组合模式 | Widget 树形结构与子节点（`MutableWidget` 变体容器） |
+| 组合模式 | Widget 树形结构与子节点（`MutableWidget` 变体容器）+ 控件行为组件组装（`add_behavior<T>()`） |
 | 观察者模式 | `InvalidationTracker` 脏标记 + `AnimationBase` 动画跟踪 + `ValueState` 绑定 |
 | 代理模式 | `MsgPump` 作为线程安全事件代理 |
 | 工厂方法 | `Engine::set_root_widget<T>()`、`ColorScheme::light/dark` |
@@ -191,8 +192,14 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         │   ├── ColorScheme.cpp            # HCT 色彩引擎完整实现（约 400 行）
         │   ├── CSS.hpp                    # 基础样式结构体（Background/Size/Border）+ Style Mixin 结构体（BackgroundStyle/SizeStyle/BorderStyle/TextStyle）
         └── Widget/
-            ├── Widget.hpp                 # Widget 基类声明（含 Builder API：build<T>/children/parent）
+            ├── Widget.hpp                 # Widget 基类声明（含 Builder API：build<T>/children/parent + 行为委托）
             ├── Widget.cpp                 # Widget 默认实现
+            ├── Behavior/
+            │   ├── Behavior.hpp           # 行为基类（持 Widget& owner_，Rule of Five delete）
+            │   ├── LayoutBehavior.hpp     # 布局行为接口（纯虚 layout）
+            │   ├── DrawBehavior.hpp       # 绘制行为接口（纯虚 draw -> Rect）
+            │   ├── InputBehavior.hpp      # 输入行为接口（纯虚 input）
+            │   └── HitTestBehavior.hpp    # 命中测试行为接口（纯虚 hit_test const -> bool）
             ├── Button/
             │   ├── Button.hpp             # Button 声明（继承 Widget + Style Mixins）
             │   └── Button.cpp             # Button 实现：layout/draw/input/hit_test/on_click
@@ -316,6 +323,7 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 - **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）四个独立组件（`Renderer` 已删除，渲染驱动并入 `Engine::render_frame`），贯彻单一职责原则
 - **样式系统重构（已完成）**：移除运行时 `StyleSheet` hashmap 样式表和 `Stylable` CRTP，替换为编译期 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），零运行时开销，无字符串查找。Widget 通过多重继承选择所需 mixin，`class_name_` 和 `style()` 链式调用一并移除
 - **布局下放（已完成）**：布局计算曾从 Engine 集中式 Renderer 下放到各 Widget——Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算，`horizontal_` 成员从 Widget 基类移除。`Engine::render_frame` 每帧调用 `root->layout({0,0,w,h})`（草稿期每帧全量布局）驱动布局阶段
+- **行为组件化（进行中）**：Widget 行为拆分——Task 1 完成行为接口层（`Widget/Behavior/`：Behavior 基类 + Layout/Draw/Input/HitTest 四接口，持 `Widget& owner_`）；Task 2 完成 Widget 基类改造（4 虚方法默认实现遍历 `behaviors_` 容器按类型委托、`add_behavior<T>()` 组装模板、`hovered_` 提升为 atomic 交互状态修复跨线程病灶、删除 build/event 空壳及全部调用点）。Task 3/4（Button/Column/Row/Center 控件重构为行为组装）进行中
 - **抽象层砍除（已完成）**：按 YAGNI 移除 `neko::platform` 平台抽象层（基类/单例/工厂注册宏）与 `neko::backend` 渲染抽象层（策略基类），`Win32` 与 `DirectX11` 成为直接实现（无基类、无 override），`handle_message` 改非静态成员方法；初始主题推送从 Engine 构造移至 main.cpp（`win32->query_theme()` 经 MsgPump push）；`Widget::draw` 签名改 `backend::DirectX11&`（Widget.hpp 前置声明避免 D3D11 头渗透）；净减 321 行；顺带修复 Engine 构造 use-after-move 潜在 bug 与 DirectX11 Rule of Five
 - **所有权模型改造（已完成）**：Engine 以 `shared_ptr` 拥有全部子系统（context/backend/invalidation/tree_manager/widget_builder/hit_tester/render_scheduler/msg_pump/event_router），所有观察者改持 `weak_ptr`（EventRouter 7 个依赖、HitTester/WidgetBuilder 的 tree、RenderScheduler 的 invalidation、Context 的 tree_manager、Widget 的 context_、MsgPump handler 捕获的 router）——无 shared_ptr 环；各使用点 lock + 判空（lock 失败安全降级：丢弃事件/返回 nullopt/构造孤儿控件，不 UB）。`Context` 增加 `enable_shared_from_this` 基类供 TreeManager 填充 `Widget::context_`；`Widget::build<T>` 的树锁改经 `context->tree_manager.lock()->mutex_` 获取；构造回调统一改 lambda（`std::bind` 清除）
 - **生命周期契约修复（已完成）**：`Engine::clear()` 不再提前 reset 被 EventRouter 引用的 backend/context/mouse/keyboard（此前在消息线程内销毁被引用对象，留下悬垂窗口），资源释放推迟至 ~Engine 成员析构（RAII 正统）；Engine.hpp 成员区补生命周期契约注释（Engine 拥有全部子系统 shared_ptr，观察者 weak_ptr；成员声明顺序仍保证观察者先析构，weak_ptr 过期只是最后的运行时安全网）
