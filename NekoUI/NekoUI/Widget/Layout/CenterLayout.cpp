@@ -18,7 +18,7 @@ namespace neko::widget {
                                    const auto ch = cb.w - cb.y;
                                    const auto cx = available.x + (available.z - available.x - cw) / 2;
                                    const auto cy = available.y + (available.w - available.y - ch) / 2;
-                                   child->set_bounds({{cx, cy, {cx + cw}, {cy + ch}}});
+                                    child->set_bounds({cx, cy, cx + cw, cy + ch});
                                });
     }
 } // namespace neko::widget
