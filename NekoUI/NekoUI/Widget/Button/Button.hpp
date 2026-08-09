@@ -1,26 +1,34 @@
-﻿#pragma once
+﻿// 2026-08-10
+
+#pragma once
 #include "../Widget.hpp"
 #include "../../Style/CSS.hpp"
-#include "../../Component/Animation.hpp"
 
-#include <functional>
+#include "ButtonDraw.hpp"
+#include "ButtonHitTest.hpp"
+#include "ButtonInput.hpp"
+#include "ButtonLayout.hpp"
+
 #include <string>
+#include <utility>
 
 namespace neko::widget {
     class Button final : public Widget, public style::BackgroundStyle, public style::SizeStyle, public style::BorderStyle, public style::TextStyle {
     public:
-        explicit Button(const engine::Context& context, std::string text = {}, std::function<void()> on_click = {});
+        using OnClick = ButtonInput::OnClick;
 
-        auto layout(Vec4I rect, engine::Context& context) -> void override;
-        auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
-        auto input(engine::Context& context, const platform::Event& event) -> void override;
-        [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
+        explicit Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr)
+            : input_{add_behavior<ButtonInput>(context, std::move(onClick))} {
+            add_behavior<ButtonLayout>();
+            add_behavior<ButtonDraw>(context, std::move(text));
+            add_behavior<ButtonHitTest>();
+        }
 
-        auto on_click(std::function<void()> cb) -> Button&;
+        auto on_click(OnClick callback) -> Button& {
+            input_.set_on_click(std::move(callback));
+            return *this;
+        }
     private:
-        std::string text_;
-        std::function<void()> on_click_;
-        bool hover_{false};
-        component::Animation<float> scale_{1.0F, 200};
+        ButtonInput& input_;
     };
 } // namespace neko::widget

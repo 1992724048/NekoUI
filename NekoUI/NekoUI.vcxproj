@@ -229,7 +229,10 @@
     <ClCompile Include="NekoUI\Engine\RenderScheduler.cpp" />
     <ClCompile Include="NekoUI\Engine\MsgPump.cpp" />
     <ClCompile Include="NekoUI\Style\ColorScheme.cpp" />
-    <ClCompile Include="NekoUI\Widget\Button\Button.cpp" />
+    <ClCompile Include="NekoUI\Widget\Button\ButtonDraw.cpp" />
+    <ClCompile Include="NekoUI\Widget\Button\ButtonHitTest.cpp" />
+    <ClCompile Include="NekoUI\Widget\Button\ButtonInput.cpp" />
+    <ClCompile Include="NekoUI\Widget\Button\ButtonLayout.cpp" />
     <ClCompile Include="NekoUI\Widget\Layout\Center.cpp" />
     <ClCompile Include="NekoUI\Widget\Layout\Column.cpp" />
     <ClCompile Include="NekoUI\Widget\Layout\Row.cpp" />
@@ -265,6 +268,10 @@
     <ClInclude Include="NekoUI\Device\keyboard.hpp" />
     <ClInclude Include="NekoUI\Device\mouse.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\Button.hpp" />
+    <ClInclude Include="NekoUI\Widget\Button\ButtonDraw.hpp" />
+    <ClInclude Include="NekoUI\Widget\Button\ButtonHitTest.hpp" />
+    <ClInclude Include="NekoUI\Widget\Button\ButtonInput.hpp" />
+    <ClInclude Include="NekoUI\Widget\Button\ButtonLayout.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Column.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Row.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
