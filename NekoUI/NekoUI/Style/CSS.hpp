@@ -11,14 +11,39 @@ namespace neko::style {
     };
 
     struct Size {
-        Vec2 size;
-        Vec2 margin;
-        Vec2 padding;
+        Vec2 value{.x = std::numeric_limits<float>::max(), .y = std::numeric_limits<float>::max()};
     };
 
     struct Border {
-        float size;
+        float width{0.0F};
         Color color;
+    };
+
+    struct Text {
+        type::Color color{0xFFFFFFFF};
+        float font_size{16.0F};
+    };
+
+    // 控件样式表（组合生成）
+    struct ButtonStyle {
+        Background background;
+        Size size;
+        Border border;
+        Text text;
+    };
+
+    struct ColumnStyle {
+        Background background;
+        Size size;
+    };
+
+    struct RowStyle {
+        Background background;
+        Size size;
+    };
+
+    struct CenterStyle {
+        Background background;
     };
 
     struct BackgroundStyle {
@@ -26,11 +51,11 @@ namespace neko::style {
     };
 
     struct SizeStyle {
-        Size size_{.size = {.x = std::numeric_limits<float>::max(), .y = std::numeric_limits<float>::max()}, .margin = {.x = 0.0F, .y = 0.0F}, .padding = {.x = 0.0F, .y = 0.0F}};
+        Size size_{.value = {.x = std::numeric_limits<float>::max(), .y = std::numeric_limits<float>::max()}};
     };
 
     struct BorderStyle {
-        Border border_{.size = 0.0F, .color = Color{0}};
+        Border border_{.width = 0.0F, .color = Color{0}};
     };
 
     struct TextStyle {
