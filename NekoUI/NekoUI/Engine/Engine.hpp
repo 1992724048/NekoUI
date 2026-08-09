@@ -53,6 +53,10 @@ namespace neko::engine {
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;
     private:
+        // 生命周期契约：成员声明顺序即析构逆序（C++ 按声明逆序析构）。
+        // 被引用的对象（context/backend/mouse/keyboard/invalidation_/tree_manager_/hit_tester_）
+        // 必须声明在引用者（widget_builder_/hit_tester_/render_scheduler_/msg_pump_/event_router_）之前，
+        // 保证引用者先析构、被引用者后析构。新增成员时保持此顺序。
         std::unique_ptr<Context> context{};
         std::unique_ptr<backend::DirectX11> backend{};
         Handle native_handle_{};

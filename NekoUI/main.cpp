@@ -1,4 +1,4 @@
-﻿// 2026-07-20 02:12:35
+﻿// 2026-08-10 04:48:52
 
 #include <Windows.h>
 #include <iostream>
@@ -81,15 +81,21 @@ auto main(int argc, char* argv[]) -> int try {
     page->children([&](auto& col) -> auto {
         auto& b1 = col.template build<neko::widget::Button>("Button 1");
         b1.size_.size = {.x = 120.0F, .y = 40.0F};
-        b1.on_click([] -> auto { std::println("Button 1 clicked!"); });
+        b1.on_click([] -> auto {
+            std::println("Button 1 clicked!");
+        });
 
         auto& b2 = col.template build<neko::widget::Button>("Button 2");
         b2.size_.size = {.x = 120.0F, .y = 40.0F};
-        b2.on_click([] -> auto { std::println("Button 2 clicked!"); });
+        b2.on_click([] -> auto {
+            std::println("Button 2 clicked!");
+        });
 
         auto& b3 = col.template build<neko::widget::Button>("Button 3");
         b3.size_.size = {.x = 120.0F, .y = 40.0F};
-        b3.on_click([] -> auto { std::println("Button 3 clicked!"); });
+        b3.on_click([] -> auto {
+            std::println("Button 3 clicked!");
+        });
     });
 
     MSG msg{};

@@ -64,10 +64,6 @@ namespace neko::engine {
             render_scheduler_->stop();
             render_scheduler_.reset();
         }
-        backend.reset();
-        context.reset();
-        mouse.reset();
-        keyboard.reset();
         tree_manager_.clear();
         invalidation_.clear();
     }
