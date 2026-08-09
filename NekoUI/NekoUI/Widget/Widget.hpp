@@ -57,7 +57,7 @@ namespace neko::widget {
             return ref;
         }
 
-        virtual auto layout(Vec4I rect, engine::Context& context) -> void {
+        virtual auto layout(const Vec4I rect, engine::Context& context) -> void {
             for (const auto& behavior : behaviors_) {
                 if (auto* layout = dynamic_cast<LayoutBehavior*>(behavior.get())) {
                     layout->layout(rect, context);
@@ -145,22 +145,17 @@ namespace neko::widget {
 namespace neko::widget {
     template<std::derived_from<Widget> T, typename... Args>
     auto Widget::build(Args&&... args) -> T& {
-        // 子控件由 children_ 强持有，返回引用不悬垂
         const auto context = context_.lock();
         std::shared_ptr<T> child;
         if (context) {
             child = std::make_shared<T>(*context, std::forward<Args>(args)...);
         } else {
-            // 生命周期契约破坏时的安全网：Context 已析构则用临时 Context 构造孤儿控件
-            // （控件构造函数仅拷贝回调/忽略参数，不依赖 Context 存活；enable_shared_from_this
-            // 的 protected 构造/析构要求 Context 由 shared_ptr 持有，不能栈上构造）
             const auto orphan_context = std::make_shared<engine::Context>();
             child = std::make_shared<T>(*orphan_context, std::forward<Args>(args)...);
         }
         child->parent_ = this;
         auto& ref = *child;
 
-        // 树结构突变与渲染线程 layout/draw 遍历互斥（TreeManager::mutex_）
         std::unique_lock<std::shared_mutex> tree_lock;
         if (context) {
             if (const auto tree = context->tree_manager.lock()) {
