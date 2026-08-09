@@ -1,17 +1,20 @@
-﻿// 2026-07-27 20:29:04
+﻿// 2026-08-10
 
 #pragma once
 #include "../Widget.hpp"
 #include "../../Style/CSS.hpp"
 
+#include "ColumnDraw.hpp"
+#include "ColumnHitTest.hpp"
+#include "ColumnLayout.hpp"
+
 namespace neko::widget {
     class Column final : public Widget, public style::BackgroundStyle, public style::SizeStyle {
     public:
-        explicit Column(engine::Context&);
-
-        auto layout(Vec4I rect, engine::Context& context) -> void override;
-        auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
-        auto input(engine::Context& context, const platform::Event& event) -> void override;
-        [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
+        explicit Column(engine::Context&) {
+            add_behavior<ColumnLayout>();
+            add_behavior<ColumnDraw>();
+            add_behavior<ColumnHitTest>();
+        }
     };
 } // namespace neko::widget

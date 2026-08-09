@@ -57,7 +57,13 @@
     <ClCompile Include="NekoUI\Style\ColorScheme.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Widget\Layout\Center.cpp">
+    <ClCompile Include="NekoUI\Widget\Layout\CenterDraw.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Layout\CenterHitTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Layout\CenterLayout.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NekoUI\Engine\TreeManager.cpp">
@@ -66,10 +72,22 @@
     <ClCompile Include="NekoUI\Engine\HitTester.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Widget\Layout\Column.cpp">
+    <ClCompile Include="NekoUI\Widget\Layout\ColumnDraw.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Widget\Layout\Row.cpp">
+    <ClCompile Include="NekoUI\Widget\Layout\ColumnHitTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Layout\ColumnLayout.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Layout\RowDraw.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Layout\RowHitTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Widget\Layout\RowLayout.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NekoUI\Engine\WidgetBuilder.cpp">
@@ -119,6 +137,15 @@
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\CenterDraw.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\CenterHitTest.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\CenterLayout.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="NekoUI\Engine\MsgPump.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -165,6 +192,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Widget\Layout\Column.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\ColumnDraw.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\ColumnHitTest.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\ColumnLayout.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\RowDraw.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\RowHitTest.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Widget\Layout\RowLayout.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Widget\Layout\Row.hpp">

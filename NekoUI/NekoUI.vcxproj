@@ -233,9 +233,15 @@
     <ClCompile Include="NekoUI\Widget\Button\ButtonHitTest.cpp" />
     <ClCompile Include="NekoUI\Widget\Button\ButtonInput.cpp" />
     <ClCompile Include="NekoUI\Widget\Button\ButtonLayout.cpp" />
-    <ClCompile Include="NekoUI\Widget\Layout\Center.cpp" />
-    <ClCompile Include="NekoUI\Widget\Layout\Column.cpp" />
-    <ClCompile Include="NekoUI\Widget\Layout\Row.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\CenterDraw.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\CenterHitTest.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\CenterLayout.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\ColumnDraw.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\ColumnHitTest.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\ColumnLayout.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\RowDraw.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\RowHitTest.cpp" />
+    <ClCompile Include="NekoUI\Widget\Layout\RowLayout.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -272,6 +278,15 @@
     <ClInclude Include="NekoUI\Widget\Button\ButtonHitTest.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\ButtonInput.hpp" />
     <ClInclude Include="NekoUI\Widget\Button\ButtonLayout.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\CenterDraw.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\CenterHitTest.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\CenterLayout.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\ColumnDraw.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\ColumnHitTest.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\ColumnLayout.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\RowDraw.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\RowHitTest.hpp" />
+    <ClInclude Include="NekoUI\Widget\Layout\RowLayout.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Column.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Row.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />

@@ -1,16 +1,20 @@
-﻿#pragma once
+﻿// 2026-08-10
+
+#pragma once
 #include "../Widget.hpp"
 #include "../../Style/CSS.hpp"
 
-namespace neko::widget {
-    class Row final : public Widget,
-                      public style::BackgroundStyle,
-                      public style::SizeStyle {
-    public:
-        explicit Row(engine::Context&);
+#include "RowDraw.hpp"
+#include "RowHitTest.hpp"
+#include "RowLayout.hpp"
 
-        auto layout(Vec4I rect, engine::Context& context) -> void override;
-        auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
-        [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
+namespace neko::widget {
+    class Row final : public Widget, public style::BackgroundStyle, public style::SizeStyle {
+    public:
+        explicit Row(engine::Context&) {
+            add_behavior<RowLayout>();
+            add_behavior<RowDraw>();
+            add_behavior<RowHitTest>();
+        }
     };
 } // namespace neko::widget
