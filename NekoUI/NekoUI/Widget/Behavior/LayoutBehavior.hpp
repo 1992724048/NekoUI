@@ -15,7 +15,7 @@ namespace neko::widget {
     class LayoutBehavior : public Behavior {
     public:
         explicit LayoutBehavior(Widget& owner) : Behavior{owner} {}
-        virtual ~LayoutBehavior() = default;
+        ~LayoutBehavior() override = default;
         virtual auto layout(Vec4I rect, engine::Context& context) -> void = 0;
     };
 }

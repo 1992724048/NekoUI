@@ -19,7 +19,7 @@ namespace neko::widget {
     class DrawBehavior : public Behavior {
     public:
         explicit DrawBehavior(Widget& owner) : Behavior{owner} {}
-        virtual ~DrawBehavior() = default;
+        ~DrawBehavior() override = default;
         virtual auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect = 0;
     };
 }

@@ -11,7 +11,7 @@ namespace neko::widget {
     class HitTestBehavior : public Behavior {
     public:
         explicit HitTestBehavior(Widget& owner) : Behavior{owner} {}
-        virtual ~HitTestBehavior() = default;
+        ~HitTestBehavior() override = default;
         [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool = 0;
     };
 }

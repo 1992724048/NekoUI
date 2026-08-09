@@ -13,7 +13,7 @@ namespace neko::widget {
     class InputBehavior : public Behavior {
     public:
         explicit InputBehavior(Widget& owner) : Behavior{owner} {}
-        virtual ~InputBehavior() = default;
+        ~InputBehavior() override = default;
         virtual auto input(engine::Context& context, const platform::Event& event) -> void = 0;
     };
 }
