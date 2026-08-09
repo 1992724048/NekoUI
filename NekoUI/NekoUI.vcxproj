@@ -256,6 +256,11 @@
     <ClInclude Include="NekoUI\Style\CSS.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />
     <ClInclude Include="NekoUI\Component\Animation.hpp" />
+    <ClInclude Include="NekoUI\Widget\Behavior\Behavior.hpp" />
+    <ClInclude Include="NekoUI\Widget\Behavior\DrawBehavior.hpp" />
+    <ClInclude Include="NekoUI\Widget\Behavior\HitTestBehavior.hpp" />
+    <ClInclude Include="NekoUI\Widget\Behavior\InputBehavior.hpp" />
+    <ClInclude Include="NekoUI\Widget\Behavior\LayoutBehavior.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Center.hpp" />
     <ClInclude Include="NekoUI\Device\keyboard.hpp" />
     <ClInclude Include="NekoUI\Device\mouse.hpp" />
