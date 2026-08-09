@@ -3,10 +3,14 @@
 #pragma once
 #include "../Behavior/LayoutBehavior.hpp"
 
+#include "../../Style/CSS.hpp"
+
 namespace neko::widget {
     class ColumnLayout final : public LayoutBehavior {
     public:
-        explicit ColumnLayout(Widget& owner) : LayoutBehavior{owner} {}
+        ColumnLayout(Widget& owner, const style::ColumnStyle& style);
         auto layout(Vec4I rect, engine::Context& context) -> void override;
+    private:
+        const style::ColumnStyle& style_;
     };
 }

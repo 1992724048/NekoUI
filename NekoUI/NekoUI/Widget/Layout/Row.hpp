@@ -2,6 +2,7 @@
 
 #pragma once
 #include "../Widget.hpp"
+
 #include "../../Style/CSS.hpp"
 
 #include "RowDraw.hpp"
@@ -9,12 +10,18 @@
 #include "RowLayout.hpp"
 
 namespace neko::widget {
-    class Row final : public Widget, public style::BackgroundStyle, public style::SizeStyle {
+    class Row final : public Widget {
     public:
         explicit Row(engine::Context&) {
-            add_behavior<RowLayout>();
-            add_behavior<RowDraw>();
+            add_behavior<RowLayout>(style_);
+            add_behavior<RowDraw>(style_);
             add_behavior<RowHitTest>();
         }
+
+        auto style() -> style::RowStyle& {
+            return style_;
+        }
+    private:
+        style::RowStyle style_{};
     };
 } // namespace neko::widget

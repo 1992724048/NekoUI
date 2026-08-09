@@ -4,13 +4,16 @@
 
 #include "../../Backend/DirectX11/DirectX11.hpp"
 #include "../../Style/CSS.hpp"
-#include "Center.hpp"
+#include "../Widget.hpp"
 
 namespace neko::widget {
+    CenterDraw::CenterDraw(Widget& owner, const style::CenterStyle& style) :
+        DrawBehavior{owner},
+        style_{style} {}
+
     auto CenterDraw::draw(Vec4I /*rect*/, engine::Context& context, backend::DirectX11& backend) -> Rect {
-        auto& center = static_cast<Center&>(owner_);
-        const auto bounds = center.get_bounds();
-        auto bg = center.background_.color.value != 0 ? center.background_ : style::Background{context.scheme.surface};
+        const auto bounds = owner_.get_bounds();
+        auto bg = style_.background.color.value != 0 ? style_.background : style::Background{context.scheme.surface};
         if (bg.color.value != 0) {
             backend.draw_rect_fill(bounds, bg.color);
         }

@@ -3,10 +3,14 @@
 #pragma once
 #include "../Behavior/DrawBehavior.hpp"
 
+#include "../../Style/CSS.hpp"
+
 namespace neko::widget {
     class CenterDraw final : public DrawBehavior {
     public:
-        explicit CenterDraw(Widget& owner) : DrawBehavior{owner} {}
+        CenterDraw(Widget& owner, const style::CenterStyle& style);
         auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
+    private:
+        const style::CenterStyle& style_;
     };
 }

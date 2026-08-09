@@ -4,13 +4,16 @@
 
 #include "../../Backend/DirectX11/DirectX11.hpp"
 #include "../../Style/CSS.hpp"
-#include "Row.hpp"
+#include "../Widget.hpp"
 
 namespace neko::widget {
+    RowDraw::RowDraw(Widget& owner, const style::RowStyle& style) :
+        DrawBehavior{owner},
+        style_{style} {}
+
     auto RowDraw::draw(Vec4I /*rect*/, engine::Context& context, backend::DirectX11& backend) -> Rect {
-        auto& row = static_cast<Row&>(owner_);
-        const auto bounds = row.get_bounds();
-        const auto bg = row.background_.color.value != 0 ? row.background_ : style::Background{context.scheme.surface};
+        const auto bounds = owner_.get_bounds();
+        const auto bg = style_.background.color.value != 0 ? style_.background : style::Background{context.scheme.surface};
         if (bg.color.value != 0) {
             backend.draw_rect_fill(bounds, bg.color);
         }

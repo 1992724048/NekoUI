@@ -2,6 +2,7 @@
 
 #pragma once
 #include "../Widget.hpp"
+
 #include "../../Style/CSS.hpp"
 
 #include "ButtonDraw.hpp"
@@ -13,14 +14,14 @@
 #include <utility>
 
 namespace neko::widget {
-    class Button final : public Widget, public style::BackgroundStyle, public style::SizeStyle, public style::BorderStyle, public style::TextStyle {
+    class Button final : public Widget {
     public:
         using OnClick = ButtonInput::OnClick;
 
-        explicit Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr)
+        Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr)
             : input_{add_behavior<ButtonInput>(context, std::move(onClick))} {
-            add_behavior<ButtonLayout>();
-            add_behavior<ButtonDraw>(context, std::move(text));
+            add_behavior<ButtonLayout>(style_);
+            add_behavior<ButtonDraw>(style_, context, std::move(text));
             add_behavior<ButtonHitTest>();
         }
 
@@ -28,7 +29,12 @@ namespace neko::widget {
             input_.set_on_click(std::move(callback));
             return *this;
         }
+
+        auto style() -> style::ButtonStyle& {
+            return style_;
+        }
     private:
+        style::ButtonStyle style_{};
         ButtonInput& input_;
     };
 } // namespace neko::widget

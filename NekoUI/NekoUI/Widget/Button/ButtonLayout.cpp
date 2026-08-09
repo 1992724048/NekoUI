@@ -4,17 +4,21 @@
 
 #include <limits>
 
-#include "Button.hpp"
+#include "../../Style/CSS.hpp"
+#include "../Widget.hpp"
 
 namespace neko::widget {
+    ButtonLayout::ButtonLayout(Widget& owner, const style::ButtonStyle& style) :
+        LayoutBehavior{owner},
+        style_{style} {}
+
     auto ButtonLayout::layout(const Vec4I available, engine::Context& /*context*/) -> void {
-        auto& button = static_cast<Button&>(owner_);
         auto effective = available;
-        const auto use_parent = button.size_.size.x == std::numeric_limits<float>::max() || button.size_.size.y == std::numeric_limits<float>::max();
+        const auto use_parent = style_.size.value.x == std::numeric_limits<float>::max() || style_.size.value.y == std::numeric_limits<float>::max();
         if (!use_parent) {
-            effective.z = effective.x + static_cast<int>(button.size_.size.x);
-            effective.w = effective.y + static_cast<int>(button.size_.size.y);
+            effective.z = effective.x + static_cast<int>(style_.size.value.x);
+            effective.w = effective.y + static_cast<int>(style_.size.value.y);
         }
-        button.set_bounds(effective);
+        owner_.set_bounds(effective);
     }
 } // namespace neko::widget

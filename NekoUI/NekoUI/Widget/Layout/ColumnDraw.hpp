@@ -3,10 +3,14 @@
 #pragma once
 #include "../Behavior/DrawBehavior.hpp"
 
+#include "../../Style/CSS.hpp"
+
 namespace neko::widget {
     class ColumnDraw final : public DrawBehavior {
     public:
-        explicit ColumnDraw(Widget& owner) : DrawBehavior{owner} {}
+        ColumnDraw(Widget& owner, const style::ColumnStyle& style);
         auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
+    private:
+        const style::ColumnStyle& style_;
     };
 }
