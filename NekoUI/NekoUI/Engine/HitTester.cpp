@@ -3,14 +3,20 @@
 #include "../Device/Mouse.hpp"
 #include "../Widget/Widget.hpp"
 
+#include <utility>
+
 namespace neko::engine {
-    HitTester::HitTester(TreeManager& tree) :
-        tree_(tree) {}
+    HitTester::HitTester(std::weak_ptr<TreeManager> tree) :
+        tree_(std::move(tree)) {}
 
     auto HitTester::hit_test(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>> {
-        std::shared_lock _(tree_.mutex_);
+        const auto tree = tree_.lock();
+        if (!tree) {
+            return std::nullopt;
+        }
+        std::shared_lock _(tree->mutex_);
 
-        const auto root = tree_.root_.load();
+        const auto root = tree->root_.load();
         if (!root) {
             return std::nullopt;
         }

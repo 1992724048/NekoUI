@@ -20,35 +20,51 @@ namespace neko::engine {
     Engine::Engine(std::unique_ptr<backend::DirectX11> backend) :
         backend{std::move(backend)},
         native_handle_(this->backend->get_native_handle()) {
-        context = std::make_unique<Context>();
-        context->tree_mutex = &tree_manager_.mutex_;
-
+        context = std::make_shared<Context>();
         mouse = std::make_shared<device::Mouse>();
         keyboard = std::make_shared<device::Keyboard>();
+        invalidation_ = std::make_shared<InvalidationTracker>();
+        tree_manager_ = std::make_shared<TreeManager>();
+        widget_builder_ = std::make_shared<WidgetBuilder>(tree_manager_);
+        hit_tester_ = std::make_shared<HitTester>(tree_manager_);
+        context->tree_manager = tree_manager_;
 
         const auto initial_dpi = static_cast<unsigned int>(std::round(this->backend->get_dpi_scale() * 96.0F));
         mouse->set_dpi(initial_dpi);
 
         context->anim_inc = [this]() -> void {
-            invalidation_.anim_inc();
+            invalidation_->anim_inc();
             if (render_scheduler_) {
                 render_scheduler_->request_frame();
             }
         };
-        context->anim_dec = std::bind(&InvalidationTracker::anim_dec, &invalidation_);
+        context->anim_dec = [this]() -> void {
+            invalidation_->anim_dec();
+        };
 
-        context->widget_tree_changed = std::bind(&Engine::schedule_rebuild, this);
+        context->widget_tree_changed = [this]() -> void {
+            schedule_rebuild();
+        };
 
-        context->mark_dirty = std::bind(&InvalidationTracker::mark_dirty, &invalidation_);
-        context->widget_dirty = std::bind(&InvalidationTracker::mark_widget_dirty, &invalidation_, std::placeholders::_1);
+        context->mark_dirty = [this]() -> void {
+            invalidation_->mark_dirty();
+        };
+        context->widget_dirty = [this](const std::weak_ptr<widget::Widget>& widget) -> void {
+            invalidation_->mark_widget_dirty(widget);
+        };
 
         context->mouse = mouse;
         context->keyboard = keyboard;
         context->native_handle = native_handle_;
 
-        render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
-        event_router_ = std::make_unique<EventRouter>(tree_manager_, hit_tester_, *mouse, *keyboard, *context, *this->backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
-        msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
+        render_scheduler_ = std::make_shared<RenderScheduler>([this]() -> void { render_frame(); }, invalidation_);
+        event_router_ = std::make_shared<EventRouter>(tree_manager_, hit_tester_, mouse, keyboard, context, this->backend, render_scheduler_, [this]() -> void { clear(); }, invalidation_);
+        msg_pump_ = std::make_shared<MsgPump>([router = std::weak_ptr<EventRouter>{event_router_}](const platform::Event& event) -> void {
+            // 生命周期契约破坏时的安全网：EventRouter 已析构则丢弃该消息
+            if (const auto locked = router.lock()) {
+                locked->dispatch(event);
+            }
+        });
     }
 
     Engine::~Engine() {
@@ -64,8 +80,8 @@ namespace neko::engine {
             render_scheduler_->stop();
             render_scheduler_.reset();
         }
-        tree_manager_.clear();
-        invalidation_.clear();
+        tree_manager_->clear();
+        invalidation_->clear();
     }
 
     auto Engine::get_msg_pump() -> std::weak_ptr<MsgPump> {
@@ -77,7 +93,7 @@ namespace neko::engine {
     }
 
     auto Engine::rebuild() -> void {
-        widget_builder_.build(*context);
+        widget_builder_->build(*context);
         if (render_scheduler_) {
             render_scheduler_->request_frame();
         }
@@ -104,7 +120,7 @@ namespace neko::engine {
         }
 
         if (tree_dirty_.exchange(false, std::memory_order_acq_rel)) {
-            widget_builder_.build(*context);
+            widget_builder_->build(*context);
         }
 
         auto size = render_scheduler_->pending_size();
@@ -115,13 +131,13 @@ namespace neko::engine {
             }
         }
 
-        const auto root = tree_manager_.get_root();
+        const auto root = tree_manager_->get_root();
         if (!root) {
-            invalidation_.clear();
+            invalidation_->clear();
             return;
         }
 
-        std::shared_lock lock(tree_manager_.mutex_);
+        std::shared_lock lock(tree_manager_->mutex_);
 
         root->layout({.x = 0, .y = 0, .z = size.width, .w = size.height}, *context);
 
@@ -129,7 +145,7 @@ namespace neko::engine {
         draw_widget(*root, *context, *backend);
         backend->end();
 
-        invalidation_.clear();
+        invalidation_->clear();
     }
 
     auto Engine::draw_widget(widget::Widget& w, Context& context, backend::DirectX11& backend) -> void {

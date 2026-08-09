@@ -38,8 +38,8 @@ namespace neko::engine {
         template<std::derived_from<widget::Widget> T, typename... Args>
         auto set_root_widget(Args&&... args) -> std::shared_ptr<T> {
             const std::shared_ptr<T> widget = std::make_shared<T>(*context, std::forward<Args>(args)...);
-            tree_manager_.set_root(*context, widget);
-            widget_builder_.build(*context);
+            tree_manager_->set_root(*context, widget);
+            widget_builder_->build(*context);
             context->root = widget;
             render_scheduler_->request_frame();
             return widget;
@@ -53,12 +53,13 @@ namespace neko::engine {
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;
     private:
-        // 生命周期契约：成员声明顺序即析构逆序（C++ 按声明逆序析构）。
-        // 被引用的对象（context/backend/mouse/keyboard/invalidation_/tree_manager_/hit_tester_）
-        // 必须声明在引用者（widget_builder_/hit_tester_/render_scheduler_/msg_pump_/event_router_）之前，
-        // 保证引用者先析构、被引用者后析构。新增成员时保持此顺序。
-        std::unique_ptr<Context> context{};
-        std::unique_ptr<backend::DirectX11> backend{};
+        // 生命周期契约：Engine 拥有全部子系统（shared_ptr），观察者
+        // （EventRouter/HitTester/WidgetBuilder/RenderScheduler/MsgPump/Context/Widget）
+        // 持 weak_ptr；成员声明顺序仍保证观察者先于被观察者析构，
+        // weak_ptr 过期只是最后的运行时安全网（lock 失败必须安全降级，不得 UB）。
+        // 新增成员时保持此顺序。
+        std::shared_ptr<Context> context{};
+        std::shared_ptr<backend::DirectX11> backend{};
         Handle native_handle_{};
         std::shared_ptr<device::Mouse> mouse;
         std::shared_ptr<device::Keyboard> keyboard;
@@ -66,13 +67,13 @@ namespace neko::engine {
         auto render_frame() -> void;
         static auto draw_widget(widget::Widget& w, Context& context, backend::DirectX11& backend) -> void;
 
-        InvalidationTracker invalidation_;
-        TreeManager tree_manager_;
-        WidgetBuilder widget_builder_{tree_manager_};
-        HitTester hit_tester_{tree_manager_};
+        std::shared_ptr<InvalidationTracker> invalidation_{};
+        std::shared_ptr<TreeManager> tree_manager_{};
+        std::shared_ptr<WidgetBuilder> widget_builder_{};
+        std::shared_ptr<HitTester> hit_tester_{};
         std::shared_ptr<RenderScheduler> render_scheduler_{};
         std::shared_ptr<MsgPump> msg_pump_{};
-        std::unique_ptr<EventRouter> event_router_{};
+        std::shared_ptr<EventRouter> event_router_{};
         std::atomic_bool tree_dirty_{false};
     };
 }

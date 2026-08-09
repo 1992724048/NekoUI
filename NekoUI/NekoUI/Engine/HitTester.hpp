@@ -17,9 +17,9 @@ namespace neko::engine {
 
     class HitTester {
     public:
-        explicit HitTester(TreeManager& tree);
+        explicit HitTester(std::weak_ptr<TreeManager> tree);
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>>;
     private:
-        TreeManager& tree_;
+        std::weak_ptr<TreeManager> tree_;
     };
 } // namespace neko::engine

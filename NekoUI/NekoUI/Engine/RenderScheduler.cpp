@@ -5,9 +5,9 @@
 #include <thread>
 
 namespace neko::engine {
-    RenderScheduler::RenderScheduler(FrameCallback callback, InvalidationTracker& invalidation) :
+    RenderScheduler::RenderScheduler(FrameCallback callback, std::weak_ptr<InvalidationTracker> invalidation) :
         frame_callback_(std::move(callback)),
-        invalidation_(invalidation) {
+        invalidation_(std::move(invalidation)) {
         render_thread_ = std::jthread(&RenderScheduler::render_loop, this);
     }
 
@@ -55,14 +55,16 @@ namespace neko::engine {
     }
 
     auto RenderScheduler::render_wait() -> bool {
-        if (invalidation_.has_active_animations()) {
+        const auto invalidation = invalidation_.lock();
+        if (invalidation && invalidation->has_active_animations()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
             return true;
         }
         std::unique_lock lock(render_mutex_);
         render_notify_.wait(lock,
-                            [this] -> bool {
-                                return render_thread_.get_stop_token().stop_requested() || pending_.load(std::memory_order_relaxed) || invalidation_.needs_frame();
+                            [this, &invalidation] -> bool {
+                                return render_thread_.get_stop_token().stop_requested() || pending_.load(std::memory_order_relaxed) ||
+                                       (invalidation && invalidation->needs_frame());
                             });
         pending_.store(false, std::memory_order_relaxed);
         return !render_thread_.get_stop_token().stop_requested();

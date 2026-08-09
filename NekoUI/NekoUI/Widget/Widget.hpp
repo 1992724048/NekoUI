@@ -15,6 +15,7 @@
 #include <concepts>
 #include "../Engine/Context.hpp"
 #include "../Engine/MutableWidget.hpp"
+#include "../Engine/TreeManager.hpp"
 #include "../Platform/Event.hpp"
 
 namespace neko::engine {
@@ -75,7 +76,7 @@ namespace neko::widget {
         Vec4I bounds{.width = std::numeric_limits<int>::max(), .height = std::numeric_limits<int>::max()};
 
         Widget* parent_ = nullptr;
-        engine::Context* context_ = nullptr;
+        std::weak_ptr<engine::Context> context_;
 
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
@@ -94,14 +95,26 @@ namespace neko::widget {
     template<std::derived_from<Widget> T, typename... Args>
     auto Widget::build(Args&&... args) -> T& {
         // 子控件由 children_ 强持有，返回引用不悬垂
-        auto child = std::make_shared<T>(*context_, std::forward<Args>(args)...);
+        const auto context = context_.lock();
+        std::shared_ptr<T> child;
+        if (context) {
+            child = std::make_shared<T>(*context, std::forward<Args>(args)...);
+        } else {
+            // 生命周期契约破坏时的安全网：Context 已析构则用临时 Context 构造孤儿控件
+            // （控件构造函数仅拷贝回调/忽略参数，不依赖 Context 存活；enable_shared_from_this
+            // 的 protected 构造/析构要求 Context 由 shared_ptr 持有，不能栈上构造）
+            const auto orphan_context = std::make_shared<engine::Context>();
+            child = std::make_shared<T>(*orphan_context, std::forward<Args>(args)...);
+        }
         child->parent_ = this;
         auto& ref = *child;
 
-        // 树结构突变与渲染线程 layout/draw 遍历互斥（tree_manager_.mutex_）
+        // 树结构突变与渲染线程 layout/draw 遍历互斥（TreeManager::mutex_）
         std::unique_lock<std::shared_mutex> tree_lock;
-        if (context_ && context_->tree_mutex) {
-            tree_lock = std::unique_lock<std::shared_mutex>(*context_->tree_mutex);
+        if (context) {
+            if (const auto tree = context->tree_manager.lock()) {
+                tree_lock = std::unique_lock<std::shared_mutex>(tree->mutex_);
+            }
         }
 
         std::visit([&]<typename V>(V& val) -> auto {
@@ -120,8 +133,8 @@ namespace neko::widget {
                    },
                    static_cast<engine::internal::WidgetContainer&>(children_));
 
-        if (context_ && context_->widget_tree_changed) {
-            context_->widget_tree_changed();
+        if (context && context->widget_tree_changed) {
+            context->widget_tree_changed();
         }
 
         return ref;

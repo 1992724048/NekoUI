@@ -16,7 +16,7 @@ namespace neko::engine {
     public:
         using FrameCallback = std::function<void()>;
 
-        RenderScheduler(FrameCallback callback, InvalidationTracker& invalidation);
+        RenderScheduler(FrameCallback callback, std::weak_ptr<InvalidationTracker> invalidation);
         ~RenderScheduler();
 
         RenderScheduler(const RenderScheduler&) = delete;
@@ -42,6 +42,6 @@ namespace neko::engine {
         std::atomic<int> pending_width_{0};
         std::atomic<int> pending_height_{0};
         FrameCallback frame_callback_;
-        InvalidationTracker& invalidation_;
+        std::weak_ptr<InvalidationTracker> invalidation_;
     };
 }

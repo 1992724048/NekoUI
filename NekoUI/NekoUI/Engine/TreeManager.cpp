@@ -13,7 +13,7 @@ namespace neko::engine {
     TreeManager::TreeManager() = default;
 
     auto TreeManager::set_root(Context& context, std::shared_ptr<widget::Widget> w) -> void {
-        w->context_ = &context;
+        w->context_ = context.shared_from_this();
         root_ = std::move(w);
     }
 
@@ -90,7 +90,7 @@ namespace neko::engine {
     }
 
     auto TreeManager::register_widget(const std::shared_ptr<widget::Widget>& sp, Context& context) -> void {
-        sp->context_ = &context;
+        sp->context_ = context.shared_from_this();
         sp->z_index_ = index_count++;
         index_widgets_[sp->z_index_] = sp;
 

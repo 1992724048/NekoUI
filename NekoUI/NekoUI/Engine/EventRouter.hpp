@@ -29,15 +29,15 @@ namespace neko::widget {
 namespace neko::engine {
     class EventRouter {
     public:
-        EventRouter(TreeManager& tree,
-                    HitTester& hit_tester,
-                    device::Mouse& mouse,
-                    device::Keyboard& keyboard,
-                    Context& context,
-                    backend::DirectX11& backend,
+        EventRouter(std::weak_ptr<TreeManager> tree,
+                    std::weak_ptr<HitTester> hit_tester,
+                    std::weak_ptr<device::Mouse> mouse,
+                    std::weak_ptr<device::Keyboard> keyboard,
+                    std::weak_ptr<Context> context,
+                    std::weak_ptr<backend::DirectX11> backend,
                     const std::shared_ptr<RenderScheduler>& scheduler,
                     std::function<void()> destroy_handler,
-                    InvalidationTracker& invalidation);
+                    std::weak_ptr<InvalidationTracker> invalidation);
 
         auto dispatch(const platform::Event& event) const -> void;
     private:
@@ -47,15 +47,15 @@ namespace neko::engine {
         auto handle_theme_change(const platform::ThemeChangedEvent& e) const -> void;
         auto handle_destroy() const -> void;
 
-        TreeManager& tree_;
-        HitTester& hit_tester_;
-        device::Mouse& mouse_;
-        device::Keyboard& keyboard_;
-        Context& context_;
-        backend::DirectX11& backend_;
+        std::weak_ptr<TreeManager> tree_;
+        std::weak_ptr<HitTester> hit_tester_;
+        std::weak_ptr<device::Mouse> mouse_;
+        std::weak_ptr<device::Keyboard> keyboard_;
+        std::weak_ptr<Context> context_;
+        std::weak_ptr<backend::DirectX11> backend_;
         std::weak_ptr<RenderScheduler> scheduler_;
         std::function<void()> destroy_handler_;
-        InvalidationTracker& invalidation_;
+        std::weak_ptr<InvalidationTracker> invalidation_;
         mutable std::weak_ptr<widget::Widget> last_mouse_target_;
     };
 }

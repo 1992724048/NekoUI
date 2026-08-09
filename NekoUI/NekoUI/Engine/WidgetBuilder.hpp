@@ -6,9 +6,9 @@ namespace neko::engine {
 
     class WidgetBuilder {
     public:
-        explicit WidgetBuilder(TreeManager& tree);
+        explicit WidgetBuilder(std::weak_ptr<TreeManager> tree);
         auto build(Context& context) -> void;
     private:
-        TreeManager& tree_;
+        std::weak_ptr<TreeManager> tree_;
     };
 } // namespace neko::engine
