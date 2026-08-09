@@ -8,10 +8,6 @@
 #include "../Platform/Event.hpp"
 #include "../Style/ColorScheme.hpp"
 
-namespace neko::backend {
-    class Backend;
-}
-
 namespace neko::widget {
     class Widget;
 } // namespace neko::widget

@@ -2,21 +2,21 @@
 
 ## Overview
 
-NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染。处于开发早期（草稿状态）。核心架构包括跨平台渲染后端抽象、响应式 Widget 树、Material You HCT 色彩引擎、速率曲线动画引擎、独立渲染线程和线程安全消息队列。
+NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染。处于开发早期（草稿状态）。核心架构包括 DirectX11 渲染后端、响应式 Widget 树、Material You HCT 色彩引擎、速率曲线动画引擎、独立渲染线程和线程安全消息队列。
 
 - **语言标准**: C++20 (Win32) / C++latest (x64)
 - **渲染**: DirectX 11
 - **平台**: Windows (Win32 API)
 - **命名空间**: `neko`，子命名空间包括 `neko::type`、`neko::engine`、`neko::engine::internal`、`neko::widget`、`neko::backend`、`neko::platform`、`neko::device`、`neko::component`、`neko::component::ease`、`neko::style`
-- **文档**: `CLAUDE.md`（AI 精简版入职文档）与本文档互为补充；本文档是权威详版
+- **文档**: 本文档（AGENTS.md）为唯一权威入职文档
 
 ## Architecture
 
 分层架构，从底层到上层依次为：
 
-### 1. 平台抽象层 (`neko::platform`)
+### 1. 平台实现 (`neko::platform`)
 
-平台事件封装与转换。`Platform` 基类（单例）负责将原生消息（如 Win32 `WM_*`）转换为统一 `Event` 变体。
+平台事件封装与转换。`Win32`（`platform::Win32`）负责将原生消息（如 Win32 `WM_*`）转换为统一 `Event` 变体。**无抽象基类/单例/注册机制**（YAGNI：不计划跨平台，Win32 是唯一实现，由 `main.cpp` 持有 `std::unique_ptr<Win32>` 实例）。
 
 **支持的事件类型**（`Event.hpp`，variant 含 Overloaded 工具）：
 
@@ -31,26 +31,24 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 - Light/Dark 模式：读取注册表 `HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme`
 - 强调色：读取注册表 `HKCU\Software\Microsoft\Windows\DWM\AccentColor`（ABGR 格式 → 转为 `neko::type::Color` RGBA 格式）
 - 主题变更监听：`WM_SETTINGCHANGE` 消息，`lparam == "ImmersiveColorSet"` 时刷新缓存
-- `Engine` 构造时通过 `MsgPump::push_msg(Platform::instance().query_theme())` 推入初始主题
+- `main.cpp` 在 Engine 构造后通过 `MsgPump::push_msg(win32->query_theme())` 推入初始主题
 
-**IME 支持**：`Platform` 提供 IME 输入法控制（TSF 接口，`ITfThreadMgr`、`ITfDocumentMgr`）。
+**IME 支持**：`Win32` 提供 IME 输入法控制（TSF 接口，`ITfThreadMgr`、`ITfDocumentMgr`）。
 
 **窗口操作**：11 个方法（show/hide/close/maximize/minimize/restore/destroy/move/resize/focus/set_opacity）。
 
-使用 `register_platform<T>()` 工厂方法 + `NEKO_REGISTER_PLATFORM(T)` 宏注册具体实现。
+**消息入口**：`handle_message(msg, wparam, lparam, msg_pump)` 非静态成员方法，由 `main.cpp` 的 WndProc 直接调用。
 
 ### 2. 渲染后端 (`neko::backend`)
 
-`Backend` 抽象基类定义绘制接口：`draw_rect_fill`、`draw_rect`、`draw_line`、`draw_circle_fill`、`draw_text`，以及 `resize`、`set_dpi`、`begin`/`end` 帧管理、`get_dpi_scale`、`get_native_handle`。
+`DirectX11`（`backend::DirectX11`）是唯一渲染实现（**无抽象基类**——YAGNI：Windows 下只用 D3D11），提供绘制接口：`draw_rect_fill`、`draw_rect`、`draw_line`、`draw_circle_fill`、`draw_text`，以及 `resize`、`set_dpi`、`begin`/`end` 帧管理、`get_dpi_scale`、`get_native_handle`。Rule of Five 显式 delete（不可拷贝/移动）。
 
-`DirectX11` 为其具体实现，包含：
+包含：
 
 - D3D11 设备/上下文/交换链创建（Debug 下启用 `D3D11_CREATE_DEVICE_DEBUG`）
 - HLSL 顶点/像素着色器编译（矩形着色器 + 文本着色器）
 - stb_truetype 字体图集生成（含 CJK 字形支持）
 - 常量缓冲区管理（`TextCB` 结构体）
-
-使用策略模式，支持切换不同渲染 API。
 
 ### 3. 输入设备 (`neko::device`)
 
@@ -68,7 +66,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 
 | 类 | 职责 |
 | --- | --- |
-| `Engine` | 总控制器：拥有 Backend、TreeManager、WidgetBuilder、HitTester、MsgPump、RenderScheduler、EventRouter、InvalidationTracker、输入设备、Context。构造函数用 `std::bind`/lambda 将全部子系统回调连接。提供 `set_root_widget<T>()` 模板工厂、`render_frame()` 帧绘制、`rebuild()`（外部保留入口）、`schedule_rebuild()` 延迟重建（`tree_dirty_` 标志 + `request_frame`，帧首合并）、`clear()` 关窗清理、私有静态 `draw_widget()` 集中式前序 DFS 递归绘制 |
+| `Engine` | 总控制器：拥有 DirectX11（`std::unique_ptr<backend::DirectX11>` 构造注入）、TreeManager、WidgetBuilder、HitTester、MsgPump、RenderScheduler、EventRouter、InvalidationTracker、输入设备、Context。构造函数用 `std::bind`/lambda 将全部子系统回调连接。提供 `set_root_widget<T>()` 模板工厂、`render_frame()` 帧绘制、`rebuild()`（外部保留入口）、`schedule_rebuild()` 延迟重建（`tree_dirty_` 标志 + `request_frame`，帧首合并）、`clear()` 关窗清理、私有静态 `draw_widget()` 集中式前序 DFS 递归绘制 |
 | `Context` | 引擎共享上下文：`mark_dirty`/`widget_dirty`/`anim_inc`/`anim_dec`/`widget_tree_changed` 回调、Mouse/Keyboard 弱引用、`tree_mutex`（指向 `TreeManager::mutex_`）、`root`（弱引用根 Widget）、`ColorScheme`、`native_handle` |
 | `TreeManager` | Widget 树管理：root/focus 原子指针（`std::atomic<shared_ptr<Widget>>`）、ID→Widget 映射、index→Widget 映射、`next_focus`/`prev_focus` 焦点导航。`register_widget()` 分配 z_index 和路径并调用 `build()`。`std::shared_mutex` 线程安全 |
 | `HitTester` | 命中测试器：递归反向遍历子节点（z 顺序），返回 `std::optional<std::shared_ptr<widget::Widget>>`（顶层命中的 Widget），持有 `TreeManager&` 引用，遍历持 `shared_lock` 读锁 |
@@ -83,7 +81,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 **全局消息流**：
 
 ```
-WM_* → Platform::translate_event() → MsgPump::push_msg()
+WM_* → Win32::handle_message() → translate_event() → MsgPump::push_msg()
   → MsgPump::msg_loop() → EventRouter::dispatch()
     → std::visit → handle_input / handle_resize / handle_dpi_change / handle_theme_change / handle_destroy
       → HitTester::hit_test() → Widget::input() / RenderScheduler::set_pending_size / Context::scheme 更新 / Engine::clear() → TreeManager::clear()
@@ -95,7 +93,7 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
 
 ### 6. Widget 系统 (`neko::widget`)
 
-- **Widget** 基类：虚方法 `layout(Vec4I, Context&)`、`draw(Vec4I, Context&, Backend&) -> Rect`、`build(Context&)`、`event(Context&)`、`input(Context&, Event)`、`hit_test(Mouse) -> bool`。Protected 成员：`bounds`（`Vec4I`）、`isFocus`（`std::atomic_bool`）、`isDirty`（`std::atomic_bool`）、`context_`、`set_bounds()`。私有成员：`children_`（`MutableWidget`，变体存储 `shared_ptr<Widget>`）、`z_index_`、`id_`、`path_`
+- **Widget** 基类：虚方法 `layout(Vec4I, Context&)`、`draw(Vec4I, Context&, backend::DirectX11&) -> Rect`、`build(Context&)`、`event(Context&)`、`input(Context&, Event)`、`hit_test(Mouse) -> bool`。Protected 成员：`bounds`（`Vec4I`）、`isFocus`（`std::atomic_bool`）、`isDirty`（`std::atomic_bool`）、`context_`、`set_bounds()`。私有成员：`children_`（`MutableWidget`，变体存储 `shared_ptr<Widget>`）、`z_index_`、`id_`、`path_`
   - **Builder API**：`build<T>(Args...) -> T&`（创建子 Widget 并链式配置）、`children(fn)`（lambda 作用域批量创建子节点）、`parent()`（获取父 Widget）
   - **build\<T\> 内部流程**（`Widget.hpp`）：`make_shared` 创建子控件 → 设 `parent_` → 插入 `children_` 前取 `std::unique_lock(tree_mutex)`（children_ 突变与渲染线程 layout/draw 遍历互斥，context_/tree_mutex 判空）→ `std::visit` 按当前变体插入 `children_`（monostate → 存为单子；shared_ptr 变体 → 升级为 list；list/vector → `emplace_back`）→ 调用 `context_->widget_tree_changed()`（→ `Engine::schedule_rebuild` 置标志，帧首合并重建）→ 返回 `T&` 供链式配置。**限制**：自定义 Widget 的 `build(Context&)`（在 register_widget 锁内调用）中禁止调用 `build<T>()`（同线程重锁死锁）
   - `children_` 为 `shared_ptr` 强持有，`build<T>` 返回的引用不悬垂（曾因 `weak_ptr` 无强持有者导致子控件创建后立即销毁）
@@ -129,19 +127,17 @@ WM_* → Platform::translate_event() → MsgPump::push_msg()
 
 | 模式 | 使用位置 |
 | --- | --- |
-| 策略模式 | `Backend` 抽象基类 + `DirectX11` 具体实现 |
-| 模板方法 | `Platform` 基类 + `Win32` 具体实现 |
-| 单例模式 | `Platform::instance()`、`viewing_conditions()` 缓存单例 |
+| 单例模式 | `viewing_conditions()` 缓存单例（HCT 引擎） |
 | 组合模式 | Widget 树形结构与子节点（`MutableWidget` 变体容器） |
 | 观察者模式 | `InvalidationTracker` 脏标记 + `AnimationBase` 动画跟踪 + `ValueState` 绑定 |
 | 代理模式 | `MsgPump` 作为线程安全事件代理 |
-| 工厂方法 | `Engine::set_root_widget<T>()`、`register_platform<T>()`、`ColorScheme::light/dark` |
+| 工厂方法 | `Engine::set_root_widget<T>()`、`ColorScheme::light/dark` |
 | 访问者模式 | `WidgetVisitor::visit_children` 统一分发 `MutableWidget` 四种变体 |
 
 ## Source Tree
 
 ```
-NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGENTS.md, .clang-format, README.md）
+NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .clang-format, README.md）
 ├── tools/
 │   └── color-picker/
 │       ├── index.html                     # HCT 颜色选取/调试工具入口（零依赖，算法与 ColorScheme.cpp 同源）
@@ -155,10 +151,9 @@ NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGE
         ├── NekoUI.hpp                     # 主包含头文件（转发 Engine.hpp）
         ├── Type.hpp                       # 核心类型：Vec2/3/4<T>（union xyzw/rgba）、Color（uint32 RGBA）、Handle（void*）
         ├── Backend/
-        │   ├── Backend.hpp                # 渲染后端抽象基类（策略模式）
         │   ├── stb_truetype.h             # 嵌入式字体光栅化（gitignored — 不跟踪，删除后无法从 git 恢复）
         │   └── DirectX11/
-        │       ├── DirectX11.hpp          # D3D11 实现头文件（设备/交换链/着色器/字体图集/CJK 字形/TextCB）
+        │       ├── DirectX11.hpp          # D3D11 唯一渲染实现头文件（设备/交换链/着色器/字体图集/CJK 字形/TextCB）
         │       └── DirectX11.cpp          # D3D11 完整实现
         ├── Component/
         │   ├── ValueState.hpp             # 响应式值封装 + 脏标记绑定
@@ -188,7 +183,6 @@ NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGE
         │   └── WidgetVisitor.hpp          # Widget 子节点遍历模板（visit_children，统一四种变体分发）
         ├── Platform/
         │   ├── Event.hpp                  # 事件类型（variant：9 种事件 + Overloaded 工具）
-        │   ├── Platform.hpp               # 平台基类（单例，含 IME / 11 窗口操作接口）
         │   └── Win32/
         │       ├── Win32.hpp              # Win32 平台实现声明（TSF IME 状态 + 主题缓存）
         │       └── Win32.cpp              # WM_* → Event 翻译 + 注册表主题检测
@@ -299,7 +293,7 @@ NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGE
 
 - `.hpp` 头文件 + `.cpp` 实现文件
 - 目录按功能域组织（`Backend/`、`Engine/`、`Platform/`、`Widget/`、`Component/`、`Device/`、`Style/`）
-- Include 路径使用相对路径（`../Type.hpp`、`../Backend/Backend.hpp`）
+- Include 路径使用相对路径（`../Type.hpp`、`../../Backend/DirectX11/DirectX11.hpp`）
 
 ## Dependencies
 
@@ -318,10 +312,11 @@ NekoUI/                                    ← 项目根（.slnx, CLAUDE.md, AGE
 ## Current Status
 
 - **草稿状态** — 核心架构已建立，渲染和交互链路可运行
-- **已实现**：跨平台渲染后端抽象（D3D11 实现）、HCT Material You 色彩引擎（sRGB→XYZ→CAM16→HCT 完整管线 + 6 组色调色板）、平台抽象（IME TSF / 11 窗口操作 / 注册表主题检测 + 强调色）、响应式 Widget 树（含焦点导航）、Widget Builder API（`build<T>()` / `children()`）、编译期 style mixin 继承（零运行时开销）、12 种速率曲线动画引擎、线程安全事件传递、系统主题变化检测与传递（Light/Dark + AccentColor）、全部核心 Widget（Button/Center/Column/Row）已实现绘制和交互、控件树 `shared_ptr` 所有权（子控件强持有）、rebuild 帧首合并（消除 build<T> 自死锁与 O(n²) 重建风暴）、布局 + 前序 DFS 递归绘制驱动、动画接线（anim_inc 唤醒 + 16ms 节拍）、Button hover 视觉态与 200ms 缩放动画、hover 离开清除（EventRouter `last_mouse_target_` 向旧目标补派 MouseMove）、关窗线程安全（RenderScheduler::stop join 渲染线程，self-id 守卫）、树结构并发加锁（build\<T\> unique_lock / render_frame shared_lock）、HCT 数学偏差修正、Button 构造参数 const 化与 draw_widget 静态化
+- **已实现**：DirectX11 渲染后端、HCT Material You 色彩引擎（sRGB→XYZ→CAM16→HCT 完整管线 + 6 组色调色板）、Win32 平台实现（IME TSF / 11 窗口操作 / 注册表主题检测 + 强调色）、响应式 Widget 树（含焦点导航）、Widget Builder API（`build<T>()` / `children()`）、编译期 style mixin 继承（零运行时开销）、12 种速率曲线动画引擎、线程安全事件传递、系统主题变化检测与传递（Light/Dark + AccentColor）、全部核心 Widget（Button/Center/Column/Row）已实现绘制和交互、控件树 `shared_ptr` 所有权（子控件强持有）、rebuild 帧首合并（消除 build<T> 自死锁与 O(n²) 重建风暴）、布局 + 前序 DFS 递归绘制驱动、动画接线（anim_inc 唤醒 + 16ms 节拍）、Button hover 视觉态与 200ms 缩放动画、hover 离开清除（EventRouter `last_mouse_target_` 向旧目标补派 MouseMove）、关窗线程安全（RenderScheduler::stop join 渲染线程，self-id 守卫）、树结构并发加锁（build\<T\> unique_lock / render_frame shared_lock）、HCT 数学偏差修正、Button 构造参数 const 化与 draw_widget 静态化
 - **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）四个独立组件（`Renderer` 已删除，渲染驱动并入 `Engine::render_frame`），贯彻单一职责原则
 - **样式系统重构（已完成）**：移除运行时 `StyleSheet` hashmap 样式表和 `Stylable` CRTP，替换为编译期 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），零运行时开销，无字符串查找。Widget 通过多重继承选择所需 mixin，`class_name_` 和 `style()` 链式调用一并移除
 - **布局下放（已完成）**：布局计算曾从 Engine 集中式 Renderer 下放到各 Widget——Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算，`horizontal_` 成员从 Widget 基类移除。`Engine::render_frame` 每帧调用 `root->layout({0,0,w,h})`（草稿期每帧全量布局）驱动布局阶段
+- **抽象层砍除（已完成）**：按 YAGNI 移除 `neko::platform` 平台抽象层（基类/单例/工厂注册宏）与 `neko::backend` 渲染抽象层（策略基类），`Win32` 与 `DirectX11` 成为直接实现（无基类、无 override），`handle_message` 改非静态成员方法；初始主题推送从 Engine 构造移至 main.cpp（`win32->query_theme()` 经 MsgPump push）；`Widget::draw` 签名改 `backend::DirectX11&`（Widget.hpp 前置声明避免 D3D11 头渗透）；净减 321 行；顺带修复 Engine 构造 use-after-move 潜在 bug 与 DirectX11 Rule of Five
 - **工具（已完成）**：`tools/color-picker/`（index.html + style.css + app.js，零依赖 file:// 即用）HCT 颜色选取/调试工具（直角扁平化 UI，两栏布局：左栏 Seed 颜色+导出 C++、右栏 47 角色表）——seed 输入（取色器 + hex 文本框 + 随机按钮 + 常用颜色列表）+ 6 组色调色带（tone 5..95）+ 47 角色 ColorScheme 表（色块展示，名称/值居中，hover 富提示框显示五色值 RGB/HSL/HSV/CMYK/VEC4）+ 手动 Light/Dark 主题切换（分段滑块动画，初始跟随系统，页面主题色由 scheme() 角色派生）+ 自定义右键菜单（选色器入口/复制颜色格式子菜单）+ 控件配色参考覆盖层 + 导出 ColorScheme 角色字典（名称 → 0xAARRGGBB 两段）；JS 引擎与 ColorScheme.cpp 同源（MCU 0.13.0 对齐）
 - **未实现**：无可运行的测试、无裁剪/溢出处理、无 margin/padding 支持、无最小/最大尺寸约束、无 Wrap/基线对齐等高级布局特性
 - **主题色获取**：使用注册表 `HKCU\...\Windows\DWM\AccentColor`（ABGR → RGBA 转换），不再使用已过时的 `DwmGetColorizationColor`

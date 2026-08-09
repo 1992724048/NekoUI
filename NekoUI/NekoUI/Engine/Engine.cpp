@@ -13,10 +13,11 @@
 #include <cmath>
 #include <optional>
 
+#include "../Backend/DirectX11/DirectX11.hpp"
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {
-    Engine::Engine(std::unique_ptr<backend::Backend> backend) :
+    Engine::Engine(std::unique_ptr<backend::DirectX11> backend) :
         backend{std::move(backend)},
         native_handle_(this->backend->get_native_handle()) {
         context = std::make_unique<Context>();
@@ -46,9 +47,8 @@ namespace neko::engine {
         context->native_handle = native_handle_;
 
         render_scheduler_ = std::make_shared<RenderScheduler>(std::bind(&Engine::render_frame, this), invalidation_);
-        event_router_ = std::make_unique<EventRouter>(tree_manager_, hit_tester_, *mouse, *keyboard, *context, *backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
+        event_router_ = std::make_unique<EventRouter>(tree_manager_, hit_tester_, *mouse, *keyboard, *context, *this->backend, render_scheduler_, std::bind(&Engine::clear, this), invalidation_);
         msg_pump_ = std::make_shared<MsgPump>(std::bind(&EventRouter::dispatch, event_router_.get(), std::placeholders::_1));
-        msg_pump_->push_msg(platform::Platform::instance().query_theme());
     }
 
     Engine::~Engine() {
@@ -136,7 +136,7 @@ namespace neko::engine {
         invalidation_.clear();
     }
 
-    auto Engine::draw_widget(widget::Widget& w, Context& context, backend::Backend& backend) -> void {
+    auto Engine::draw_widget(widget::Widget& w, Context& context, backend::DirectX11& backend) -> void {
         w.draw(w.get_bounds(), context, backend);
         visit_children(w,
                        [&](const std::shared_ptr<widget::Widget>& child) -> void {

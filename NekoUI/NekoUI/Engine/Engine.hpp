@@ -16,15 +16,18 @@
 
 #include "../Type.hpp"
 
-#include "../Backend/Backend.hpp"
 #include "../Widget/Widget.hpp"
+
+namespace neko::backend {
+    class DirectX11;
+}
 
 namespace neko::engine {
     using namespace neko::type;
 
     class Engine final {
     public:
-        explicit Engine(std::unique_ptr<backend::Backend> backend);
+        explicit Engine(std::unique_ptr<backend::DirectX11> backend);
         ~Engine();
 
         Engine(const Engine&) = delete;
@@ -51,13 +54,13 @@ namespace neko::engine {
         [[nodiscard]] auto get_context() const -> Context&;
     private:
         std::unique_ptr<Context> context{};
-        std::unique_ptr<backend::Backend> backend{};
+        std::unique_ptr<backend::DirectX11> backend{};
         Handle native_handle_{};
         std::shared_ptr<device::Mouse> mouse;
         std::shared_ptr<device::Keyboard> keyboard;
 
         auto render_frame() -> void;
-        static auto draw_widget(widget::Widget& w, Context& context, backend::Backend& backend) -> void;
+        static auto draw_widget(widget::Widget& w, Context& context, backend::DirectX11& backend) -> void;
 
         InvalidationTracker invalidation_;
         TreeManager tree_manager_;

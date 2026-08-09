@@ -11,27 +11,34 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "../Backend.hpp"
+#include "../../Type.hpp"
 #include "../stb_truetype.h"
 
 namespace neko::backend {
-    class DirectX11 final : public Backend {
+    using namespace neko::type;
+
+    class DirectX11 final {
     public:
         explicit DirectX11(HWND hwnd);
-        ~DirectX11() override;
+        ~DirectX11();
 
-        auto resize(Vec2I new_size) -> void override;
-        auto set_dpi(unsigned int dpi) -> void override;
-        [[nodiscard]] auto get_dpi_scale() const -> float override;
-        auto begin() const -> void override;
-        auto end() const -> void override;
-        auto draw_rect_fill(Vec4I rect, Color color) const -> void override;
-        auto draw_rect(Vec4I rect, Color color, int thickness) const -> void override;
-        auto draw_line(Vec2I from, Vec2I to, Color color, int thickness) const -> void override;
-        auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void override;
-        auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void override;
+        DirectX11(const DirectX11&) = delete;
+        auto operator=(const DirectX11&) -> DirectX11& = delete;
+        DirectX11(DirectX11&&) = delete;
+        auto operator=(DirectX11&&) -> DirectX11& = delete;
 
-        [[nodiscard]] auto get_native_handle() const -> Handle override {
+        auto resize(Vec2I new_size) -> void;
+        auto set_dpi(unsigned int dpi) -> void;
+        [[nodiscard]] auto get_dpi_scale() const -> float;
+        auto begin() const -> void;
+        auto end() const -> void;
+        auto draw_rect_fill(Vec4I rect, Color color) const -> void;
+        auto draw_rect(Vec4I rect, Color color, int thickness) const -> void;
+        auto draw_line(Vec2I from, Vec2I to, Color color, int thickness) const -> void;
+        auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void;
+        auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void;
+
+        [[nodiscard]] auto get_native_handle() const -> Handle {
             return hwnd_;
         }
     private:

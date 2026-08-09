@@ -32,8 +32,6 @@ namespace {
 }
 
 namespace neko::platform {
-    NEKO_REGISTER_PLATFORM(Win32)
-
     Win32::Win32() {
         cached_theme_ = ::query_theme();
     }
@@ -51,7 +49,7 @@ namespace neko::platform {
         }
     }
 
-    auto Win32::translate_event(const NativeMessage& nm) const -> std::optional<Event> {
+    auto Win32::translate_event(const NativeMessage& nm) -> std::optional<Event> {
         const UINT msg = nm.msg;
         const WPARAM wparam = nm.wparam;
         const LPARAM lparam = nm.lparam;
@@ -101,11 +99,11 @@ namespace neko::platform {
         }
     }
 
-    auto Win32::query_theme() const -> ThemeChangedEvent {
+    auto Win32::query_theme() -> ThemeChangedEvent {
         return cached_theme_;
     }
 
-    auto Win32::activate_ime(type::Handle native_window, const bool active) const -> bool {
+    auto Win32::activate_ime(type::Handle native_window, const bool active) -> bool {
         init_ime();
         if (ime_thread_mgr_ == nullptr || ime_doc_mgr_ == nullptr) {
             return false;
@@ -115,47 +113,47 @@ namespace neko::platform {
         return true;
     }
 
-    auto Win32::show_window(const type::Handle native_window) const -> void {
+    auto Win32::show_window(const type::Handle native_window) -> void {
         ShowWindow(static_cast<HWND>(native_window), SW_SHOW);
     }
 
-    auto Win32::hide_window(const type::Handle native_window) const -> void {
+    auto Win32::hide_window(const type::Handle native_window) -> void {
         ShowWindow(static_cast<HWND>(native_window), SW_HIDE);
     }
 
-    auto Win32::close_window(const type::Handle native_window) const -> void {
+    auto Win32::close_window(const type::Handle native_window) -> void {
         PostMessageW(static_cast<HWND>(native_window), WM_CLOSE, 0, 0);
     }
 
-    auto Win32::maximize_window(const type::Handle native_window) const -> void {
+    auto Win32::maximize_window(const type::Handle native_window) -> void {
         ShowWindow(static_cast<HWND>(native_window), SW_MAXIMIZE);
     }
 
-    auto Win32::minimize_window(const type::Handle native_window) const -> void {
+    auto Win32::minimize_window(const type::Handle native_window) -> void {
         ShowWindow(static_cast<HWND>(native_window), SW_MINIMIZE);
     }
 
-    auto Win32::restore_window(const type::Handle native_window) const -> void {
+    auto Win32::restore_window(const type::Handle native_window) -> void {
         ShowWindow(static_cast<HWND>(native_window), SW_RESTORE);
     }
 
-    auto Win32::destroy_window(const type::Handle native_window) const -> void {
+    auto Win32::destroy_window(const type::Handle native_window) -> void {
         DestroyWindow(static_cast<HWND>(native_window));
     }
 
-    auto Win32::move_window(const type::Handle native_window, const int x, const int y) const -> void {
+    auto Win32::move_window(const type::Handle native_window, const int x, const int y) -> void {
         SetWindowPos(static_cast<HWND>(native_window), nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 
-    auto Win32::resize_window(const type::Handle native_window, const int width, const int height) const -> void {
+    auto Win32::resize_window(const type::Handle native_window, const int width, const int height) -> void {
         SetWindowPos(static_cast<HWND>(native_window), nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
     }
 
-    auto Win32::set_focus(const type::Handle native_window) const -> void {
+    auto Win32::set_focus(const type::Handle native_window) -> void {
         SetFocus(static_cast<HWND>(native_window));
     }
 
-    auto Win32::set_opacity(const type::Handle native_window, const float opacity) const -> void {
+    auto Win32::set_opacity(const type::Handle native_window, const float opacity) -> void {
         const auto hwnd = static_cast<HWND>(native_window);
         const auto ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
         SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED);
@@ -163,7 +161,7 @@ namespace neko::platform {
         SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA);
     }
 
-    auto Win32::init_ime() const -> void {
+    auto Win32::init_ime() -> void {
         if (ime_initialized_) {
             return;
         }

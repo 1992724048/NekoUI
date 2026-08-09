@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 
-#include "../Platform/Platform.hpp"
+#include "../Platform/Event.hpp"
 
 namespace neko::engine {
     class TreeManager;
@@ -19,7 +19,7 @@ namespace neko::device {
 }
 
 namespace neko::backend {
-    class Backend;
+    class DirectX11;
 }
 
 namespace neko::widget {
@@ -34,7 +34,7 @@ namespace neko::engine {
                     device::Mouse& mouse,
                     device::Keyboard& keyboard,
                     Context& context,
-                    backend::Backend& backend,
+                    backend::DirectX11& backend,
                     const std::shared_ptr<RenderScheduler>& scheduler,
                     std::function<void()> destroy_handler,
                     InvalidationTracker& invalidation);
@@ -52,7 +52,7 @@ namespace neko::engine {
         device::Mouse& mouse_;
         device::Keyboard& keyboard_;
         Context& context_;
-        backend::Backend& backend_;
+        backend::DirectX11& backend_;
         std::weak_ptr<RenderScheduler> scheduler_;
         std::function<void()> destroy_handler_;
         InvalidationTracker& invalidation_;

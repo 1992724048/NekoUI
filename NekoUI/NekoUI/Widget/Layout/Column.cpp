@@ -2,7 +2,7 @@
 
 #include <limits>
 
-#include "../../Backend/Backend.hpp"
+#include "../../Backend/DirectX11/DirectX11.hpp"
 #include "../../Device/Mouse.hpp"
 #include "../../Engine/WidgetVisitor.hpp"
 
@@ -27,7 +27,7 @@ namespace neko::widget {
                                });
     }
 
-    auto Column::draw(Vec4I /*rect*/, engine::Context& context, backend::Backend& backend) -> Rect {
+    auto Column::draw(Vec4I /*rect*/, engine::Context& context, backend::DirectX11& backend) -> Rect {
         auto bg = background_.color.value != 0 ? background_ : style::Background{context.scheme.surface};
         if (bg.color.value != 0) {
             backend.draw_rect_fill(bounds, bg.color);

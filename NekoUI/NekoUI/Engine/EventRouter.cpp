@@ -6,7 +6,7 @@
 #include "RenderScheduler.hpp"
 #include "TreeManager.hpp"
 
-#include "../Backend/Backend.hpp"
+#include "../Backend/DirectX11/DirectX11.hpp"
 #include "../Style/ColorScheme.hpp"
 #include "../Widget/Widget.hpp"
 
@@ -16,7 +16,7 @@ namespace neko::engine {
                              device::Mouse& mouse,
                              device::Keyboard& keyboard,
                              Context& context,
-                             backend::Backend& backend,
+                             backend::DirectX11& backend,
                              const std::shared_ptr<RenderScheduler>& scheduler,
                              std::function<void()> destroy_handler,
                              InvalidationTracker& invalidation) :

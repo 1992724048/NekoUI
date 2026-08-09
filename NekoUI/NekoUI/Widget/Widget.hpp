@@ -13,13 +13,16 @@
 #include "../Type.hpp"
 
 #include <concepts>
-#include "../Backend/Backend.hpp"
 #include "../Engine/Context.hpp"
 #include "../Engine/MutableWidget.hpp"
 #include "../Platform/Event.hpp"
 
 namespace neko::engine {
     class TreeManager;
+}
+
+namespace neko::backend {
+    class DirectX11;
 }
 
 namespace neko::widget {
@@ -42,7 +45,7 @@ namespace neko::widget {
             set_bounds(available);
         }
 
-        virtual auto draw(Vec4I rect, engine::Context& context, backend::Backend& backend) -> Rect {
+        virtual auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect {
             return {};
         }
 

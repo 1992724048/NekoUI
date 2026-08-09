@@ -5,7 +5,7 @@
 #include <limits>
 #include <utility>
 
-#include "../../Backend/Backend.hpp"
+#include "../../Backend/DirectX11/DirectX11.hpp"
 #include "../../Device/Mouse.hpp"
 #include "../../Platform/Event.hpp"
 
@@ -26,7 +26,7 @@ namespace neko::widget {
         set_bounds(effective);
     }
 
-    auto Button::draw(Vec4I /*rect*/, engine::Context& context, backend::Backend& backend) -> Rect {
+    auto Button::draw(Vec4I /*rect*/, engine::Context& context, backend::DirectX11& backend) -> Rect {
         const auto bg = background_.color.value != 0 ? background_ : style::Background{hover_ ? context.scheme.secondary_container : context.scheme.primary};
         const auto tc = text_color_.value != 0 ? text_color_ : Color{0xFFFFFFFF};
 

@@ -10,14 +10,10 @@
 #include "MutableWidget.hpp"
 
 #include "../Type.hpp"
-#include "../Platform/Platform.hpp"
+#include "../Platform/Event.hpp"
 
 namespace neko::device {
     struct Mouse;
-}
-
-namespace neko::backend {
-    class Backend;
 }
 
 namespace neko::widget {

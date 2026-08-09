@@ -17,6 +17,7 @@ using namespace neko::type;
 namespace {
     std::unique_ptr<neko::engine::Engine> engine;
     std::weak_ptr<neko::engine::MsgPump> msg_pump;
+    std::unique_ptr<neko::platform::Win32> win32;
 }
 
 namespace {
@@ -34,8 +35,8 @@ namespace {
                 break;
         }
 
-        if (engine) {
-            neko::platform::Win32::handle_message(msg, wparam, lparam, msg_pump);
+        if (engine && win32) {
+            win32->handle_message(msg, wparam, lparam, msg_pump);
         }
 
         return DefWindowProcW(hwnd, msg, wparam, lparam);
@@ -57,6 +58,8 @@ auto main(int argc, char* argv[]) -> int try {
         return 0;
     }
 
+    win32 = std::make_unique<neko::platform::Win32>();
+
     HWND hwnd = CreateWindowW(class_name.data(), L"NekoUI", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, win_class.hInstance, nullptr);
     if (hwnd == nullptr) {
         std::println("Error {:#X}", GetLastError());
@@ -69,6 +72,9 @@ auto main(int argc, char* argv[]) -> int try {
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
     msg_pump = engine->get_msg_pump();
+    if (const auto pump = msg_pump.lock()) {
+        pump->push_msg(win32->query_theme());
+    }
 
     const auto page = engine->set_root_widget<neko::widget::Column>();
 

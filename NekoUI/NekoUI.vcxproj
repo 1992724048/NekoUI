@@ -236,7 +236,6 @@
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NekoUI\Backend\Backend.hpp" />
     <ClInclude Include="NekoUI\Backend\DirectX11\DirectX11.hpp" />
     <ClInclude Include="NekoUI\Backend\stb_truetype.h" />
     <ClInclude Include="NekoUI\Component\ValueState.hpp" />
@@ -253,7 +252,6 @@
     <ClInclude Include="NekoUI\Engine\WidgetVisitor.hpp" />
     <ClInclude Include="NekoUI\Engine\RenderScheduler.hpp" />
     <ClInclude Include="NekoUI\Engine\MsgPump.hpp" />
-    <ClInclude Include="NekoUI\Platform\Platform.hpp" />
     <ClInclude Include="NekoUI\Style\ColorScheme.hpp" />
     <ClInclude Include="NekoUI\Style\CSS.hpp" />
     <ClInclude Include="NekoUI\Type.hpp" />
