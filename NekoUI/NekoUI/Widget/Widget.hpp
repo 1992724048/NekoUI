@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <memory>
 #include <mutex>
 #include <string_view>
 #include <type_traits>
@@ -17,6 +18,11 @@
 #include "../Engine/MutableWidget.hpp"
 #include "../Engine/TreeManager.hpp"
 #include "../Platform/Event.hpp"
+
+#include "Behavior/LayoutBehavior.hpp"
+#include "Behavior/DrawBehavior.hpp"
+#include "Behavior/InputBehavior.hpp"
+#include "Behavior/HitTestBehavior.hpp"
 
 namespace neko::engine {
     class TreeManager;
@@ -42,19 +48,48 @@ namespace neko::widget {
 
         [[nodiscard]] auto parent() const -> Widget*;
 
-        virtual auto layout(const Vec4I available, engine::Context& /*context*/) -> void {
-            set_bounds(available);
+        template<typename B, typename... Args>
+        auto add_behavior(Args&&... args) -> B& {
+            static_assert(std::derived_from<B, Behavior>, "B 必须继承 Behavior");
+            auto behavior = std::make_unique<B>(*this, std::forward<Args>(args)...);
+            B& ref = *behavior;
+            behaviors_.push_back(std::move(behavior));
+            return ref;
+        }
+
+        virtual auto layout(Vec4I rect, engine::Context& context) -> void {
+            for (const auto& behavior : behaviors_) {
+                if (auto* layout = dynamic_cast<LayoutBehavior*>(behavior.get())) {
+                    layout->layout(rect, context);
+                    return;
+                }
+            }
         }
 
         virtual auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect {
+            for (const auto& behavior : behaviors_) {
+                if (auto* draw = dynamic_cast<DrawBehavior*>(behavior.get())) {
+                    return draw->draw(rect, context, backend);
+                }
+            }
             return {};
         }
 
-        virtual auto build(engine::Context& context) -> void {}
-        virtual auto event(engine::Context& context) -> void {}
-        virtual auto input(engine::Context& context, const platform::Event& event) -> void {}
+        virtual auto input(engine::Context& context, const platform::Event& event) -> void {
+            for (const auto& behavior : behaviors_) {
+                if (auto* input = dynamic_cast<InputBehavior*>(behavior.get())) {
+                    input->input(context, event);
+                    return;
+                }
+            }
+        }
 
         [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool {
+            for (const auto& behavior : behaviors_) {
+                if (const auto* hit = dynamic_cast<const HitTestBehavior*>(behavior.get())) {
+                    return hit->hit_test(mouse);
+                }
+            }
             return false;
         }
 
@@ -62,8 +97,21 @@ namespace neko::widget {
         [[nodiscard]] auto index() const -> int;
         [[nodiscard]] auto path() const -> const std::string&;
 
-        [[nodiscard]] auto get_bounds() const -> const Vec4I&;
-        auto set_bounds(Vec4I b) -> void;
+        [[nodiscard]] auto get_hovered() const -> bool {
+            return hovered_.load(std::memory_order_relaxed);
+        }
+
+        auto set_hovered(const bool hovered) -> void {
+            hovered_.store(hovered, std::memory_order_relaxed);
+        }
+
+        [[nodiscard]] auto get_bounds() const -> Vec4I {
+            return bounds;
+        }
+
+        auto set_bounds(const Vec4I rect) -> void {
+            bounds = rect;
+        }
 
         [[nodiscard]] auto get_children() -> engine::MutableWidget& {
             return children_;
@@ -80,6 +128,9 @@ namespace neko::widget {
 
         std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
+        std::atomic_bool hovered_{false};
+
+        std::vector<std::unique_ptr<Behavior>> behaviors_;
     private:
         friend engine::TreeManager;
 

@@ -6,7 +6,7 @@
 #include "../../Platform/Event.hpp"
 
 namespace neko::engine {
-    class Context;
+    struct Context;
 }
 
 namespace neko::widget {

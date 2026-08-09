@@ -21,7 +21,7 @@ namespace neko::widget {
         auto y_offset = effective.y;
         engine::visit_children(*this,
                                [&](const std::shared_ptr<widget::Widget>& child) -> void {
-                                   child->layout({effective.x, y_offset, effective.z, effective.w}, context);
+                                   child->layout({.x = effective.x, .y = y_offset, .z = effective.z, .w = effective.w}, context);
                                    const auto& cb = child->get_bounds();
                                    y_offset += cb.w - cb.y;
                                });
@@ -34,10 +34,6 @@ namespace neko::widget {
         }
         return {.x = bounds.x, .y = bounds.y, .width = bounds.z - bounds.x, .height = bounds.w - bounds.y};
     }
-
-    auto Column::build(engine::Context& context) -> void {}
-
-    auto Column::event(engine::Context& context) -> void {}
 
     auto Column::input(engine::Context& context, const platform::Event& event) -> void {}
 

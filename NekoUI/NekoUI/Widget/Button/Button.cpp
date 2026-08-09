@@ -48,10 +48,6 @@ namespace neko::widget {
         return {.x = visual.x, .y = visual.y, .width = visual.z - visual.x, .height = visual.w - visual.y};
     }
 
-    auto Button::build(engine::Context& context) -> void {}
-
-    auto Button::event(engine::Context& context) -> void {}
-
     auto Button::input(engine::Context& context, const platform::Event& event) -> void {
         if (std::get_if<device::MouseMoveEvent>(&event) != nullptr) {
             const auto mouse = context.mouse.lock();

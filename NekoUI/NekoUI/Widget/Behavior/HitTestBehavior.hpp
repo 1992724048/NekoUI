@@ -4,7 +4,7 @@
 #include "Behavior.hpp"
 
 namespace neko::device {
-    class Mouse;
+    struct Mouse;
 }
 
 namespace neko::widget {

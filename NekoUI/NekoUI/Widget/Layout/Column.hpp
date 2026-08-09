@@ -11,8 +11,6 @@ namespace neko::widget {
 
         auto layout(Vec4I rect, engine::Context& context) -> void override;
         auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
-        auto build(engine::Context& context) -> void override;
-        auto event(engine::Context& context) -> void override;
         auto input(engine::Context& context, const platform::Event& event) -> void override;
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
     };

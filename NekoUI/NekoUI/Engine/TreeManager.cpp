@@ -59,12 +59,6 @@ namespace neko::engine {
         index_widgets_.clear();
     }
 
-    auto TreeManager::event(Context& context) const -> void {
-        for_each([&](widget::Widget& widget) -> void {
-            widget.event(context);
-        });
-    }
-
     auto TreeManager::input(Context& context, const platform::Event& event) const -> void {
         for_each([&](widget::Widget& widget) -> void {
             widget.input(context, event);
@@ -103,7 +97,5 @@ namespace neko::engine {
         if (!sp->id_.empty()) {
             id_widgets_[sp->id_] = sp;
         }
-
-        sp->build(context);
     }
 }

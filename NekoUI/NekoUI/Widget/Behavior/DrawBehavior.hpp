@@ -10,7 +10,7 @@ namespace neko::backend {
 }
 
 namespace neko::engine {
-    class Context;
+    struct Context;
 }
 
 namespace neko::widget {

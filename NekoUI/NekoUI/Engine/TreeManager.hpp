@@ -37,7 +37,6 @@ namespace neko::engine {
         auto prev_focus() -> std::weak_ptr<widget::Widget>;
 
         auto clear() -> void;
-        auto event(Context& context) const -> void;
         auto input(Context& context, const platform::Event& event) const -> void;
         auto for_each(const std::function<void(widget::Widget&)>& callback) const -> void;
 
