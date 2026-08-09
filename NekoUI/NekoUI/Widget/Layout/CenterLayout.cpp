@@ -4,14 +4,12 @@
 
 #include "../../Engine/WidgetVisitor.hpp"
 #include "../Widget.hpp"
-#include "Center.hpp"
 
 namespace neko::widget {
     auto CenterLayout::layout(const Vec4I available, engine::Context& context) -> void {
-        auto& center = static_cast<Center&>(owner_);
-        center.set_bounds(available);
+        owner_.set_bounds(available);
 
-        engine::visit_children(center,
+        engine::visit_children(owner_,
                                [&](const std::shared_ptr<Widget>& child) -> void {
                                    // First let child calculate its natural size
                                    child->layout(available, context);
