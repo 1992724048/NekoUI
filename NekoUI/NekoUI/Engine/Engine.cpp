@@ -57,10 +57,22 @@ namespace neko::engine {
         context->keyboard = keyboard;
         context->native_handle = native_handle_;
 
-        render_scheduler_ = std::make_shared<RenderScheduler>([this]() -> void { render_frame(); }, invalidation_);
-        event_router_ = std::make_shared<EventRouter>(tree_manager_, hit_tester_, mouse, keyboard, context, this->backend, render_scheduler_, [this]() -> void { clear(); }, invalidation_);
-        msg_pump_ = std::make_shared<MsgPump>([router = std::weak_ptr<EventRouter>{event_router_}](const platform::Event& event) -> void {
-            // 生命周期契约破坏时的安全网：EventRouter 已析构则丢弃该消息
+        render_scheduler_ = std::make_shared<RenderScheduler>([this]() -> void {
+                                                                  render_frame();
+                                                              },
+                                                              invalidation_);
+        event_router_ = std::make_shared<EventRouter>(tree_manager_,
+                                                      hit_tester_,
+                                                      mouse,
+                                                      keyboard,
+                                                      context,
+                                                      this->backend,
+                                                      render_scheduler_,
+                                                      [this]() -> void {
+                                                          clear();
+                                                      },
+                                                      invalidation_);
+        msg_pump_ = std::make_shared<MsgPump>([router = std::weak_ptr{event_router_}](const platform::Event& event) -> void {
             if (const auto locked = router.lock()) {
                 locked->dispatch(event);
             }
@@ -92,7 +104,7 @@ namespace neko::engine {
         return render_scheduler_;
     }
 
-    auto Engine::rebuild() -> void {
+    auto Engine::rebuild() const -> void {
         widget_builder_->build(*context);
         if (render_scheduler_) {
             render_scheduler_->request_frame();

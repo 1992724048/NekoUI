@@ -1,4 +1,6 @@
-﻿#include "Win32.hpp"
+﻿// 2026-08-10 06:01:49
+
+#include "Win32.hpp"
 #ifdef _WIN32
 #include <algorithm>
 #include <string_view>
@@ -37,10 +39,10 @@ namespace neko::platform {
     }
 
     Win32::~Win32() {
-        if (ime_doc_mgr_) {
+        if (ime_doc_mgr_ != nullptr) {
             ime_doc_mgr_->Release();
         }
-        if (ime_thread_mgr_) {
+        if (ime_thread_mgr_ != nullptr) {
             ime_thread_mgr_->Deactivate();
             ime_thread_mgr_->Release();
         }
@@ -99,7 +101,7 @@ namespace neko::platform {
         }
     }
 
-    auto Win32::query_theme() -> ThemeChangedEvent {
+    auto Win32::query_theme() const -> ThemeChangedEvent {
         return cached_theme_;
     }
 
@@ -154,7 +156,7 @@ namespace neko::platform {
     }
 
     auto Win32::set_opacity(const type::Handle native_window, const float opacity) -> void {
-        const auto hwnd = static_cast<HWND>(native_window);
+        auto* const hwnd = static_cast<HWND>(native_window);
         const auto ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
         SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED);
         const auto alpha = static_cast<BYTE>(std::clamp(opacity, 0.0F, 1.0F) * 255.0F);
@@ -168,7 +170,7 @@ namespace neko::platform {
         ime_initialized_ = true;
 
         const HRESULT com_hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-        ime_com_initialized_ = (com_hr == S_OK);
+        ime_com_initialized_ = com_hr == S_OK;
 
         if (FAILED(CoCreateInstance(CLSID_TF_ThreadMgr, nullptr, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, reinterpret_cast<void**>(&ime_thread_mgr_)))) {
             return;

@@ -11,7 +11,7 @@ namespace neko::style {
         Brightness brightness = Brightness::Light;
 
         type::Color primary{};
-        type::Color onPrimary{};
+        type::Color on_primary{};
         type::Color primary_container{};
         type::Color on_primary_container{};
         type::Color primary_fixed{};

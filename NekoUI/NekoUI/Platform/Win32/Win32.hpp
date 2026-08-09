@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifdef _WIN32
 #include <Windows.h>
 #include <memory>
@@ -20,19 +20,19 @@ namespace neko::platform {
         Win32();
         ~Win32();
         [[nodiscard]] auto translate_event(const NativeMessage& nm) -> std::optional<Event>;
-        [[nodiscard]] auto query_theme() -> ThemeChangedEvent;
+        [[nodiscard]] auto query_theme() const -> ThemeChangedEvent;
         [[nodiscard]] auto activate_ime(type::Handle native_window, bool active) -> bool;
-        auto show_window(type::Handle native_window) -> void;
-        auto hide_window(type::Handle native_window) -> void;
-        auto close_window(type::Handle native_window) -> void;
-        auto maximize_window(type::Handle native_window) -> void;
-        auto minimize_window(type::Handle native_window) -> void;
-        auto restore_window(type::Handle native_window) -> void;
-        auto destroy_window(type::Handle native_window) -> void;
-        auto move_window(type::Handle native_window, int x, int y) -> void;
-        auto resize_window(type::Handle native_window, int width, int height) -> void;
-        auto set_focus(type::Handle native_window) -> void;
-        auto set_opacity(type::Handle native_window, float opacity) -> void;
+        static auto show_window(type::Handle native_window) -> void;
+        static auto hide_window(type::Handle native_window) -> void;
+        static auto close_window(type::Handle native_window) -> void;
+        static auto maximize_window(type::Handle native_window) -> void;
+        static auto minimize_window(type::Handle native_window) -> void;
+        static auto restore_window(type::Handle native_window) -> void;
+        static auto destroy_window(type::Handle native_window) -> void;
+        static auto move_window(type::Handle native_window, int x, int y) -> void;
+        static auto resize_window(type::Handle native_window, int width, int height) -> void;
+        static auto set_focus(type::Handle native_window) -> void;
+        static auto set_opacity(type::Handle native_window, float opacity) -> void;
     private:
         ThemeChangedEvent cached_theme_{};
         ITfThreadMgr* ime_thread_mgr_{};

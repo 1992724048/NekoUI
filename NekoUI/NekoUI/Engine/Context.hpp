@@ -15,9 +15,7 @@ namespace neko::widget {
 namespace neko::engine {
     class TreeManager;
 
-    // enable_shared_from_this：TreeManager 需要从 Context& 取得 shared_ptr 以填充 Widget::context_；
-    // 前提是 Context 由 Engine 以 shared_ptr 持有（否则 shared_from_this 抛 bad_weak_ptr）
-    struct Context : public std::enable_shared_from_this<Context> {
+    struct Context : std::enable_shared_from_this<Context> {
         std::function<void()> mark_dirty;
 
         std::function<void(std::weak_ptr<widget::Widget>)> widget_dirty;

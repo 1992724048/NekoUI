@@ -1,3 +1,5 @@
+﻿// 2026-08-10 06:01:10
+
 #include "RenderScheduler.hpp"
 #include "InvalidationTracker.hpp"
 
@@ -63,8 +65,7 @@ namespace neko::engine {
         std::unique_lock lock(render_mutex_);
         render_notify_.wait(lock,
                             [this, &invalidation] -> bool {
-                                return render_thread_.get_stop_token().stop_requested() || pending_.load(std::memory_order_relaxed) ||
-                                       (invalidation && invalidation->needs_frame());
+                                return render_thread_.get_stop_token().stop_requested() || pending_.load(std::memory_order_relaxed) || (invalidation && invalidation->needs_frame());
                             });
         pending_.store(false, std::memory_order_relaxed);
         return !render_thread_.get_stop_token().stop_requested();

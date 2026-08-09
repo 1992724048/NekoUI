@@ -48,18 +48,13 @@ namespace neko::engine {
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
-        auto rebuild() -> void;
+        auto rebuild() const -> void;
         auto schedule_rebuild() -> void;
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;
     private:
-        // 生命周期契约：Engine 拥有全部子系统（shared_ptr），观察者
-        // （EventRouter/HitTester/WidgetBuilder/RenderScheduler/MsgPump/Context/Widget）
-        // 持 weak_ptr；成员声明顺序仍保证观察者先于被观察者析构，
-        // weak_ptr 过期只是最后的运行时安全网（lock 失败必须安全降级，不得 UB）。
-        // 新增成员时保持此顺序。
-        std::shared_ptr<Context> context{};
-        std::shared_ptr<backend::DirectX11> backend{};
+        std::shared_ptr<Context> context;
+        std::shared_ptr<backend::DirectX11> backend;
         Handle native_handle_{};
         std::shared_ptr<device::Mouse> mouse;
         std::shared_ptr<device::Keyboard> keyboard;
@@ -67,13 +62,13 @@ namespace neko::engine {
         auto render_frame() -> void;
         static auto draw_widget(widget::Widget& w, Context& context, backend::DirectX11& backend) -> void;
 
-        std::shared_ptr<InvalidationTracker> invalidation_{};
-        std::shared_ptr<TreeManager> tree_manager_{};
-        std::shared_ptr<WidgetBuilder> widget_builder_{};
-        std::shared_ptr<HitTester> hit_tester_{};
-        std::shared_ptr<RenderScheduler> render_scheduler_{};
-        std::shared_ptr<MsgPump> msg_pump_{};
-        std::shared_ptr<EventRouter> event_router_{};
+        std::shared_ptr<InvalidationTracker> invalidation_;
+        std::shared_ptr<TreeManager> tree_manager_;
+        std::shared_ptr<WidgetBuilder> widget_builder_;
+        std::shared_ptr<HitTester> hit_tester_;
+        std::shared_ptr<RenderScheduler> render_scheduler_;
+        std::shared_ptr<MsgPump> msg_pump_;
+        std::shared_ptr<EventRouter> event_router_;
         std::atomic_bool tree_dirty_{false};
     };
 }
