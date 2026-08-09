@@ -18,7 +18,7 @@ namespace neko::widget {
     public:
         using OnClick = ButtonInput::OnClick;
 
-        Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr)
+        explicit Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr)
             : input_{add_behavior<ButtonInput>(context, std::move(onClick))} {
             add_behavior<ButtonLayout>(style_);
             add_behavior<ButtonDraw>(style_, context, std::move(text));
