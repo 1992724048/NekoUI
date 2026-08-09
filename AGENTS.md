@@ -100,9 +100,9 @@ WM_* → Win32::handle_message() → translate_event() → MsgPump::push_msg()
   - `children_` 为 `shared_ptr` 强持有，`build<T>` 返回的引用不悬垂（曾因 `weak_ptr` 无强持有者导致子控件创建后立即销毁）
   - **Style Mixin 继承**：Widget 通过继承 `style::BackgroundStyle`、`style::SizeStyle`、`style::BorderStyle`、`style::TextStyle` 等 mixin 结构体获得样式属性，零运行时开销
 - **Button**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`、`BorderStyle`、`TextStyle`（四 mixin）。**行为组装零 override**：构造时 `add_behavior` 组装——`ButtonLayout`（SizeStyle 回退 → 固定尺寸/父尺寸）、`ButtonDraw`（Style 回退 → 背景 hover 时 `scheme.secondary_container` 否则 `scheme.primary`/边框/文字居中；持 `scale_` 缩放动画，draw 内 hovered_ 边沿检测驱动 `to_value(1.06F/1.0F)` + tick）、`ButtonInput`（hover 检测写 `set_hovered` + `mark_dirty`，左键按下且命中 → 回调；不触碰动画）、`ButtonHitTest`（`Mouse::is_inside`）。构造函数 `Button(const Context&, text="", onClick=nullptr)`，链式 setter `on_click()`（经 `ButtonInput& input_` 引用委托）。动画 `component::Animation<float> scale_{1.0F, 200}`（构造时 `scale_.bind(context.anim_inc, context.anim_dec)`）
-- **Column**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，垂直布局容器。实现 `layout`（垂直栈式布局子 Widget，经 `visit_children` 遍历）和 `draw`（仅背景绘制，不遍历子节点）、`build`/`event`/`input`/`hit_test`
-- **Row**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，水平布局容器。实现 `layout`（水平栈式布局子 Widget）和 `draw`（背景绘制）、`hit_test`
-- **Center**：继承 `Widget` + `BackgroundStyle`，居中布局容器。实现 `draw`（ColorScheme 回退 → 背景绘制）、`layout`（计算子 Widget 自然尺寸后居中放置）、`hit_test`
+- **Column**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，垂直布局容器。**行为组装零 override**：`ColumnLayout`（垂直栈式布局子 Widget，经 `visit_children` 遍历）、`ColumnDraw`（仅背景绘制，不遍历子节点）、`ColumnHitTest`
+- **Row**：继承 `Widget` + `BackgroundStyle`、`SizeStyle`，水平布局容器。**行为组装零 override**：`RowLayout`（水平栈式布局子 Widget）、`RowDraw`（背景绘制）、`RowHitTest`
+- **Center**：继承 `Widget` + `BackgroundStyle`，居中布局容器。**行为组装零 override**：`CenterLayout`（计算子 Widget 自然尺寸后居中放置）、`CenterDraw`（ColorScheme 回退 → 背景绘制）、`CenterHitTest`
 
 ### 7. 样式系统 (`neko::style`)
 
@@ -207,12 +207,18 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
             │   ├── ButtonInput.hpp/.cpp   # 输入行为：hover 状态更新 + 点击回调
             │   └── ButtonHitTest.hpp/.cpp # 命中行为：bounds 判定
             └── Layout/
-                ├── Center.hpp             # Center 布局声明（继承 Widget + Style Mixins）
-                ├── Center.cpp             # Center 实现：背景绘制 + 子 Widget 居中
-                ├── Column.hpp             # Column 垂直布局声明（继承 Widget + Style Mixins）
-                ├── Column.cpp             # Column 实现：背景绘制
-                ├── Row.hpp                # Row 水平布局声明（继承 Widget + Style Mixins）
-                └── Row.cpp                # Row 实现：背景绘制
+                ├── Center.hpp             # Center 声明（行为组装零 override）
+                ├── CenterLayout.hpp/.cpp  # 布局行为：子自然尺寸 + 居中放置
+                ├── CenterDraw.hpp/.cpp    # 绘制行为：背景绘制（ColorScheme 回退）
+                ├── CenterHitTest.hpp/.cpp # 命中行为
+                ├── Column.hpp             # Column 声明（行为组装零 override）
+                ├── ColumnLayout.hpp/.cpp  # 布局行为：垂直栈式布局
+                ├── ColumnDraw.hpp/.cpp    # 绘制行为：背景绘制
+                ├── ColumnHitTest.hpp/.cpp # 命中行为
+                ├── Row.hpp                # Row 声明（行为组装零 override）
+                ├── RowLayout.hpp/.cpp     # 布局行为：水平栈式布局
+                ├── RowDraw.hpp/.cpp       # 绘制行为：背景绘制
+                └── RowHitTest.hpp/.cpp    # 命中行为
 ```
 
 ## Build
@@ -326,7 +332,7 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 - **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）四个独立组件（`Renderer` 已删除，渲染驱动并入 `Engine::render_frame`），贯彻单一职责原则
 - **样式系统重构（已完成）**：移除运行时 `StyleSheet` hashmap 样式表和 `Stylable` CRTP，替换为编译期 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），零运行时开销，无字符串查找。Widget 通过多重继承选择所需 mixin，`class_name_` 和 `style()` 链式调用一并移除
 - **布局下放（已完成）**：布局计算曾从 Engine 集中式 Renderer 下放到各 Widget——Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算，`horizontal_` 成员从 Widget 基类移除。`Engine::render_frame` 每帧调用 `root->layout({0,0,w,h})`（草稿期每帧全量布局）驱动布局阶段
-- **行为组件化（进行中）**：Widget 行为拆分——Task 1 完成行为接口层（`Widget/Behavior/`：Behavior 基类 + Layout/Draw/Input/HitTest 四接口，持 `Widget& owner_`）；Task 2 完成 Widget 基类改造（4 虚方法默认实现遍历 `behaviors_` 容器按类型委托、`add_behavior<T>()` 组装模板、`hovered_` 提升为 atomic 交互状态修复跨线程病灶、删除 build/event 空壳及全部调用点）；Task 3 完成（Button 重构为行为组装零 override，行为经 `static_cast<Button&>(owner_)` 访问 mixin 成员，Button.cpp 删除 + vcxproj 同步）。Task 4（Column/Row/Center 控件重构）进行中
+- **行为组件化（已完成）**：Widget 行为拆分——Task 1 行为接口层（`Widget/Behavior/`：Behavior 基类 + Layout/Draw/Input/HitTest 四接口，持 `Widget& owner_`）；Task 2 Widget 基类改造（4 虚方法默认实现遍历 `behaviors_` 容器按类型委托、`add_behavior<T>()` 组装模板、`hovered_` 提升为 atomic 交互状态修复跨线程病灶、删除 build/event 空壳及全部调用点）；Task 3/4 全部控件重构为行为组装零 override（Button 四行为 + Column/Row/Center 各三行为，行为经 `static_cast<Xxx&>(owner_)` 访问 mixin 成员），全部旧 cpp 删除、vcxproj/filters 同步。**新控件开发 = 组合行为 + 数据，不再 override 虚方法**
 - **抽象层砍除（已完成）**：按 YAGNI 移除 `neko::platform` 平台抽象层（基类/单例/工厂注册宏）与 `neko::backend` 渲染抽象层（策略基类），`Win32` 与 `DirectX11` 成为直接实现（无基类、无 override），`handle_message` 改非静态成员方法；初始主题推送从 Engine 构造移至 main.cpp（`win32->query_theme()` 经 MsgPump push）；`Widget::draw` 签名改 `backend::DirectX11&`（Widget.hpp 前置声明避免 D3D11 头渗透）；净减 321 行；顺带修复 Engine 构造 use-after-move 潜在 bug 与 DirectX11 Rule of Five
 - **所有权模型改造（已完成）**：Engine 以 `shared_ptr` 拥有全部子系统（context/backend/invalidation/tree_manager/widget_builder/hit_tester/render_scheduler/msg_pump/event_router），所有观察者改持 `weak_ptr`（EventRouter 7 个依赖、HitTester/WidgetBuilder 的 tree、RenderScheduler 的 invalidation、Context 的 tree_manager、Widget 的 context_、MsgPump handler 捕获的 router）——无 shared_ptr 环；各使用点 lock + 判空（lock 失败安全降级：丢弃事件/返回 nullopt/构造孤儿控件，不 UB）。`Context` 增加 `enable_shared_from_this` 基类供 TreeManager 填充 `Widget::context_`；`Widget::build<T>` 的树锁改经 `context->tree_manager.lock()->mutex_` 获取；构造回调统一改 lambda（`std::bind` 清除）
 - **生命周期契约修复（已完成）**：`Engine::clear()` 不再提前 reset 被 EventRouter 引用的 backend/context/mouse/keyboard（此前在消息线程内销毁被引用对象，留下悬垂窗口），资源释放推迟至 ~Engine 成员析构（RAII 正统）；Engine.hpp 成员区补生命周期契约注释（Engine 拥有全部子系统 shared_ptr，观察者 weak_ptr；成员声明顺序仍保证观察者先析构，weak_ptr 过期只是最后的运行时安全网）
