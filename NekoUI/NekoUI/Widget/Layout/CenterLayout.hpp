@@ -1,12 +1,12 @@
 // 2026-08-10
 
 #pragma once
-#include "../Behavior/LayoutBehavior.hpp"
+#include "../../Behavior/LayoutBehavior.hpp"
 
-namespace neko::widget {
+namespace neko::behavior {
     class CenterLayout final : public LayoutBehavior {
     public:
-        explicit CenterLayout(Widget& owner) : LayoutBehavior{owner} {}
+        explicit CenterLayout(neko::widget::Widget& owner) : LayoutBehavior{owner} {}
         auto layout(Vec4I rect, engine::Context& context) -> void override;
     };
 }

@@ -1,12 +1,12 @@
 // 2026-08-10
 
 #pragma once
-#include "../Behavior/HitTestBehavior.hpp"
+#include "../../Behavior/HitTestBehavior.hpp"
 
-namespace neko::widget {
+namespace neko::behavior {
     class CenterHitTest final : public HitTestBehavior {
     public:
-        explicit CenterHitTest(Widget& owner) : HitTestBehavior{owner} {}
+        explicit CenterHitTest(neko::widget::Widget& owner) : HitTestBehavior{owner} {}
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
     };
 }

@@ -6,8 +6,8 @@
 #include "../../Style/CSS.hpp"
 #include "../Widget.hpp"
 
-namespace neko::widget {
-    RowDraw::RowDraw(Widget& owner, const style::RowStyle& style) :
+namespace neko::behavior {
+    RowDraw::RowDraw(neko::widget::Widget& owner, const style::RowStyle& style) :
         DrawBehavior{owner},
         style_{style} {}
 
@@ -19,4 +19,4 @@ namespace neko::widget {
         }
         return {.x = bounds.x, .y = bounds.y, .width = bounds.z - bounds.x, .height = bounds.w - bounds.y};
     }
-} // namespace neko::widget
+} // namespace neko::behavior

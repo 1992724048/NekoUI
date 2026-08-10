@@ -10,6 +10,10 @@
 #include "RowLayout.hpp"
 
 namespace neko::widget {
+    using neko::behavior::RowDraw;
+    using neko::behavior::RowHitTest;
+    using neko::behavior::RowLayout;
+
     class Row final : public Widget {
     public:
         explicit Row(engine::Context&) {

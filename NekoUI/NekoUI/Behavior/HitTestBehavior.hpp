@@ -7,10 +7,10 @@ namespace neko::device {
     struct Mouse;
 }
 
-namespace neko::widget {
+namespace neko::behavior {
     class HitTestBehavior : public Behavior {
     public:
-        explicit HitTestBehavior(Widget& owner) : Behavior{owner} {}
+        explicit HitTestBehavior(neko::widget::Widget& owner) : Behavior{owner} {}
         ~HitTestBehavior() override = default;
         [[nodiscard]] virtual auto hit_test(const device::Mouse& mouse) const -> bool = 0;
     };

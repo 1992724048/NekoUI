@@ -10,6 +10,10 @@
 #include "ColumnLayout.hpp"
 
 namespace neko::widget {
+    using neko::behavior::ColumnDraw;
+    using neko::behavior::ColumnHitTest;
+    using neko::behavior::ColumnLayout;
+
     class Column final : public Widget {
     public:
         explicit Column(engine::Context&) {

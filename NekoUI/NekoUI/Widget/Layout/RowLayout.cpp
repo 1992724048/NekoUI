@@ -8,8 +8,8 @@
 #include "../../Style/CSS.hpp"
 #include "../Widget.hpp"
 
-namespace neko::widget {
-    RowLayout::RowLayout(Widget& owner, const style::RowStyle& style) :
+namespace neko::behavior {
+    RowLayout::RowLayout(neko::widget::Widget& owner, const style::RowStyle& style) :
         LayoutBehavior{owner},
         style_{style} {}
 
@@ -24,10 +24,10 @@ namespace neko::widget {
 
         auto x_offset = effective.x;
         engine::visit_children(owner_,
-                               [&](const std::shared_ptr<Widget>& child) -> void {
+                               [&](const std::shared_ptr<neko::widget::Widget>& child) -> void {
                                    child->layout({.x = x_offset, .y = effective.y, .z = effective.z, .w = effective.w}, context);
                                    const auto& cb = child->get_bounds();
                                    x_offset += cb.z - cb.x;
                                });
     }
-} // namespace neko::widget
+} // namespace neko::behavior

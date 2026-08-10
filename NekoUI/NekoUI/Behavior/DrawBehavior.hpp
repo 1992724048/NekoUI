@@ -3,7 +3,7 @@
 #pragma once
 #include "Behavior.hpp"
 
-#include "../../Type.hpp"
+#include "../Type.hpp"
 
 namespace neko::backend {
     class DirectX11;
@@ -13,12 +13,12 @@ namespace neko::engine {
     struct Context;
 }
 
-namespace neko::widget {
+namespace neko::behavior {
     using namespace neko::type;
 
     class DrawBehavior : public Behavior {
     public:
-        explicit DrawBehavior(Widget& owner) : Behavior{owner} {}
+        explicit DrawBehavior(neko::widget::Widget& owner) : Behavior{owner} {}
         ~DrawBehavior() override = default;
         virtual auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect = 0;
     };

@@ -7,8 +7,8 @@
 #include "../../Style/CSS.hpp"
 #include "../Widget.hpp"
 
-namespace neko::widget {
-    ButtonLayout::ButtonLayout(Widget& owner, const style::ButtonStyle& style) :
+namespace neko::behavior {
+    ButtonLayout::ButtonLayout(neko::widget::Widget& owner, const style::ButtonStyle& style) :
         LayoutBehavior{owner},
         style_{style} {}
 
@@ -21,4 +21,4 @@ namespace neko::widget {
         }
         owner_.set_bounds(effective);
     }
-} // namespace neko::widget
+} // namespace neko::behavior

@@ -8,8 +8,8 @@
 #include "../../Style/CSS.hpp"
 #include "../Widget.hpp"
 
-namespace neko::widget {
-    ButtonDraw::ButtonDraw(Widget& owner, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
+namespace neko::behavior {
+    ButtonDraw::ButtonDraw(neko::widget::Widget& owner, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
         DrawBehavior{owner},
         style_{style},
         text_(std::move(text)) {
@@ -44,4 +44,4 @@ namespace neko::widget {
         }
         return {.x = visual.x, .y = visual.y, .width = visual.z - visual.x, .height = visual.w - visual.y};
     }
-} // namespace neko::widget
+} // namespace neko::behavior

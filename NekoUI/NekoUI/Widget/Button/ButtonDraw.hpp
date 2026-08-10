@@ -1,17 +1,17 @@
 // 2026-08-10
 
 #pragma once
-#include "../Behavior/DrawBehavior.hpp"
+#include "../../Behavior/DrawBehavior.hpp"
 
 #include "../../Component/Animation.hpp"
 #include "../../Style/CSS.hpp"
 
 #include <string>
 
-namespace neko::widget {
+namespace neko::behavior {
     class ButtonDraw final : public DrawBehavior {
     public:
-        ButtonDraw(Widget& owner, const style::ButtonStyle& style, const engine::Context& context, std::string text);
+        ButtonDraw(neko::widget::Widget& owner, const style::ButtonStyle& style, const engine::Context& context, std::string text);
         auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
     private:
         const style::ButtonStyle& style_;

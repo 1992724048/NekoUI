@@ -10,6 +10,10 @@
 #include "CenterLayout.hpp"
 
 namespace neko::widget {
+    using neko::behavior::CenterDraw;
+    using neko::behavior::CenterHitTest;
+    using neko::behavior::CenterLayout;
+
     class Center final : public Widget {
     public:
         explicit Center(engine::Context&) {

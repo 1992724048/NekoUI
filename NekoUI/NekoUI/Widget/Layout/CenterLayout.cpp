@@ -5,12 +5,12 @@
 #include "../../Engine/WidgetVisitor.hpp"
 #include "../Widget.hpp"
 
-namespace neko::widget {
+namespace neko::behavior {
     auto CenterLayout::layout(const Vec4I available, engine::Context& context) -> void {
         owner_.set_bounds(available);
 
         engine::visit_children(owner_,
-                               [&](const std::shared_ptr<Widget>& child) -> void {
+                               [&](const std::shared_ptr<neko::widget::Widget>& child) -> void {
                                    // First let child calculate its natural size
                                    child->layout(available, context);
                                    const auto& cb = child->get_bounds();
@@ -21,4 +21,4 @@ namespace neko::widget {
                                    child->set_bounds({.x = cx, .y = cy, .z = cx + cw, .w = cy + ch});
                                });
     }
-} // namespace neko::widget
+} // namespace neko::behavior

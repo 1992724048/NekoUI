@@ -14,6 +14,11 @@
 #include <utility>
 
 namespace neko::widget {
+    using neko::behavior::ButtonDraw;
+    using neko::behavior::ButtonHitTest;
+    using neko::behavior::ButtonInput;
+    using neko::behavior::ButtonLayout;
+
     class Button final : public Widget {
     public:
         using OnClick = ButtonInput::OnClick;

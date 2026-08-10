@@ -7,8 +7,8 @@
 #include "../../Device/Mouse.hpp"
 #include "../Widget.hpp"
 
-namespace neko::widget {
-    ButtonInput::ButtonInput(Widget& owner, const engine::Context& /*context*/, OnClick onClick) :
+namespace neko::behavior {
+    ButtonInput::ButtonInput(neko::widget::Widget& owner, const engine::Context& /*context*/, OnClick onClick) :
         InputBehavior{owner},
         onClick_(std::move(onClick)) {}
 
@@ -36,4 +36,4 @@ namespace neko::widget {
             }
         }
     }
-} // namespace neko::widget
+} // namespace neko::behavior
