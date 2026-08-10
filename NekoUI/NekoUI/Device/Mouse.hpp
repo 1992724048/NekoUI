@@ -66,25 +66,22 @@ namespace neko::device {
         }
 
         [[nodiscard]] auto is_inside(const Vec4I r) const -> bool {
-            const float s = dpi_scale_;
-            return pos.x >= r.x * s && pos.x <= (r.x + r.z) * s && pos.y >= r.y * s && pos.y <= (r.y + r.w) * s;
+            return pos.x >= r.x && pos.x <= (r.x + r.z) && pos.y >= r.y && pos.y <= (r.y + r.w);
         }
 
         [[nodiscard]] auto is_inside_circle(const Vec2I center, const int radius) const -> bool {
-            const float s = dpi_scale_;
-            const float dx = static_cast<float>(pos.x) - (static_cast<float>(center.x) * s);
-            const float dy = static_cast<float>(pos.y) - (static_cast<float>(center.y) * s);
-            const float r = static_cast<float>(radius) * s;
+            const float dx = static_cast<float>(pos.x - center.x);
+            const float dy = static_cast<float>(pos.y - center.y);
+            const float r = static_cast<float>(radius);
             return (dx * dx) + (dy * dy) <= r * r;
         }
 
         [[nodiscard]] auto is_inside_rounded(const Vec4I r, const int corner_radius) const -> bool {
-            const float s = dpi_scale_;
-            const int rx = static_cast<int>(r.x * s);
-            const int ry = static_cast<int>(r.y * s);
-            const int rw = static_cast<int>(r.z * s);
-            const int rh = static_cast<int>(r.w * s);
-            const int cr = static_cast<int>(static_cast<float>(corner_radius) * s);
+            const int rx = r.x;
+            const int ry = r.y;
+            const int rw = r.z;
+            const int rh = r.w;
+            const int cr = corner_radius;
 
             if (pos.x < rx || pos.x > rx + rw || pos.y < ry || pos.y > ry + rh) {
                 return false;
@@ -107,13 +104,12 @@ namespace neko::device {
             if (pts.size() < 3) {
                 return false;
             }
-            const float s = dpi_scale_;
             bool inside = false;
             for (size_t i = 0, j = pts.size() - 1; i < pts.size(); j = i++) {
-                const int xi = static_cast<int>(static_cast<float>(pts[i].x) * s);
-                const int yi = static_cast<int>(static_cast<float>(pts[i].y) * s);
-                const int xj = static_cast<int>(static_cast<float>(pts[j].x) * s);
-                const int yj = static_cast<int>(static_cast<float>(pts[j].y) * s);
+                const int xi = pts[i].x;
+                const int yi = pts[i].y;
+                const int xj = pts[j].x;
+                const int yj = pts[j].y;
 
                 if (yi > pos.y != yj > pos.y && pos.x < (static_cast<float>(xj - xi) * static_cast<float>(pos.y - yi) / static_cast<float>(yj - yi)) + xi) {
                     inside = !inside;

@@ -242,10 +242,10 @@ namespace neko::backend {
             float s_w, s_h;
             float p0, p1;
         } const data{
-            .r_x = static_cast<float>(rect.x) * dpi_scale_,
-            .r_y = static_cast<float>(rect.y) * dpi_scale_,
-            .r_w = static_cast<float>(rect.z) * dpi_scale_,
-            .r_h = static_cast<float>(rect.w) * dpi_scale_,
+            .r_x = static_cast<float>(rect.x),
+            .r_y = static_cast<float>(rect.y),
+            .r_w = static_cast<float>(rect.z),
+            .r_h = static_cast<float>(rect.w),
             .c_r = color.r() / 255.0F,
             .c_g = color.g() / 255.0F,
             .c_b = color.b() / 255.0F,
