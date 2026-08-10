@@ -1,4 +1,4 @@
-﻿// 2026-07-27 23:30:02
+// 2026-07-27 23:30:02
 
 #pragma once
 
@@ -14,9 +14,9 @@
 #include "../Type.hpp"
 
 #include <concepts>
-#include "../Engine/Context.hpp"
-#include "../Engine/MutableWidget.hpp"
-#include "../Engine/TreeManager.hpp"
+#include "../Engine/Core/Context.hpp"
+#include "../Engine/Core/MutableWidget.hpp"
+#include "../Engine/Tree/TreeManager.hpp"
 #include "../Platform/Event.hpp"
 
 #include "../Behavior/LayoutBehavior.hpp"

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #ifdef _WIN32
 #include <Windows.h>
 #include <memory>
@@ -6,7 +6,7 @@
 #include <optional>
 
 #include "Event.hpp"
-#include "../Engine/MsgPump.hpp"
+#include "../Engine/Runtime/MsgPump.hpp"
 
 namespace neko::platform {
     struct NativeMessage {
