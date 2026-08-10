@@ -41,6 +41,8 @@ namespace neko::backend {
         [[nodiscard]] auto get_native_handle() const -> Handle {
             return hwnd_;
         }
+
+        [[nodiscard]] auto get_client_size() const -> Vec2I;
     private:
         static constexpr int ATLAS_W = 4096;
         static constexpr int ATLAS_H = 4096;

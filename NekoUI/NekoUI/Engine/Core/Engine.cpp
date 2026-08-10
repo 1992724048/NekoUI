@@ -9,9 +9,8 @@
 #include "../Tree/WidgetBuilder.hpp"
 #include "../Tree/WidgetVisitor.hpp"
 
-#include <Windows.h>
-#include <cmath>
 #include <optional>
+
 
 #include "../../Backend/DirectX11.hpp"
 #include "../../Widget/Widget.hpp"
@@ -137,9 +136,9 @@ namespace neko::engine {
 
         auto size = render_scheduler_->pending_size();
         if (size.width <= 0 || size.height <= 0) {
-            RECT client{};
-            if (GetClientRect(static_cast<HWND>(native_handle_), &client) != 0) {
-                size = {.x = client.right - client.left, .y = client.bottom - client.top};
+            const auto client = backend->get_client_size();
+            if (client.width > 0 && client.height > 0) {
+                size = client;
             }
         }
 

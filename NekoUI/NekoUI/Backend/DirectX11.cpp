@@ -194,6 +194,14 @@ namespace neko::backend {
         return dpi_scale_;
     }
 
+    auto DirectX11::get_client_size() const -> Vec2I {
+        RECT client{};
+        if (GetClientRect(hwnd_, &client) != 0) {
+            return {.x = client.right - client.left, .y = client.bottom - client.top};
+        }
+        return {};
+    }
+
     auto DirectX11::begin() const -> void {
         if (ctx_ == nullptr || rtv_ == nullptr) {
             return;
