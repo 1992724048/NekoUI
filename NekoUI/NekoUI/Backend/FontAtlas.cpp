@@ -152,16 +152,19 @@ namespace neko::backend {
         std::println(stderr, "{} font atlases baked (ASCII {}px x3 + CJK {}px)", 3, FONT_SIZES[0], cjk_atlas_.font_size);
 
         // 图集 MipLevels=1，LINEAR 对 MIN/MAG 生效；放大时平滑插值消除像素化
+        ID3D11Device* dev = surface_.device();
+        std::println(stderr, "[diag] sampler dev ptr={} ctx={}", static_cast<void*>(dev), static_cast<void*>(surface_.context()));
         D3D11_SAMPLER_DESC sm{};
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        std::println(stderr, "[diag] sm fields: filter={} addrU={} addrV={} addrW={} maxAniso={} minLOD={} maxLOD={} comp={} size={}",
-                     static_cast<int>(sm.Filter), static_cast<int>(sm.AddressU), static_cast<int>(sm.AddressV),
-                     static_cast<int>(sm.AddressW), sm.MaxAnisotropy, sm.MinLOD, sm.MaxLOD,
-                     static_cast<int>(sm.ComparisonFunc), sizeof(sm));
-        const HRESULT sampler_hr = surface_.device()->CreateSamplerState(&sm, &font_sampler_);
-        std::println(stderr, "[diag] sampler create: device={} hr={:#010X} result={}", surface_.device() != nullptr, static_cast<unsigned int>(sampler_hr), font_sampler_ != nullptr);
+        HRESULT hr = dev->CreateSamplerState(&sm, &font_sampler_);
+        std::println(stderr, "[diag] sampler LINEAR hr={:#010X} result={}", static_cast<unsigned int>(hr), font_sampler_ != nullptr);
+        if (FAILED(hr)) {
+            sm.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+            const HRESULT hr2 = dev->CreateSamplerState(&sm, &font_sampler_);
+            std::println(stderr, "[diag] sampler POINT hr={:#010X} result={}", static_cast<unsigned int>(hr2), font_sampler_ != nullptr);
+        }
         return true;
     }
 
