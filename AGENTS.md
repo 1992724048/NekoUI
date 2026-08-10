@@ -41,7 +41,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 
 ### 2. 渲染后端 (`neko::backend`)
 
-`DirectX11`（`backend::DirectX11`）是唯一渲染实现（**无抽象基类**——YAGNI：Windows 下只用 D3D11），提供绘制接口：`draw_rect_fill`、`draw_rect`、`draw_line`、`draw_circle_fill`、`draw_text`，以及 `resize`、`set_dpi`、`begin`/`end` 帧管理、`get_dpi_scale`、`get_native_handle`。Rule of Five 显式 delete（不可拷贝/移动）。
+`DirectX11`（`backend::DirectX11`）是唯一渲染实现（**无抽象基类**——YAGNI：Windows 下只用 D3D11），提供绘制接口：`draw_rect_fill`、`draw_rect`、`draw_line`、`draw_circle_fill`、`draw_text`，以及 `resize`、`set_dpi`、`begin`/`end` 帧管理、`get_dpi_scale`、`get_native_handle`、`get_client_size`（客户区尺寸，封装 GetClientRect——Engine 不直接依赖 Win32 API）。Rule of Five 显式 delete（不可拷贝/移动）。
 
 包含：
 
