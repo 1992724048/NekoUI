@@ -68,7 +68,7 @@ namespace neko::widget {
             }
         }
 
-        virtual auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect {
+        virtual auto draw(const Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect {
             for (const auto& behavior : behaviors_) {
                 if (auto* draw = dynamic_cast<behavior::DrawBehavior*>(behavior.get())) {
                     return draw->draw(rect, context, backend);
@@ -111,7 +111,7 @@ namespace neko::widget {
             interaction_ = &interaction;
         }
 
-        auto set_hovered(const bool hovered) -> void {
+        auto set_hovered(const bool hovered) const -> void {
             if (interaction_ == nullptr) {
                 return;
             }

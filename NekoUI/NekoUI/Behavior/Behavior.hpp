@@ -1,4 +1,4 @@
-﻿// 2026-08-10
+﻿// 2026-08-10 10:18:21
 
 #pragma once
 
@@ -9,7 +9,9 @@ namespace neko::widget {
 namespace neko::behavior {
     class Behavior {
     public:
-        explicit Behavior(neko::widget::Widget& owner) : owner_{owner} {}
+        explicit Behavior(widget::Widget& owner) :
+            owner_{owner} {}
+
         virtual ~Behavior() = default;
 
         Behavior(const Behavior&) = delete;
@@ -17,6 +19,6 @@ namespace neko::behavior {
         Behavior(Behavior&&) = delete;
         auto operator=(Behavior&&) -> Behavior& = delete;
     protected:
-        neko::widget::Widget& owner_;
+        widget::Widget& owner_;
     };
 }

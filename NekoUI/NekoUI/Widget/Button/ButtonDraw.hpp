@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:19:14
 
 #pragma once
 #include "../../Behavior/DrawBehavior.hpp"
@@ -13,10 +13,10 @@
 namespace neko::behavior {
     class ButtonDraw final : public DrawBehavior {
     public:
-        ButtonDraw(neko::widget::Widget& owner, const behavior::GeometryState& geometry, const InteractionState& interaction, const style::ButtonStyle& style, const engine::Context& context, std::string text);
+        ButtonDraw(widget::Widget& owner, const GeometryState& geometry, const InteractionState& interaction, const style::ButtonStyle& style, const engine::Context& context, std::string text);
         auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
     private:
-        const behavior::GeometryState& geometry_;
+        const GeometryState& geometry_;
         const InteractionState& interaction_;
         const style::ButtonStyle& style_;
         std::string text_;

@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:18:33
 
 #pragma once
 #include "Behavior.hpp"
@@ -14,7 +14,9 @@ namespace neko::behavior {
 
     class LayoutBehavior : public Behavior {
     public:
-        explicit LayoutBehavior(neko::widget::Widget& owner) : Behavior{owner} {}
+        explicit LayoutBehavior(widget::Widget& owner) :
+            Behavior{owner} {}
+
         ~LayoutBehavior() override = default;
         virtual auto layout(Vec4I rect, engine::Context& context) -> void = 0;
     };

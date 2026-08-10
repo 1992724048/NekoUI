@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:17:28
+
 #include "InvalidationTracker.hpp"
 
 namespace neko::engine {

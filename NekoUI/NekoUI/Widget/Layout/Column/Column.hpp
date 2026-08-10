@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:20:13
 
 #pragma once
 #include "../../Widget.hpp"
@@ -10,9 +10,9 @@
 #include "ColumnLayout.hpp"
 
 namespace neko::widget {
-    using neko::behavior::ColumnDraw;
-    using neko::behavior::ColumnHitTest;
-    using neko::behavior::ColumnLayout;
+    using behavior::ColumnDraw;
+    using behavior::ColumnHitTest;
+    using behavior::ColumnLayout;
 
     class Column final : public Widget {
     public:

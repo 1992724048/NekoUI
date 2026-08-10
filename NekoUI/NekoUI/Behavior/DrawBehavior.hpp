@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:18:19
 
 #pragma once
 #include "Behavior.hpp"
@@ -18,7 +18,9 @@ namespace neko::behavior {
 
     class DrawBehavior : public Behavior {
     public:
-        explicit DrawBehavior(neko::widget::Widget& owner) : Behavior{owner} {}
+        explicit DrawBehavior(widget::Widget& owner) :
+            Behavior{owner} {}
+
         ~DrawBehavior() override = default;
         virtual auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect = 0;
     };

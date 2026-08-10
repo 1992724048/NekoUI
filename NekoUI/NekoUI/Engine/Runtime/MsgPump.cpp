@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:17:32
+
 #include "MsgPump.hpp"
 
 namespace neko::engine {

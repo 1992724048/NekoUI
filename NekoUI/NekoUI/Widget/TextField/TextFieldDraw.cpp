@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:16:56
 
 #include "TextFieldDraw.hpp"
 
@@ -42,7 +42,12 @@ namespace {
 } // namespace
 
 namespace neko::behavior {
-    TextFieldDraw::TextFieldDraw(neko::widget::Widget& owner, const behavior::GeometryState& geometry, const InteractionState& interaction, const TextFieldState& state, const style::TextFieldStyle& style, const engine::Context& /*context*/) :
+    TextFieldDraw::TextFieldDraw(widget::Widget& owner,
+                                 const GeometryState& geometry,
+                                 const InteractionState& interaction,
+                                 const TextFieldState& state,
+                                 const style::TextFieldStyle& style,
+                                 const engine::Context& /*context*/) :
         DrawBehavior{owner},
         geometry_{geometry},
         interaction_{interaction},
@@ -80,7 +85,7 @@ namespace neko::behavior {
         if (!state_.ime_active && focused) {
             const auto now = std::chrono::steady_clock::now().time_since_epoch();
             const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
-            if ((ms / 500) % 2 == 0) {
+            if (ms / 500 % 2 == 0) {
                 backend.draw_line(Vec2I{.x = caret_x, .y = bounds.y + PADDING}, Vec2I{.x = caret_x, .y = bounds.w - PADDING}, resolved_caret, 2);
             }
         }

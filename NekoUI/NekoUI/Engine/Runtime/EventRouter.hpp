@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:17:23
+
 #pragma once
 
 #include <functional>
@@ -42,7 +44,6 @@ namespace neko::engine {
 
         auto dispatch(const platform::Event& event) const -> void;
     private:
-        // 输入事件分派（dispatch 按类型分发）
         auto handle_key(const device::KeyEvent& e) const -> void;
         auto handle_char(const device::CharEvent& e) const -> void;
         auto handle_ime(const platform::ImeCompositionEvent& e) const -> void;
@@ -54,7 +55,6 @@ namespace neko::engine {
         auto handle_theme_change(const platform::ThemeChangedEvent& e) const -> void;
         auto handle_destroy() const -> void;
 
-        // 共享辅助
         [[nodiscard]] auto hit_target(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>>;
         [[nodiscard]] auto focused_target() const -> std::shared_ptr<widget::Widget>;
         [[nodiscard]] auto try_tab_navigate(const std::shared_ptr<Context>& context, const device::KeyEvent& e) const -> bool;

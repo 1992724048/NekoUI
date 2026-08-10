@@ -1,6 +1,7 @@
+﻿// 2026-08-10 10:17:40
+
 #include "HitTester.hpp"
 #include "TreeManager.hpp"
-#include "../../Device/Mouse.hpp"
 #include "../../Widget/Widget.hpp"
 
 #include <utility>

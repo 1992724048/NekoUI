@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:17:47
+
 #pragma once
 #include "../../Widget/Widget.hpp"
 

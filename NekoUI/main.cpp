@@ -1,4 +1,4 @@
-// 2026-08-10 04:48:52
+﻿// 2026-08-10 10:16:37
 
 #include <Windows.h>
 #include <iostream>
@@ -73,42 +73,56 @@ auto main(int argc, char* argv[]) -> int try {
 
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
-    engine->get_context().set_ime_pos = [](const int x, const int y) -> void {
-        win32->set_ime_window_position(x, y);
-    };
+    engine->get_context().set_ime_pos = std::bind(&neko::platform::Win32::set_ime_window_position, win32.get(), std::placeholders::_1, std::placeholders::_2);
     msg_pump = engine->get_msg_pump();
     if (const auto pump = msg_pump.lock()) {
         pump->push_msg(win32->query_theme());
     }
 
-    const auto page = engine->set_root_widget<neko::widget::Column>();
+    bool show_field = true;
+    neko::widget::TextField* input_ptr = nullptr;
+    engine->set_root_widget<neko::widget::Column>([&](neko::widget::Widget& root) -> void {
+        auto& column = static_cast<neko::widget::Column&>(root);
+        column.children([&](auto& builder) -> void {
+            auto& b1 = builder.template build<neko::widget::Button>("Button 1");
+            b1.style().size.value = {.x = 120.0F, .y = 40.0F};
+            b1.on_click([]() -> void {
+                std::println("Button 1 clicked!");
+            });
 
-    page->children([&](auto& col) -> auto {
-        auto& b1 = col.template build<neko::widget::Button>("Button 1");
-        b1.style().size.value = {.x = 120.0F, .y = 40.0F};
-        b1.on_click([] -> auto {
-            std::println("Button 1 clicked!");
-        });
+            auto& b2 = builder.template build<neko::widget::Button>("Button 2");
+            b2.style().size.value = {.x = 120.0F, .y = 40.0F};
+            b2.on_click([]() -> void {
+                std::println("Button 2 clicked!");
+            });
 
-        auto& b2 = col.template build<neko::widget::Button>("Button 2");
-        b2.style().size.value = {.x = 120.0F, .y = 40.0F};
-        b2.on_click([] -> auto {
-            std::println("Button 2 clicked!");
-        });
+            auto& b3 = builder.template build<neko::widget::Button>("Button 3");
+            b3.style().size.value = {.x = 120.0F, .y = 40.0F};
+            b3.on_click([]() -> void {
+                std::println("Button 3 clicked!");
+            });
 
-        auto& b3 = col.template build<neko::widget::Button>("Button 3");
-        b3.style().size.value = {.x = 120.0F, .y = 40.0F};
-        b3.on_click([] -> auto {
-            std::println("Button 3 clicked!");
-        });
+            auto& toggle_btn = builder.template build<neko::widget::Button>("切换输入框");
+            toggle_btn.style().size.value = {.x = 120.0F, .y = 40.0F};
+            toggle_btn.on_click([&]() -> void {
+                show_field = !show_field;
+                engine->rebuild();
+            });
 
-        auto& input_field = col.template build<neko::widget::TextField>();
-        input_field.style().size.value = {.x = 240.0F, .y = 40.0F};
+            if (show_field) {
+                input_ptr = &builder.template build<neko::widget::TextField>();
+                input_ptr->style().size.value = {.x = 240.0F, .y = 40.0F};
 
-        auto& show_btn = col.template build<neko::widget::Button>("显示输入");
-        show_btn.style().size.value = {.x = 120.0F, .y = 40.0F};
-        show_btn.on_click([&input_field]() -> void {
-            std::println("输入内容: {}", input_field.text());
+                auto& show_btn = builder.template build<neko::widget::Button>("显示输入");
+                show_btn.style().size.value = {.x = 120.0F, .y = 40.0F};
+                show_btn.on_click([&]() -> void {
+                    if (input_ptr != nullptr) {
+                        std::println("输入内容: {}", input_ptr->text());
+                    }
+                });
+            } else {
+                input_ptr = nullptr;
+            }
         });
     });
 

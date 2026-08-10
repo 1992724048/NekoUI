@@ -1,7 +1,8 @@
-// 2026-08-02 04:25:02
+﻿// 2026-08-10 10:17:56
 
 #pragma once
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <type_traits>
 
@@ -45,10 +46,32 @@ namespace neko::engine {
             return widget;
         }
 
+        template<std::derived_from<widget::Widget> T, typename BuilderFn>
+        auto set_root_widget(BuilderFn&& builder) -> std::shared_ptr<T> {
+            auto stored_builder = std::forward<BuilderFn>(builder);
+            root_builder_ = [builder = stored_builder](widget::Widget& root) -> void {
+                builder(root);
+            };
+            rebuild_root_ = [this, builder = stored_builder]() -> void {
+                const auto root = std::make_shared<T>(*context);
+                tree_manager_->set_root(*context, root);
+                context->root = root;
+                builder(*root);
+            };
+
+            const auto root = std::make_shared<T>(*context);
+            tree_manager_->set_root(*context, root);
+            widget_builder_->build(*context);
+            context->root = root;
+            root_builder_(*root);
+            render_scheduler_->request_frame();
+            return root;
+        }
+
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
-        auto rebuild() const -> void;
+        auto rebuild() -> void;
         auto schedule_rebuild() -> void;
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;
@@ -70,5 +93,8 @@ namespace neko::engine {
         std::shared_ptr<MsgPump> msg_pump_;
         std::shared_ptr<EventRouter> event_router_;
         std::atomic_bool tree_dirty_{false};
+
+        std::function<void(widget::Widget&)> root_builder_;
+        std::function<void()> rebuild_root_;
     };
 }

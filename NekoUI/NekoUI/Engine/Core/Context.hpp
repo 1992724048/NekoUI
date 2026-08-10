@@ -1,11 +1,11 @@
+﻿// 2026-08-10 10:18:01
+
 #pragma once
 #include <functional>
 #include <memory>
-#include <shared_mutex>
 
 #include "../../Device/Keyboard.hpp"
 #include "../../Device/Mouse.hpp"
-#include "../../Platform/Event.hpp"
 #include "../../Style/ColorScheme.hpp"
 
 namespace neko::widget {
@@ -25,7 +25,7 @@ namespace neko::engine {
 
         std::function<void()> widget_tree_changed;
 
-        std::function<void(int pos_x, int pos_y)> set_ime_pos;  // IME 合成窗/候选窗定位（main.cpp 绑定 Win32）
+        std::function<void(int pos_x, int pos_y)> set_ime_pos;
 
         std::weak_ptr<device::Mouse> mouse;
         std::weak_ptr<device::Keyboard> keyboard;

@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:18:26
 
 #pragma once
 #include "Behavior.hpp"
@@ -12,7 +12,9 @@ namespace neko::engine {
 namespace neko::behavior {
     class InputBehavior : public Behavior {
     public:
-        explicit InputBehavior(neko::widget::Widget& owner) : Behavior{owner} {}
+        explicit InputBehavior(widget::Widget& owner) :
+            Behavior{owner} {}
+
         ~InputBehavior() override = default;
         virtual auto input(engine::Context& context, const platform::Event& event) -> void = 0;
     };

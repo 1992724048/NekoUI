@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:20:09
 
 #include "CenterDraw.hpp"
 
@@ -7,14 +7,14 @@
 #include "../../Widget.hpp"
 
 namespace neko::behavior {
-    CenterDraw::CenterDraw(neko::widget::Widget& owner, const behavior::GeometryState& geometry, const style::CenterStyle& style) :
+    CenterDraw::CenterDraw(widget::Widget& owner, const GeometryState& geometry, const style::CenterStyle& style) :
         DrawBehavior{owner},
         geometry_{geometry},
         style_{style} {}
 
     auto CenterDraw::draw(Vec4I /*rect*/, engine::Context& context, backend::DirectX11& backend) -> Rect {
         const auto bounds = geometry_.bounds;
-        auto bg = style_.background.color.value != 0 ? style_.background : style::Background{context.scheme.surface};
+        const auto bg = style_.background.color.value != 0 ? style_.background : style::Background{context.scheme.surface};
         if (bg.color.value != 0) {
             backend.draw_rect_fill(bounds, bg.color);
         }

@@ -1,4 +1,4 @@
-// 2026-08-02 04:25:14
+﻿// 2026-08-10 10:17:51
 
 #include "Engine.hpp"
 #include "../Runtime/EventRouter.hpp"
@@ -10,7 +10,6 @@
 #include "../Tree/WidgetVisitor.hpp"
 
 #include <optional>
-
 
 #include "../../Backend/DirectX11.hpp"
 #include "../../Widget/Widget.hpp"
@@ -103,11 +102,14 @@ namespace neko::engine {
         return render_scheduler_;
     }
 
-    auto Engine::rebuild() const -> void {
-        widget_builder_->build(*context);
-        if (render_scheduler_) {
-            render_scheduler_->request_frame();
+    auto Engine::rebuild() -> void {
+        if (!rebuild_root_) {
+            return;
         }
+        tree_manager_->clear();
+        rebuild_root_();
+        widget_builder_->build(*context);
+        render_scheduler_->request_frame();
     }
 
     auto Engine::schedule_rebuild() -> void {

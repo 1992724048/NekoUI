@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:19:09
 
 #include "ButtonDraw.hpp"
 
@@ -9,7 +9,7 @@
 #include "../Widget.hpp"
 
 namespace neko::behavior {
-    ButtonDraw::ButtonDraw(neko::widget::Widget& owner, const behavior::GeometryState& geometry, const InteractionState& interaction, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
+    ButtonDraw::ButtonDraw(widget::Widget& owner, const GeometryState& geometry, const InteractionState& interaction, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
         DrawBehavior{owner},
         geometry_(geometry),
         interaction_(interaction),

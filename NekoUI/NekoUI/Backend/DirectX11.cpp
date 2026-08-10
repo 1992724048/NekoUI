@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:18:55
+
 #ifdef _WIN32
 #include "DirectX11.hpp"
 
@@ -194,14 +196,6 @@ namespace neko::backend {
         return dpi_scale_;
     }
 
-    auto DirectX11::get_client_size() const -> Vec2I {
-        RECT client{};
-        if (GetClientRect(hwnd_, &client) != 0) {
-            return {.x = client.right - client.left, .y = client.bottom - client.top};
-        }
-        return {};
-    }
-
     auto DirectX11::begin() const -> void {
         if (ctx_ == nullptr || rtv_ == nullptr) {
             return;
@@ -264,23 +258,23 @@ namespace neko::backend {
     }
 
     auto DirectX11::draw_rect(const Vec4I rect, const Color color, const int thickness) const -> void {
-        draw_rect_fill({rect.x, rect.y, rect.z, thickness}, color);
-        draw_rect_fill({rect.x, rect.y + rect.w - thickness, rect.z, thickness}, color);
-        draw_rect_fill({rect.x, rect.y + thickness, thickness, rect.w - (thickness * 2)}, color);
-        draw_rect_fill({rect.x + rect.z - thickness, rect.y + thickness, thickness, rect.w - (thickness * 2)}, color);
+        draw_rect_fill({.x = rect.x, .y = rect.y, .z = rect.z, .w = thickness}, color);
+        draw_rect_fill({.x = rect.x, .y = rect.y + rect.w - thickness, .z = rect.z, .w = thickness}, color);
+        draw_rect_fill({.x = rect.x, .y = rect.y + thickness, .z = thickness, .w = rect.w - thickness * 2}, color);
+        draw_rect_fill({.x = rect.x + rect.z - thickness, .y = rect.y + thickness, .z = thickness, .w = rect.w - thickness * 2}, color);
     }
 
     auto DirectX11::draw_line(const Vec2I from, const Vec2I to, const Color color, const int thickness) const -> void {
         const Vec2I d = to - from;
         if (std::abs(d.x) >= std::abs(d.y)) {
-            draw_rect_fill({std::min(from.x, to.x), from.y - (thickness / 2), std::abs(d.x) + thickness, thickness}, color);
+            draw_rect_fill({.x = std::min(from.x, to.x), .y = from.y - thickness / 2, .z = std::abs(d.x) + thickness, .w = thickness}, color);
         } else {
-            draw_rect_fill({from.x - (thickness / 2), std::min(from.y, to.y), thickness, std::abs(d.y) + thickness}, color);
+            draw_rect_fill({.x = from.x - thickness / 2, .y = std::min(from.y, to.y), .z = thickness, .w = std::abs(d.y) + thickness}, color);
         }
     }
 
     auto DirectX11::draw_circle_fill(const Vec2I center, const int radius, const Color color) const -> void {
-        draw_rect_fill({center.x - radius, center.y - radius, radius * 2, radius * 2}, color);
+        draw_rect_fill({.x = center.x - radius, .y = center.y - radius, .z = radius * 2, .w = radius * 2}, color);
     }
 
     auto DirectX11::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) -> void {
@@ -382,14 +376,21 @@ namespace neko::backend {
         ctx_->OMSetBlendState(bs_opaque_, nullptr, 0xFFFFFFFF);
     }
 
+    auto DirectX11::get_client_size() const -> Vec2I {
+        RECT client{};
+        if (GetClientRect(hwnd_, &client) != 0) {
+            return {.x = client.right - client.left, .y = client.bottom - client.top};
+        }
+        return {};
+    }
+
     auto DirectX11::init_device() -> void {
         UINT create_flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
         #ifdef _DEBUG
         create_flags |= D3D11_CREATE_DEVICE_DEBUG;
         #endif
         D3D_FEATURE_LEVEL feature_level{};
-        if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flags,
-            nullptr, 0, D3D11_SDK_VERSION, &device_, &feature_level, &ctx_))) {
+        if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flags, nullptr, 0, D3D11_SDK_VERSION, &device_, &feature_level, &ctx_))) {
             std::println(stderr, "[NekoUI] D3D11CreateDevice failed");
         }
     }
@@ -429,7 +430,7 @@ namespace neko::backend {
         }
         factory->Release();
 
-        size_ = {static_cast<int>(sc_desc.Width), static_cast<int>(sc_desc.Height)};
+        size_ = {.x = static_cast<int>(sc_desc.Width), .y = static_cast<int>(sc_desc.Height)};
         ID3D11Texture2D* back_buffer{};
         if (SUCCEEDED(swap_chain_->GetBuffer(0, IID_PPV_ARGS(&back_buffer)))) {
             device_->CreateRenderTargetView(back_buffer, nullptr, &rtv_);
@@ -556,7 +557,7 @@ namespace neko::backend {
         ranges[2].num_chars = FW_PUNCT_LAST - FW_PUNCT_FIRST + 1;
         ranges[2].chardata_for_range = fw_output.data();
 
-        if (stbtt_PackFontRanges(&pc, font_data.data(), 0, ranges.data(), static_cast<int>(ranges.size())) == 0) {
+        if (stbtt_PackFontRanges(&pc, font_data.data(), 0, ranges.data(), ranges.size()) == 0) {
             std::println(stderr, "[NekoUI] Font atlas pack failed: {}x{} too small", ATLAS_W, ATLAS_H);
             return false;
         }

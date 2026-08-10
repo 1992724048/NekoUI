@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:17:34
+
 #pragma once
 
 #include <atomic>

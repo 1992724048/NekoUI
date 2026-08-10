@@ -1,4 +1,4 @@
-﻿// 2026-08-10 06:01:49
+﻿// 2026-08-10 10:20:27
 
 #include "Win32.hpp"
 #ifdef _WIN32
@@ -84,7 +84,7 @@ namespace neko::platform {
             case WM_CHAR:
                 return device::CharEvent{.ch = static_cast<wchar_t>(wparam),};
             case WM_IME_STARTCOMPOSITION:
-                return platform::ImeCompositionEvent{};
+                return ImeCompositionEvent{};
             case WM_IME_COMPOSITION: {
                 if (hwnd_ == nullptr) {
                     return std::nullopt;
@@ -93,7 +93,7 @@ namespace neko::platform {
                 if (himc == nullptr) {
                     return std::nullopt;
                 }
-                platform::ImeCompositionEvent event{};
+                ImeCompositionEvent event{};
                 if (lparam & GCS_COMPSTR) {
                     const DWORD len = ImmGetCompositionStringW(himc, GCS_COMPSTR, nullptr, 0);
                     if (len > 0) {
@@ -108,7 +108,7 @@ namespace neko::platform {
                 return event;
             }
             case WM_IME_ENDCOMPOSITION:
-                return platform::ImeCompositionEvent{};
+                return ImeCompositionEvent{};
             case WM_IME_CHAR:
                 return device::CharEvent{.ch = static_cast<wchar_t>(wparam),};
             case WM_SIZE:
@@ -135,7 +135,7 @@ namespace neko::platform {
         return cached_theme_;
     }
 
-    auto Win32::set_ime_window_position(const int client_x, const int client_y) -> void {
+    auto Win32::set_ime_window_position(const int client_x, const int client_y) const -> void {
         if (hwnd_ == nullptr) {
             return;
         }

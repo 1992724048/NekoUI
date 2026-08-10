@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10 10:16:49
 
 #pragma once
 #include "../Widget.hpp"
@@ -19,13 +19,13 @@ namespace neko::widget {
 
     class TextField final : public Widget {
     public:
-        explicit TextField(const engine::Context& context)
-            : input_{add_behavior<behavior::TextFieldInput>(state_, geometry_, style_, context)} {
+        explicit TextField(const engine::Context& context) :
+            input_{add_behavior<TextFieldInput>(state_, geometry_, style_, context)} {
             set_geometry(geometry_);
             set_interaction(interaction_);
-            add_behavior<behavior::TextFieldLayout>(geometry_, style_);
-            add_behavior<behavior::TextFieldDraw>(geometry_, interaction_, state_, style_, context);
-            add_behavior<behavior::TextFieldHitTest>(geometry_);
+            add_behavior<TextFieldLayout>(geometry_, style_);
+            add_behavior<TextFieldDraw>(geometry_, interaction_, state_, style_, context);
+            add_behavior<TextFieldHitTest>(geometry_);
         }
 
         auto style() -> style::TextFieldStyle& {
@@ -40,6 +40,6 @@ namespace neko::widget {
         behavior::TextFieldState state_{};
         behavior::InteractionState interaction_{};
         behavior::GeometryState geometry_{};
-        behavior::TextFieldInput& input_;
+        TextFieldInput& input_;
     };
 } // namespace neko::widget

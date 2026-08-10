@@ -1,4 +1,4 @@
-﻿// 2026-08-10 09:20:42
+﻿// 2026-08-10 10:17:10
 
 #include "EventRouter.hpp"
 
@@ -180,32 +180,6 @@ namespace neko::engine {
         }
     }
 
-    auto EventRouter::hit_target(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>> {
-        const auto hit_tester = hit_tester_.lock();
-        return hit_tester ? hit_tester->hit_test(mouse) : std::nullopt;
-    }
-
-    auto EventRouter::focused_target() const -> std::shared_ptr<widget::Widget> {
-        const auto tree = tree_.lock();
-        return tree ? tree->get_focus().lock() : nullptr;
-    }
-
-    auto EventRouter::try_tab_navigate(const std::shared_ptr<Context>& context, const device::KeyEvent& e) const -> bool {
-        if (!(e.pressed && e.key == 0x09)) { // VK_TAB
-            return false;
-        }
-        const auto tree = tree_.lock();
-        const auto next = tree ? tree->next_focus() : std::weak_ptr<widget::Widget>{};
-        if (!next.lock()) {
-            return false;
-        }
-        tree->set_focus(next);
-        if (context->mark_dirty) {
-            context->mark_dirty();
-        }
-        return true;
-    }
-
     auto EventRouter::handle_resize(const platform::ResizeEvent& e) const -> void {
         if (!scheduler_.expired()) {
             scheduler_.lock()->set_pending_size(e.width, e.height);
@@ -240,5 +214,31 @@ namespace neko::engine {
         if (destroy_handler_) {
             destroy_handler_();
         }
+    }
+
+    auto EventRouter::hit_target(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>> {
+        const auto hit_tester = hit_tester_.lock();
+        return hit_tester ? hit_tester->hit_test(mouse) : std::nullopt;
+    }
+
+    auto EventRouter::focused_target() const -> std::shared_ptr<widget::Widget> {
+        const auto tree = tree_.lock();
+        return tree ? tree->get_focus().lock() : nullptr;
+    }
+
+    auto EventRouter::try_tab_navigate(const std::shared_ptr<Context>& context, const device::KeyEvent& e) const -> bool {
+        if (!(e.pressed && e.key == 0x09)) {
+            return false;
+        }
+        const auto tree = tree_.lock();
+        const auto next = tree ? tree->next_focus() : std::weak_ptr<widget::Widget>{};
+        if (!next.lock()) {
+            return false;
+        }
+        tree->set_focus(next);
+        if (context->mark_dirty) {
+            context->mark_dirty();
+        }
+        return true;
     }
 }

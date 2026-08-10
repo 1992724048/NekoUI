@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:17:33
+
 #pragma once
 
 #include <array>

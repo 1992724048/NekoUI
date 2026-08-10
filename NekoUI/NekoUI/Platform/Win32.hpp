@@ -24,7 +24,7 @@ namespace neko::platform {
         auto set_window(type::Handle native_window) -> void {
             hwnd_ = static_cast<HWND>(native_window);
         }
-        auto set_ime_window_position(int client_x, int client_y) -> void;
+        auto set_ime_window_position(int client_x, int client_y) const -> void;
         [[nodiscard]] auto activate_ime(type::Handle native_window, bool active) -> bool;
         static auto show_window(type::Handle native_window) -> void;
         static auto hide_window(type::Handle native_window) -> void;

@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10
 
 #include "CenterLayout.hpp"
 
@@ -11,7 +11,6 @@ namespace neko::behavior {
 
         engine::visit_children(owner_,
                                [&](const std::shared_ptr<neko::widget::Widget>& child) -> void {
-                                   // First let child calculate its natural size
                                    child->layout(available, context);
                                    const auto& cb = child->get_bounds();
                                    const auto cw = cb.z - cb.x;

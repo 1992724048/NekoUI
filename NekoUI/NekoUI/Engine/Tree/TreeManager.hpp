@@ -1,3 +1,5 @@
+﻿// 2026-08-10 10:17:44
+
 #pragma once
 
 #include <atomic>
@@ -9,7 +11,6 @@
 
 #include "../Core/MutableWidget.hpp"
 
-#include "../../Type.hpp"
 #include "../../Platform/Event.hpp"
 
 namespace neko::device {

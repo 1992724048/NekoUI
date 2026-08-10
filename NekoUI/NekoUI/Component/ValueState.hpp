@@ -1,8 +1,7 @@
-﻿#pragma once
-#include <algorithm>
-#include <atomic>
+﻿// 2026-08-10 10:18:52
+
+#pragma once
 #include <functional>
-#include <utility>
 
 namespace neko::component {
     class ValueStateBase {
