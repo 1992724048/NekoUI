@@ -7,12 +7,13 @@
 #include "../../Widget.hpp"
 
 namespace neko::behavior {
-    ColumnDraw::ColumnDraw(neko::widget::Widget& owner, const style::ColumnStyle& style) :
+    ColumnDraw::ColumnDraw(neko::widget::Widget& owner, const behavior::GeometryState& geometry, const style::ColumnStyle& style) :
         DrawBehavior{owner},
+        geometry_{geometry},
         style_{style} {}
 
     auto ColumnDraw::draw(Vec4I /*rect*/, engine::Context& context, backend::DirectX11& backend) -> Rect {
-        const auto bounds = owner_.get_bounds();
+        const auto bounds = geometry_.bounds;
         auto bg = style_.background.color.value != 0 ? style_.background : style::Background{context.scheme.surface};
         if (bg.color.value != 0) {
             backend.draw_rect_fill(bounds, bg.color);

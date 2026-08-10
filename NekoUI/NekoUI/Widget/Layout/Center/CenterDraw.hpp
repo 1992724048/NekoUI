@@ -2,15 +2,17 @@
 
 #pragma once
 #include "../../../Behavior/DrawBehavior.hpp"
+#include "../../../Behavior/GeometryState.hpp"
 
 #include "CenterStyle.hpp"
 
 namespace neko::behavior {
     class CenterDraw final : public DrawBehavior {
     public:
-        CenterDraw(neko::widget::Widget& owner, const style::CenterStyle& style);
+        CenterDraw(neko::widget::Widget& owner, const behavior::GeometryState& geometry, const style::CenterStyle& style);
         auto draw(Vec4I rect, engine::Context& context, backend::DirectX11& backend) -> Rect override;
     private:
+        const behavior::GeometryState& geometry_;
         const style::CenterStyle& style_;
     };
 }

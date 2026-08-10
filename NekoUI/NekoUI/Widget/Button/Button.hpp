@@ -24,10 +24,11 @@ namespace neko::widget {
         using OnClick = ButtonInput::OnClick;
 
         explicit Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr) :
-            input_{add_behavior<ButtonInput>(interaction_, context, std::move(onClick))} {
-            add_behavior<ButtonLayout>(style_);
-            add_behavior<ButtonDraw>(interaction_, style_, context, std::move(text));
-            add_behavior<ButtonHitTest>();
+            input_{add_behavior<ButtonInput>(geometry_, interaction_, context, std::move(onClick))} {
+            set_geometry(geometry_);
+            add_behavior<ButtonLayout>(geometry_, style_);
+            add_behavior<ButtonDraw>(geometry_, interaction_, style_, context, std::move(text));
+            add_behavior<ButtonHitTest>(geometry_);
         }
 
         auto on_click(OnClick callback) -> Button& {
@@ -41,6 +42,7 @@ namespace neko::widget {
     private:
         style::ButtonStyle style_{};
         behavior::InteractionState interaction_{};
+        behavior::GeometryState geometry_{};
         ButtonInput& input_;
     };
 } // namespace neko::widget

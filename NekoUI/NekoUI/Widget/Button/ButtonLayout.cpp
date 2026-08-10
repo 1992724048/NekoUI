@@ -8,8 +8,9 @@
 #include "../Widget.hpp"
 
 namespace neko::behavior {
-    ButtonLayout::ButtonLayout(neko::widget::Widget& owner, const style::ButtonStyle& style) :
+    ButtonLayout::ButtonLayout(neko::widget::Widget& owner, behavior::GeometryState& geometry, const style::ButtonStyle& style) :
         LayoutBehavior{owner},
+        geometry_{geometry},
         style_{style} {}
 
     auto ButtonLayout::layout(const Vec4I available, engine::Context& /*context*/) -> void {
@@ -19,6 +20,6 @@ namespace neko::behavior {
             effective.z = effective.x + static_cast<int>(style_.size.value.x);
             effective.w = effective.y + static_cast<int>(style_.size.value.y);
         }
-        owner_.set_bounds(effective);
+        geometry_.bounds = effective;
     }
 } // namespace neko::behavior

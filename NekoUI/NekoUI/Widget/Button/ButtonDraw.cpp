@@ -9,8 +9,9 @@
 #include "../Widget.hpp"
 
 namespace neko::behavior {
-    ButtonDraw::ButtonDraw(neko::widget::Widget& owner, const InteractionState& interaction, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
+    ButtonDraw::ButtonDraw(neko::widget::Widget& owner, const behavior::GeometryState& geometry, const InteractionState& interaction, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
         DrawBehavior{owner},
+        geometry_(geometry),
         interaction_(interaction),
         style_{style},
         text_(std::move(text)) {
@@ -28,7 +29,7 @@ namespace neko::behavior {
         const auto tc = style_.text.color.value != 0 ? style_.text.color : Color{0xFFFFFFFF};
 
         const auto s = scale_.tick();
-        const auto bounds = owner_.get_bounds();
+        const auto bounds = geometry_.bounds;
         const auto center_x = (bounds.x + bounds.z) / 2;
         const auto center_y = (bounds.y + bounds.w) / 2;
         const auto half_w = static_cast<int>(static_cast<float>(bounds.z - bounds.x) * s / 2.0F);

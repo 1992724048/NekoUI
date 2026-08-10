@@ -17,9 +17,10 @@ namespace neko::widget {
     class Center final : public Widget {
     public:
         explicit Center(engine::Context&) {
-            add_behavior<CenterLayout>();
-            add_behavior<CenterDraw>(style_);
-            add_behavior<CenterHitTest>();
+            set_geometry(geometry_);
+            add_behavior<CenterLayout>(geometry_);
+            add_behavior<CenterDraw>(geometry_, style_);
+            add_behavior<CenterHitTest>(geometry_);
         }
 
         auto style() -> style::CenterStyle& {
@@ -27,5 +28,6 @@ namespace neko::widget {
         }
     private:
         style::CenterStyle style_{};
+        behavior::GeometryState geometry_{};
     };
 } // namespace neko::widget

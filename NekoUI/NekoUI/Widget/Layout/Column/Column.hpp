@@ -17,9 +17,10 @@ namespace neko::widget {
     class Column final : public Widget {
     public:
         explicit Column(engine::Context&) {
-            add_behavior<ColumnLayout>(style_);
-            add_behavior<ColumnDraw>(style_);
-            add_behavior<ColumnHitTest>();
+            set_geometry(geometry_);
+            add_behavior<ColumnLayout>(geometry_, style_);
+            add_behavior<ColumnDraw>(geometry_, style_);
+            add_behavior<ColumnHitTest>(geometry_);
         }
 
         auto style() -> style::ColumnStyle& {
@@ -27,5 +28,6 @@ namespace neko::widget {
         }
     private:
         style::ColumnStyle style_{};
+        behavior::GeometryState geometry_{};
     };
 } // namespace neko::widget

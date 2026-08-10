@@ -9,8 +9,9 @@
 #include "../../Widget.hpp"
 
 namespace neko::behavior {
-    ColumnLayout::ColumnLayout(neko::widget::Widget& owner, const style::ColumnStyle& style) :
+    ColumnLayout::ColumnLayout(neko::widget::Widget& owner, behavior::GeometryState& geometry, const style::ColumnStyle& style) :
         LayoutBehavior{owner},
+        geometry_{geometry},
         style_{style} {}
 
     auto ColumnLayout::layout(const Vec4I available, engine::Context& context) -> void {
@@ -20,7 +21,7 @@ namespace neko::behavior {
             effective.z = effective.x + static_cast<int>(style_.size.value.x);
             effective.w = effective.y + static_cast<int>(style_.size.value.y);
         }
-        owner_.set_bounds(effective);
+        geometry_.bounds = effective;
 
         auto y_offset = effective.y;
         engine::visit_children(owner_,

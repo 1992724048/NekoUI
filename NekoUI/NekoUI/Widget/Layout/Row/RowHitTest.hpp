@@ -2,11 +2,14 @@
 
 #pragma once
 #include "../../../Behavior/HitTestBehavior.hpp"
+#include "../../../Behavior/GeometryState.hpp"
 
 namespace neko::behavior {
     class RowHitTest final : public HitTestBehavior {
     public:
-        explicit RowHitTest(neko::widget::Widget& owner) : HitTestBehavior{owner} {}
+        explicit RowHitTest(neko::widget::Widget& owner, const behavior::GeometryState& geometry) : HitTestBehavior{owner}, geometry_{geometry} {}
         [[nodiscard]] auto hit_test(const device::Mouse& mouse) const -> bool override;
+    private:
+        const behavior::GeometryState& geometry_;
     };
 }

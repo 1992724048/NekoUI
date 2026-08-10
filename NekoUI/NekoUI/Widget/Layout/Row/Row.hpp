@@ -17,9 +17,10 @@ namespace neko::widget {
     class Row final : public Widget {
     public:
         explicit Row(engine::Context&) {
-            add_behavior<RowLayout>(style_);
-            add_behavior<RowDraw>(style_);
-            add_behavior<RowHitTest>();
+            set_geometry(geometry_);
+            add_behavior<RowLayout>(geometry_, style_);
+            add_behavior<RowDraw>(geometry_, style_);
+            add_behavior<RowHitTest>(geometry_);
         }
 
         auto style() -> style::RowStyle& {
@@ -27,5 +28,6 @@ namespace neko::widget {
         }
     private:
         style::RowStyle style_{};
+        behavior::GeometryState geometry_{};
     };
 } // namespace neko::widget

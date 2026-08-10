@@ -7,6 +7,6 @@
 
 namespace neko::behavior {
     auto CenterHitTest::hit_test(const device::Mouse& mouse) const -> bool {
-        return mouse.is_inside(owner_.get_bounds());
+        return mouse.is_inside(geometry_.bounds);
     }
 } // namespace neko::behavior

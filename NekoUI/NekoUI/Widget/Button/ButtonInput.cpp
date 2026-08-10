@@ -8,8 +8,9 @@
 #include "../Widget.hpp"
 
 namespace neko::behavior {
-    ButtonInput::ButtonInput(neko::widget::Widget& owner, InteractionState& interaction, const engine::Context& /*context*/, OnClick onClick) :
+    ButtonInput::ButtonInput(neko::widget::Widget& owner, const behavior::GeometryState& geometry, InteractionState& interaction, const engine::Context& /*context*/, OnClick onClick) :
         InputBehavior{owner},
+        geometry_(geometry),
         interaction_(interaction),
         onClick_(std::move(onClick)) {}
 
@@ -19,7 +20,7 @@ namespace neko::behavior {
             if (!mouse) {
                 return;
             }
-            const auto inside = mouse->is_inside(owner_.get_bounds());
+            const auto inside = mouse->is_inside(geometry_.bounds);
             if (inside != interaction_.hovered.load(std::memory_order_relaxed)) {
                 interaction_.hovered.store(inside, std::memory_order_relaxed);
                 if (context.mark_dirty) {
@@ -32,7 +33,7 @@ namespace neko::behavior {
         const auto* mouse_evt = std::get_if<device::MouseButtonEvent>(&event);
         if (mouse_evt && mouse_evt->button == device::MouseButton::Left && mouse_evt->pressed) {
             const auto mouse = context.mouse.lock();
-            if (onClick_ && mouse && mouse->is_inside(owner_.get_bounds())) {
+            if (onClick_ && mouse && mouse->is_inside(geometry_.bounds)) {
                 onClick_();
             }
         }
