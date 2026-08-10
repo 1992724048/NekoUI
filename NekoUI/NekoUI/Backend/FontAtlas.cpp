@@ -9,13 +9,6 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
-namespace {
-    // EXPERIMENT-D: 非内联辅助——绕过可能的编译器内联优化 bug
-    auto create_sampler_state(ID3D11Device* device, const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState*& out) -> HRESULT {
-        return device->CreateSamplerState(&desc, &out);
-    }
-}
-
 namespace neko::backend {
     FontAtlas::FontAtlas(const Surface& surface) :
         surface_{surface} {
