@@ -106,13 +106,18 @@ namespace neko::engine {
         if (!rebuild_root_) {
             return;
         }
+        rebuilding_.store(true, std::memory_order_relaxed);
         tree_manager_->clear();
         rebuild_root_();
         widget_builder_->build(*context);
+        rebuilding_.store(false, std::memory_order_relaxed);
         render_scheduler_->request_frame();
     }
 
     auto Engine::schedule_rebuild() -> void {
+        if (rebuilding_.load(std::memory_order_relaxed)) {
+            return;  // rebuild 中抑制中间帧请求（build<T> 逐个触发，避免半树渲染闪屏）
+        }
         tree_dirty_.store(true, std::memory_order_relaxed);
         if (render_scheduler_) {
             render_scheduler_->request_frame();
