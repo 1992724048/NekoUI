@@ -40,34 +40,34 @@ namespace neko::engine {
                            if (const auto mouse = mouse_.lock()) {
                                mouse->handle(e);
                            }
-                           handle_input(event);
+                           handle_mouse_move(e);
                        },
                        [&](const device::MouseButtonEvent& e) -> void {
                            if (const auto mouse = mouse_.lock()) {
                                mouse->handle(e);
                            }
-                           handle_input(event);
+                           handle_mouse_button(e);
                        },
                        [&](const device::MouseWheelEvent& e) -> void {
                            if (const auto mouse = mouse_.lock()) {
                                mouse->handle(e);
                            }
-                           handle_input(event);
+                           handle_mouse_wheel(e);
                        },
                        [&](const device::KeyEvent& e) -> void {
                            if (const auto keyboard = keyboard_.lock()) {
                                keyboard->handle(e);
                            }
-                           handle_input(event);
+                           handle_key(e);
                        },
                        [&](const device::CharEvent& e) -> void {
                            if (const auto keyboard = keyboard_.lock()) {
                                keyboard->handle(e);
                            }
-                           handle_input(event);
+                           handle_char(e);
                        },
-                       [&](const platform::ImeCompositionEvent&) -> void {
-                           handle_input(event);
+                       [&](const platform::ImeCompositionEvent& e) -> void {
+                           handle_ime(e);
                        },
                        [&](const platform::ResizeEvent& e) -> void {
                            handle_resize(e);
@@ -90,52 +90,120 @@ namespace neko::engine {
         }
     }
 
-    auto EventRouter::handle_input(const platform::Event& event) const -> void {
+    auto EventRouter::handle_key(const device::KeyEvent& e) const -> void {
         const auto context = context_.lock();
         const auto mouse = mouse_.lock();
+        if (!context || !mouse) {
+            return;
+        }
+        if (const auto focus = focused_target()) {
+            if (!try_tab_navigate(context, e)) {
+                focus->input(*context, e);
+            }
+            return;
+        }
+        if (const auto target = hit_target(*mouse)) {
+            (*target)->input(*context, e);
+        }
+    }
+
+    auto EventRouter::handle_char(const device::CharEvent& e) const -> void {
+        const auto context = context_.lock();
+        const auto mouse = mouse_.lock();
+        if (!context || !mouse) {
+            return;
+        }
+        if (const auto focus = focused_target()) {
+            focus->input(*context, e);
+            return;
+        }
+        if (const auto target = hit_target(*mouse)) {
+            (*target)->input(*context, e);
+        }
+    }
+
+    auto EventRouter::handle_ime(const platform::ImeCompositionEvent& e) const -> void {
+        const auto context = context_.lock();
+        const auto mouse = mouse_.lock();
+        if (!context || !mouse) {
+            return;
+        }
+        if (const auto focus = focused_target()) {
+            focus->input(*context, e);
+            return;
+        }
+        if (const auto target = hit_target(*mouse)) {
+            (*target)->input(*context, e);
+        }
+    }
+
+    auto EventRouter::handle_mouse_move(const device::MouseMoveEvent& e) const -> void {
+        const auto context = context_.lock();
+        const auto mouse = mouse_.lock();
+        if (!context || !mouse) {
+            return;
+        }
+        const auto target = hit_target(*mouse);
+        const auto prev = last_mouse_target_.lock();
+        if (prev && (!target || prev.get() != target->get())) {
+            prev->set_hovered(false);
+        }
+        last_mouse_target_ = target ? std::weak_ptr{*target} : std::weak_ptr<widget::Widget>{};
+        if (target) {
+            (*target)->set_hovered(true);
+            (*target)->input(*context, e);
+        }
+    }
+
+    auto EventRouter::handle_mouse_button(const device::MouseButtonEvent& e) const -> void {
+        const auto context = context_.lock();
+        const auto mouse = mouse_.lock();
+        if (!context || !mouse) {
+            return;
+        }
+        if (const auto target = hit_target(*mouse)) {
+            if (const auto tree = tree_.lock()) {
+                tree->set_focus(*target);
+            }
+            (*target)->input(*context, e);
+        }
+    }
+
+    auto EventRouter::handle_mouse_wheel(const device::MouseWheelEvent& e) const -> void {
+        const auto context = context_.lock();
+        const auto mouse = mouse_.lock();
+        if (!context || !mouse) {
+            return;
+        }
+        if (const auto target = hit_target(*mouse)) {
+            (*target)->input(*context, e);
+        }
+    }
+
+    auto EventRouter::hit_target(const device::Mouse& mouse) const -> std::optional<std::shared_ptr<widget::Widget>> {
         const auto hit_tester = hit_tester_.lock();
-        if (!context || !mouse || !hit_tester) {
-            return;
+        return hit_tester ? hit_tester->hit_test(mouse) : std::nullopt;
+    }
+
+    auto EventRouter::focused_target() const -> std::shared_ptr<widget::Widget> {
+        const auto tree = tree_.lock();
+        return tree ? tree->get_focus().lock() : nullptr;
+    }
+
+    auto EventRouter::try_tab_navigate(const std::shared_ptr<Context>& context, const device::KeyEvent& e) const -> bool {
+        if (!(e.pressed && e.key == 0x09)) { // VK_TAB
+            return false;
         }
-        if (std::holds_alternative<device::KeyEvent>(event) || std::holds_alternative<device::CharEvent>(event) || std::holds_alternative<platform::ImeCompositionEvent>(event)) {
-            const auto tree = tree_.lock();
-            const auto focus = tree ? tree->get_focus().lock() : nullptr;
-            if (focus) {
-                if (const auto* key = std::get_if<device::KeyEvent>(&event); key != nullptr && key->pressed && key->key == 0x09) { // VK_TAB
-                    const auto next = tree->next_focus();
-                    if (next.lock()) {
-                        tree->set_focus(next);
-                        if (context->mark_dirty) {
-                            context->mark_dirty();
-                        }
-                    }
-                    return;
-                }
-                focus->input(*context, event);
-                return;
-            }
+        const auto tree = tree_.lock();
+        const auto next = tree ? tree->next_focus() : std::weak_ptr<widget::Widget>{};
+        if (!next.lock()) {
+            return false;
         }
-        if (std::holds_alternative<device::MouseMoveEvent>(event)) {
-            const auto target = hit_tester->hit_test(*mouse);
-            const auto prev = last_mouse_target_.lock();
-            if (prev && (!target || prev.get() != target->get())) {
-                prev->set_hovered(false);
-            }
-            last_mouse_target_ = target ? std::weak_ptr{*target} : std::weak_ptr<widget::Widget>{};
-            if (target) {
-                (*target)->set_hovered(true);
-                (*target)->input(*context, event);
-            }
-            return;
+        tree->set_focus(next);
+        if (context->mark_dirty) {
+            context->mark_dirty();
         }
-        if (const auto target = hit_tester->hit_test(*mouse)) {
-            if (std::holds_alternative<device::MouseButtonEvent>(event)) {
-                if (const auto tree = tree_.lock()) {
-                    tree->set_focus(*target);
-                }
-            }
-            (*target)->input(*context, event);
-        }
+        return true;
     }
 
     auto EventRouter::handle_resize(const platform::ResizeEvent& e) const -> void {

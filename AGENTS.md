@@ -83,7 +83,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 ```
 WM_* → Win32::handle_message() → translate_event() → MsgPump::push_msg()
   → MsgPump::msg_loop() → EventRouter::dispatch()
-    → std::visit → handle_input / handle_resize / handle_dpi_change / handle_theme_change / handle_destroy
+    → std::visit → 按类型分发（handle_key/handle_char/handle_ime/handle_mouse_move/handle_mouse_button/handle_mouse_wheel）/ handle_resize / handle_dpi_change / handle_theme_change / handle_destroy
       → HitTester::hit_test() → Widget::input() / RenderScheduler::set_pending_size / Context::scheme 更新 / Engine::clear() → TreeManager::clear()
 ```
 
