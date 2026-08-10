@@ -9,6 +9,13 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
+namespace {
+    // EXPERIMENT-D: 非内联辅助——绕过可能的编译器内联优化 bug
+    auto create_sampler_state(ID3D11Device* device, const D3D11_SAMPLER_DESC& desc, ID3D11SamplerState*& out) -> HRESULT {
+        return device->CreateSamplerState(&desc, &out);
+    }
+}
+
 namespace neko::backend {
     FontAtlas::FontAtlas(const Surface& surface) :
         surface_{surface} {
@@ -156,7 +163,9 @@ namespace neko::backend {
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        surface_.device()->CreateSamplerState(&sm, &font_sampler_);
+        // EXPERIMENT-D: 辅助函数（非内联）调用——绕过可能的内联优化 bug
+        const HRESULT hr = create_sampler_state(surface_.device(), sm, font_sampler_);
+        std::println(stderr, "[diag] sampler via helper: hr={:#010X} result={}", static_cast<unsigned int>(hr), font_sampler_ != nullptr);
         return true;
     }
 
