@@ -93,7 +93,7 @@ namespace neko::engine {
         std::shared_ptr<MsgPump> msg_pump_;
         std::shared_ptr<EventRouter> event_router_;
         std::atomic_bool tree_dirty_{false};
-        std::atomic_bool rebuilding_{false};
+        mutable std::atomic_bool rebuilding_{false};
 
         std::function<void(widget::Widget&)> root_builder_;
         std::function<void()> rebuild_root_;
