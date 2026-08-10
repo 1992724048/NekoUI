@@ -153,27 +153,33 @@ namespace neko::backend {
 
         // 图集 MipLevels=1，LINEAR 对 MIN/MAG 生效；放大时平滑插值消除像素化
         ID3D11Device* dev = surface_.device();
-        // 验证 device 指针有效性（QI 自检）
-        ID3D11Device* qi_test = nullptr;
-        const HRESULT qi_hr = dev->QueryInterface(__uuidof(ID3D11Device), reinterpret_cast<void**>(&qi_test));
-        std::println(stderr, "[diag] device QI hr={:#010X} same={}", static_cast<unsigned int>(qi_hr), qi_test == dev);
-        if (qi_test != nullptr) {
-            qi_test->Release();
+        // 对照：同一 device 创建小纹理（create_atlas_texture 成功过——验证创建能力）
+        D3D11_TEXTURE2D_DESC probe_td{};
+        probe_td.Width = 8;
+        probe_td.Height = 8;
+        probe_td.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        probe_td.MipLevels = 1;
+        probe_td.ArraySize = 1;
+        probe_td.SampleDesc.Count = 1;
+        probe_td.Usage = D3D11_USAGE_DEFAULT;
+        probe_td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        ID3D11Texture2D* probe = nullptr;
+        const HRESULT probe_hr = dev->CreateTexture2D(&probe_td, nullptr, &probe);
+        std::println(stderr, "[diag] probe texture hr={:#010X} result={}", static_cast<unsigned int>(probe_hr), probe != nullptr);
+        if (probe != nullptr) {
+            probe->Release();
         }
-        // 局部变量 sampler（排除成员问题）
+        // sampler 字节 dump
         D3D11_SAMPLER_DESC sm{};
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        ID3D11SamplerState* tmp_sampler = nullptr;
-        const HRESULT tmp_hr = dev->CreateSamplerState(&sm, &tmp_sampler);
-        std::println(stderr, "[diag] tmp sampler hr={:#010X} result={}", static_cast<unsigned int>(tmp_hr), tmp_sampler != nullptr);
-        if (tmp_sampler != nullptr) {
-            tmp_sampler->Release();
-        }
-        // 正式创建（成员）
+        const auto* bytes = reinterpret_cast<const unsigned char*>(&sm);
+        std::println(stderr, "[diag] sm bytes: {:02X} {:02X} {:02X} {:02X} | {:02X} {:02X} {:02X} {:02X} | {:02X} {:02X} {:02X} {:02X} | {:02X} {:02X} {:02X} {:02X}",
+                     bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+                     bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
         const HRESULT hr = dev->CreateSamplerState(&sm, &font_sampler_);
-        std::println(stderr, "[diag] member sampler hr={:#010X} result={}", static_cast<unsigned int>(hr), font_sampler_ != nullptr);
+        std::println(stderr, "[diag] sampler hr={:#010X} result={}", static_cast<unsigned int>(hr), font_sampler_ != nullptr);
         return true;
     }
 
