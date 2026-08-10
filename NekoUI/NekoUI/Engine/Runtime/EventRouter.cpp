@@ -6,7 +6,6 @@
 #include "RenderScheduler.hpp"
 #include "../Tree/TreeManager.hpp"
 
-#include <cstdio>
 #include <utility>
 
 #include "../../Backend/DirectX11.hpp"
@@ -94,12 +93,9 @@ namespace neko::engine {
             return;
         }
         if (std::holds_alternative<device::MouseMoveEvent>(event)) {
-            const auto& move = std::get<device::MouseMoveEvent>(event);
             const auto target = hit_tester->hit_test(*mouse);
             const auto prev = last_mouse_target_.lock();
-            const bool repatch = prev && (!target || prev.get() != target->get());
-            std::printf("[Router] pos=(%d,%d) target=%s prev=%s repatch=%d\n", move.x, move.y, target ? target->get()->path().c_str() : "null", prev ? prev->path().c_str() : "null", repatch);
-            if (repatch) {
+            if (prev && (!target || prev.get() != target->get())) {
                 prev->input(*context, event);
             }
             last_mouse_target_ = target ? std::weak_ptr<widget::Widget>{*target} : std::weak_ptr<widget::Widget>{};

@@ -66,7 +66,7 @@ namespace neko::device {
         }
 
         [[nodiscard]] auto is_inside(const Vec4I r) const -> bool {
-            return pos.x >= r.x && pos.x <= (r.x + r.z) && pos.y >= r.y && pos.y <= (r.y + r.w);
+            return pos.x >= r.x && pos.x < (r.x + r.z) && pos.y >= r.y && pos.y < (r.y + r.w);
         }
 
         [[nodiscard]] auto is_inside_circle(const Vec2I center, const int radius) const -> bool {
@@ -83,7 +83,7 @@ namespace neko::device {
             const int rh = r.w;
             const int cr = corner_radius;
 
-            if (pos.x < rx || pos.x > rx + rw || pos.y < ry || pos.y > ry + rh) {
+            if (pos.x < rx || pos.x >= rx + rw || pos.y < ry || pos.y >= ry + rh) {
                 return false;
             }
 
