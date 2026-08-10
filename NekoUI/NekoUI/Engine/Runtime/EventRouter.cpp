@@ -96,10 +96,11 @@ namespace neko::engine {
             const auto target = hit_tester->hit_test(*mouse);
             const auto prev = last_mouse_target_.lock();
             if (prev && (!target || prev.get() != target->get())) {
-                prev->input(*context, event);
+                prev->set_hovered(false);
             }
             last_mouse_target_ = target ? std::weak_ptr<widget::Widget>{*target} : std::weak_ptr<widget::Widget>{};
             if (target) {
+                (*target)->set_hovered(true);
                 (*target)->input(*context, event);
             }
             return;

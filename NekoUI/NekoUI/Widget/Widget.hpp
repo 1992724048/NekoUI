@@ -20,6 +20,7 @@
 #include "../Platform/Event.hpp"
 
 #include "../Behavior/GeometryState.hpp"
+#include "../Behavior/InteractionState.hpp"
 #include "../Behavior/LayoutBehavior.hpp"
 #include "../Behavior/DrawBehavior.hpp"
 #include "../Behavior/InputBehavior.hpp"
@@ -106,6 +107,25 @@ namespace neko::widget {
             geometry_ = &geometry;
         }
 
+        auto set_interaction(behavior::InteractionState& interaction) -> void {
+            interaction_ = &interaction;
+        }
+
+        auto set_hovered(const bool hovered) -> void {
+            if (interaction_ == nullptr) {
+                return;
+            }
+            if (interaction_->hovered.exchange(hovered, std::memory_order_relaxed) != hovered) {
+                if (const auto ctx = context_.lock(); ctx && ctx->mark_dirty) {
+                    ctx->mark_dirty();
+                }
+            }
+        }
+
+        [[nodiscard]] auto get_hovered() const -> bool {
+            return interaction_ != nullptr && interaction_->hovered.load(std::memory_order_relaxed);
+        }
+
         [[nodiscard]] auto geometry() const -> behavior::GeometryState& {
             return *geometry_;
         }
@@ -119,6 +139,7 @@ namespace neko::widget {
         }
     protected:
         behavior::GeometryState* geometry_ = nullptr;
+        behavior::InteractionState* interaction_ = nullptr;
 
         Widget* parent_ = nullptr;
         std::weak_ptr<engine::Context> context_;
