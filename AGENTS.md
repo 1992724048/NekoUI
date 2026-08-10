@@ -7,7 +7,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 - **语言标准**: C++20 (Win32) / C++latest (x64)
 - **渲染**: DirectX 11
 - **平台**: Windows (Win32 API)
-- **命名空间**: `neko`，子命名空间包括 `neko::type`、`neko::engine`、`neko::engine::internal`、`neko::widget`、`neko::backend`、`neko::platform`、`neko::device`、`neko::component`、`neko::component::ease`、`neko::style`
+- **命名空间**: `neko`，子命名空间包括 `neko::type`、`neko::engine`、`neko::engine::internal`、`neko::behavior`、`neko::widget`、`neko::backend`、`neko::platform`、`neko::device`、`neko::component`、`neko::component::ease`、`neko::style`
 - **文档**: 本文档（AGENTS.md）为唯一权威入职文档
 
 ## Architecture
@@ -152,10 +152,15 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         ├── NekoUI.hpp                     # 主包含头文件（转发 Engine.hpp）
         ├── Type.hpp                       # 核心类型：Vec2/3/4<T>（union xyzw/rgba）、Color（uint32 RGBA）、Handle（void*）
         ├── Backend/
-        │   ├── stb_truetype.h             # 嵌入式字体光栅化（gitignored — 不跟踪，删除后无法从 git 恢复）
-        │   └── DirectX11/
-        │       ├── DirectX11.hpp          # D3D11 唯一渲染实现头文件（设备/交换链/着色器/字体图集/CJK 字形/TextCB）
-        │       └── DirectX11.cpp          # D3D11 完整实现
+        │   ├── DirectX11.hpp              # D3D11 唯一渲染实现头文件（设备/交换链/着色器/字体图集/CJK 字形/TextCB）
+        │   ├── DirectX11.cpp              # D3D11 完整实现
+        │   └── stb_truetype.h             # 嵌入式字体光栅化（gitignored — 不跟踪，删除后无法从 git 恢复）
+        ├── Behavior/                      # 行为层（namespace neko::behavior）
+        │   ├── Behavior.hpp               # 行为基类（持 Widget& owner_，Rule of Five delete）
+        │   ├── LayoutBehavior.hpp         # 布局行为接口（纯虚 layout）
+        │   ├── DrawBehavior.hpp           # 绘制行为接口（纯虚 draw -> Rect）
+        │   ├── InputBehavior.hpp          # 输入行为接口（纯虚 input）
+        │   └── HitTestBehavior.hpp        # 命中测试行为接口（纯虚 hit_test const -> bool）
         ├── Component/
         │   ├── ValueState.hpp             # 响应式值封装 + 脏标记绑定
         │   └── Animation.hpp              # 12 种速率曲线动画引擎
@@ -163,62 +168,58 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         │   ├── Keyboard.hpp               # 键盘状态（修饰键 + 边沿检测 + 字符缓冲）
         │   └── Mouse.hpp                  # 鼠标状态 + DPI 感知 4 种命中测试
         ├── Engine/
-        │   ├── Context.hpp                # 引擎共享上下文（回调 + Mouse/Keyboard 弱引用 + ColorScheme）
-        │   ├── Engine.hpp                 # 引擎主类声明
-        │   ├── Engine.cpp                 # 引擎实现：初始化全部子系统并连接回调 + render_frame + draw_widget
-        │   ├── EventRouter.hpp            # 事件路由声明
-        │   ├── EventRouter.cpp            # std::visit 事件分发
-        │   ├── HitTester.hpp              # 命中测试声明（递归反向遍历，返回顶层命中 Widget）
-        │   ├── HitTester.cpp              # 命中测试实现
-        │   ├── InvalidationTracker.hpp    # 脏标记跟踪声明
-        │   ├── InvalidationTracker.cpp    # 实现（atomic dirty + animation 计数器 + 脏 Widget 列表）
-        │   ├── MsgPump.hpp                # 线程安全消息队列声明
-        │   ├── MsgPump.cpp                # SPSC 环形缓冲区实现（32 槽）
-        │   ├── MutableWidget.hpp          # 变体 Widget 容器（四种形式：monostate/list/vector/shared_ptr）
-        │   ├── RenderScheduler.hpp        # 独立渲染线程声明
-        │   ├── RenderScheduler.cpp        # 渲染线程实现
-        │   ├── TreeManager.hpp            # Widget 树管理声明（root/focus 原子指针 + ID/index 映射 + 焦点导航）
-        │   ├── TreeManager.cpp            # Widget 树管理实现（shared_mutex 线程安全）
-        │   ├── WidgetBuilder.hpp          # Widget Builder API 声明
-        │   ├── WidgetBuilder.cpp          # Widget 构建遍历实现（注册到 ID/index 映射，调用 build()）
-        │   └── WidgetVisitor.hpp          # Widget 子节点遍历模板（visit_children，统一四种变体分发）
+        │   ├── Core/
+        │   │   ├── Engine.hpp             # 引擎主类声明
+        │   │   ├── Engine.cpp             # 引擎实现：初始化全部子系统并连接回调 + render_frame + draw_widget
+        │   │   ├── Context.hpp            # 引擎共享上下文（回调 + Mouse/Keyboard 弱引用 + ColorScheme）
+        │   │   └── MutableWidget.hpp      # 变体 Widget 容器（四种形式：monostate/list/vector/shared_ptr）
+        │   ├── Tree/
+        │   │   ├── TreeManager.hpp/.cpp   # Widget 树管理（root/focus 原子指针 + ID/index 映射 + shared_mutex）
+        │   │   ├── WidgetBuilder.hpp/.cpp # Widget 构建遍历（注册到 ID/index 映射）
+        │   │   ├── WidgetVisitor.hpp      # Widget 子节点遍历模板（visit_children）
+        │   │   └── HitTester.hpp/.cpp     # 命中测试（递归反向遍历，返回顶层命中 Widget）
+        │   └── Runtime/
+        │       ├── MsgPump.hpp/.cpp       # 线程安全消息队列（SPSC 环形缓冲区，32 槽）
+        │       ├── RenderScheduler.hpp/.cpp # 独立渲染线程（帧回调 + resize 处理 + 16ms 节拍）
+        │       ├── InvalidationTracker.hpp/.cpp # 脏标记跟踪（atomic dirty + 动画计数 + 脏列表）
+        │       └── EventRouter.hpp/.cpp   # 事件路由（std::visit 分发 + 设备更新 + 命中派发）
         ├── Platform/
         │   ├── Event.hpp                  # 事件类型（variant：9 种事件 + Overloaded 工具）
-        │   └── Win32/
-        │       ├── Win32.hpp              # Win32 平台实现声明（TSF IME 状态 + 主题缓存）
-        │       └── Win32.cpp              # WM_* → Event 翻译 + 注册表主题检测
+        │   ├── Win32.hpp                  # Win32 平台实现声明（TSF IME 状态 + 主题缓存）
+        │   └── Win32.cpp                  # WM_* → Event 翻译 + 注册表主题检测
         ├── Style/
         │   ├── ColorScheme.hpp            # Material You 47 色调字段结构体（Brightness 枚举 + light/dark 工厂）
         │   ├── ColorScheme.cpp            # HCT 色彩引擎完整实现（约 400 行）
-        │   ├── CSS.hpp                    # 基础样式结构体（Background/Size/Border/Text）+ 组合样式表（ButtonStyle/ColumnStyle/RowStyle/CenterStyle）
+        │   └── CSS.hpp                    # 基础样式结构体（Background/Size/Border/Text）
         └── Widget/
             ├── Widget.hpp                 # Widget 基类声明（含 Builder API：build<T>/children/parent + 行为委托）
             ├── Widget.cpp                 # Widget 默认实现
-            ├── Behavior/
-            │   ├── Behavior.hpp           # 行为基类（持 Widget& owner_，Rule of Five delete）
-            │   ├── LayoutBehavior.hpp     # 布局行为接口（纯虚 layout）
-            │   ├── DrawBehavior.hpp       # 绘制行为接口（纯虚 draw -> Rect）
-            │   ├── InputBehavior.hpp      # 输入行为接口（纯虚 input）
-            │   └── HitTestBehavior.hpp    # 命中测试行为接口（纯虚 hit_test const -> bool）
             ├── Button/
             │   ├── Button.hpp             # Button 声明（继承仅 Widget，style_ 成员 + style() 访问器，行为组装零 override）
+            │   ├── ButtonStyle.hpp        # Button 样式表（组合 Background/Size/Border/Text）
             │   ├── ButtonLayout.hpp/.cpp  # 布局行为：style_.size.value 回退尺寸计算
             │   ├── ButtonDraw.hpp/.cpp    # 绘制行为：背景/边框/文字 + hover 边沿检测 + scale_ 动画
             │   ├── ButtonInput.hpp/.cpp   # 输入行为：hover 状态更新 + 点击回调
             │   └── ButtonHitTest.hpp/.cpp # 命中行为：bounds 判定
             └── Layout/
-                ├── Center.hpp             # Center 声明（行为组装零 override）
-                ├── CenterLayout.hpp/.cpp  # 布局行为：子自然尺寸 + 居中放置
-                ├── CenterDraw.hpp/.cpp    # 绘制行为：背景绘制（ColorScheme 回退）
-                ├── CenterHitTest.hpp/.cpp # 命中行为
-                ├── Column.hpp             # Column 声明（行为组装零 override）
-                ├── ColumnLayout.hpp/.cpp  # 布局行为：垂直栈式布局
-                ├── ColumnDraw.hpp/.cpp    # 绘制行为：背景绘制
-                ├── ColumnHitTest.hpp/.cpp # 命中行为
-                ├── Row.hpp                # Row 声明（行为组装零 override）
-                ├── RowLayout.hpp/.cpp     # 布局行为：水平栈式布局
-                ├── RowDraw.hpp/.cpp       # 绘制行为：背景绘制
-                └── RowHitTest.hpp/.cpp    # 命中行为
+                ├── Center/
+                │   ├── Center.hpp         # Center 声明（行为组装零 override）
+                │   ├── CenterStyle.hpp    # Center 样式表（组合 Background）
+                │   ├── CenterLayout.hpp/.cpp   # 布局行为：子自然尺寸 + 居中放置
+                │   ├── CenterDraw.hpp/.cpp     # 绘制行为：背景绘制（ColorScheme 回退）
+                │   └── CenterHitTest.hpp/.cpp  # 命中行为
+                ├── Column/
+                │   ├── Column.hpp         # Column 声明（行为组装零 override）
+                │   ├── ColumnStyle.hpp    # Column 样式表（组合 Background/Size）
+                │   ├── ColumnLayout.hpp/.cpp  # 布局行为：垂直栈式布局
+                │   ├── ColumnDraw.hpp/.cpp    # 绘制行为：背景绘制
+                │   └── ColumnHitTest.hpp/.cpp # 命中行为
+                └── Row/
+                    ├── Row.hpp            # Row 声明（行为组装零 override）
+                    ├── RowStyle.hpp       # Row 样式表（组合 Background/Size）
+                    ├── RowLayout.hpp/.cpp # 布局行为：水平栈式布局
+                    ├── RowDraw.hpp/.cpp   # 绘制行为：背景绘制
+                    └── RowHitTest.hpp/.cpp # 命中行为
 ```
 
 ## Build
@@ -332,7 +333,8 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 - **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）四个独立组件（`Renderer` 已删除，渲染驱动并入 `Engine::render_frame`），贯彻单一职责原则
 - **样式组合化（已完成）**：移除 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），替换为组合样式表——基础结构体重构（`Size` 删 margin/padding 死字段、`size`→`value`、`Border::size`→`width`、新增 `Text`）+ 每控件聚合样式结构体（`ButtonStyle`/`ColumnStyle`/`RowStyle`/`CenterStyle`），控件持 `style_` 成员 + `style()` 访问器，行为构造注入样式引用（`const style::XxxStyle&`）——消灭 static_cast 样式访问，零运行时开销
 - **布局下放（已完成）**：布局计算曾从 Engine 集中式 Renderer 下放到各 Widget——Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算，`horizontal_` 成员从 Widget 基类移除。`Engine::render_frame` 每帧调用 `root->layout({0,0,w,h})`（草稿期每帧全量布局）驱动布局阶段
-- **行为组件化（已完成）**：Widget 行为拆分——Task 1 行为接口层（`Widget/Behavior/`：Behavior 基类 + Layout/Draw/Input/HitTest 四接口，持 `Widget& owner_`）；Task 2 Widget 基类改造（4 虚方法默认实现遍历 `behaviors_` 容器按类型委托、`add_behavior<T>()` 组装模板、`hovered_` 提升为 atomic 交互状态修复跨线程病灶、删除 build/event 空壳及全部调用点）；Task 3/4 全部控件重构为行为组装零 override（Button 四行为 + Column/Row/Center 各三行为），全部旧 cpp 删除、vcxproj/filters 同步。**新控件开发 = 组合行为 + 数据，不再 override 虚方法**（样式经组合样式表注入，见"样式组合化"）
+- **行为组件化（已完成）**：Widget 行为拆分——Task 1 行为接口层（`Behavior/`：Behavior 基类 + Layout/Draw/Input/HitTest 四接口，持 `Widget& owner_`，namespace `neko::behavior`）；Task 2 Widget 基类改造（4 虚方法默认实现遍历 `behaviors_` 容器按类型委托、`add_behavior<T>()` 组装模板、`hovered_` 提升为 atomic 交互状态修复跨线程病灶、删除 build/event 空壳及全部调用点）；Task 3/4 全部控件重构为行为组装零 override（Button 四行为 + Column/Row/Center 各三行为），全部旧 cpp 删除、vcxproj/filters 同步。**新控件开发 = 组合行为 + 数据，不再 override 虚方法**（样式经组合样式表注入，见"样式组合化"）
+- **目录重组（已完成）**：`Behavior/` 与 Widget 平级（namespace `neko::behavior`）；`Backend/DirectX11/` 与 `Platform/Win32/` 去一层目录；样式表移出 CSS.hpp 到各控件目录（`Widget/Button/ButtonStyle.hpp` 等，namespace `neko::style`）；`Widget/Layout/` 按控件分子目录（Center/Column/Row，控件+行为+样式表内聚）；`Engine/` 分类 Core（Engine/Context/MutableWidget）/Tree（TreeManager/WidgetBuilder/WidgetVisitor/HitTester）/Runtime（MsgPump/RenderScheduler/InvalidationTracker/EventRouter）；vcxproj/filters 全条目重写
 - **抽象层砍除（已完成）**：按 YAGNI 移除 `neko::platform` 平台抽象层（基类/单例/工厂注册宏）与 `neko::backend` 渲染抽象层（策略基类），`Win32` 与 `DirectX11` 成为直接实现（无基类、无 override），`handle_message` 改非静态成员方法；初始主题推送从 Engine 构造移至 main.cpp（`win32->query_theme()` 经 MsgPump push）；`Widget::draw` 签名改 `backend::DirectX11&`（Widget.hpp 前置声明避免 D3D11 头渗透）；净减 321 行；顺带修复 Engine 构造 use-after-move 潜在 bug 与 DirectX11 Rule of Five
 - **所有权模型改造（已完成）**：Engine 以 `shared_ptr` 拥有全部子系统（context/backend/invalidation/tree_manager/widget_builder/hit_tester/render_scheduler/msg_pump/event_router），所有观察者改持 `weak_ptr`（EventRouter 7 个依赖、HitTester/WidgetBuilder 的 tree、RenderScheduler 的 invalidation、Context 的 tree_manager、Widget 的 context_、MsgPump handler 捕获的 router）——无 shared_ptr 环；各使用点 lock + 判空（lock 失败安全降级：丢弃事件/返回 nullopt/构造孤儿控件，不 UB）。`Context` 增加 `enable_shared_from_this` 基类供 TreeManager 填充 `Widget::context_`；`Widget::build<T>` 的树锁改经 `context->tree_manager.lock()->mutex_` 获取；构造回调统一改 lambda（`std::bind` 清除）
 - **生命周期契约修复（已完成）**：`Engine::clear()` 不再提前 reset 被 EventRouter 引用的 backend/context/mouse/keyboard（此前在消息线程内销毁被引用对象，留下悬垂窗口），资源释放推迟至 ~Engine 成员析构（RAII 正统）；Engine.hpp 成员区补生命周期契约注释（Engine 拥有全部子系统 shared_ptr，观察者 weak_ptr；成员声明顺序仍保证观察者先析构，weak_ptr 过期只是最后的运行时安全网）
