@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <string_view>
 
+#include <imm.h>
+
 namespace {
     auto query_theme() -> neko::platform::ThemeChangedEvent {
         auto mode = neko::platform::ThemeMode::Light;
@@ -80,6 +82,34 @@ namespace neko::platform {
             case WM_SYSKEYUP:
                 return device::KeyEvent{.key = static_cast<int>(wparam), .pressed = false,};
             case WM_CHAR:
+                return device::CharEvent{.ch = static_cast<wchar_t>(wparam),};
+            case WM_IME_STARTCOMPOSITION:
+                return platform::ImeCompositionEvent{};
+            case WM_IME_COMPOSITION: {
+                if (hwnd_ == nullptr) {
+                    return std::nullopt;
+                }
+                const HIMC himc = ImmGetContext(hwnd_);
+                if (himc == nullptr) {
+                    return std::nullopt;
+                }
+                platform::ImeCompositionEvent event{};
+                if (lparam & GCS_COMPSTR) {
+                    const DWORD len = ImmGetCompositionStringW(himc, GCS_COMPSTR, nullptr, 0);
+                    if (len > 0) {
+                        event.composition.resize(len / sizeof(wchar_t));
+                        ImmGetCompositionStringW(himc, GCS_COMPSTR, event.composition.data(), len);
+                    }
+                }
+                if (lparam & GCS_CURSORPOS) {
+                    event.cursor_pos = static_cast<int>(ImmGetCompositionStringW(himc, GCS_CURSORPOS, nullptr, 0));
+                }
+                ImmReleaseContext(hwnd_, himc);
+                return event;
+            }
+            case WM_IME_ENDCOMPOSITION:
+                return platform::ImeCompositionEvent{};
+            case WM_IME_CHAR:
                 return device::CharEvent{.ch = static_cast<wchar_t>(wparam),};
             case WM_SIZE:
                 return ResizeEvent{.width = static_cast<int>(LOWORD(lparam)), .height = static_cast<int>(HIWORD(lparam)),};

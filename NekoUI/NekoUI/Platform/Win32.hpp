@@ -21,6 +21,9 @@ namespace neko::platform {
         ~Win32();
         [[nodiscard]] auto translate_event(const NativeMessage& nm) -> std::optional<Event>;
         [[nodiscard]] auto query_theme() const -> ThemeChangedEvent;
+        auto set_window(type::Handle native_window) -> void {
+            hwnd_ = static_cast<HWND>(native_window);
+        }
         [[nodiscard]] auto activate_ime(type::Handle native_window, bool active) -> bool;
         static auto show_window(type::Handle native_window) -> void;
         static auto hide_window(type::Handle native_window) -> void;
@@ -34,6 +37,7 @@ namespace neko::platform {
         static auto set_focus(type::Handle native_window) -> void;
         static auto set_opacity(type::Handle native_window, float opacity) -> void;
     private:
+        HWND hwnd_{};
         ThemeChangedEvent cached_theme_{};
         ITfThreadMgr* ime_thread_mgr_{};
         ITfDocumentMgr* ime_doc_mgr_{};

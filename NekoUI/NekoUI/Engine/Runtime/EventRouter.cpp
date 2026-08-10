@@ -1,3 +1,5 @@
+﻿// 2026-08-10 09:20:42
+
 #include "EventRouter.hpp"
 
 #include "../Core/Context.hpp"
@@ -64,6 +66,9 @@ namespace neko::engine {
                            }
                            handle_input(event);
                        },
+                       [&](const platform::ImeCompositionEvent&) -> void {
+                           handle_input(event);
+                       },
                        [&](const platform::ResizeEvent& e) -> void {
                            handle_resize(e);
                        },
@@ -98,7 +103,7 @@ namespace neko::engine {
             if (prev && (!target || prev.get() != target->get())) {
                 prev->set_hovered(false);
             }
-            last_mouse_target_ = target ? std::weak_ptr<widget::Widget>{*target} : std::weak_ptr<widget::Widget>{};
+            last_mouse_target_ = target ? std::weak_ptr{*target} : std::weak_ptr<widget::Widget>{};
             if (target) {
                 (*target)->set_hovered(true);
                 (*target)->input(*context, event);
@@ -133,7 +138,7 @@ namespace neko::engine {
 
     auto EventRouter::handle_theme_change(const platform::ThemeChangedEvent& e) const -> void {
         if (const auto context = context_.lock()) {
-            context->scheme = (e.mode == platform::ThemeMode::Dark) ? style::ColorScheme::dark(e.color) : style::ColorScheme::light(e.color);
+            context->scheme = e.mode == platform::ThemeMode::Dark ? style::ColorScheme::dark(e.color) : style::ColorScheme::light(e.color);
         }
         if (const auto invalidation = invalidation_.lock()) {
             invalidation->mark_dirty();

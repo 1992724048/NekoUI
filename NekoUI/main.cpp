@@ -65,6 +65,7 @@ auto main(int argc, char* argv[]) -> int try {
         std::println("Error {:#X}", GetLastError());
         return 0;
     }
+    win32->set_window(hwnd);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
