@@ -163,9 +163,11 @@ namespace neko::backend {
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        // EXPERIMENT-D: 辅助函数（非内联）调用——绕过可能的内联优化 bug
-        const HRESULT hr = create_sampler_state(surface_.device(), sm, font_sampler_);
-        std::println(stderr, "[diag] sampler via helper: hr={:#010X} result={}", static_cast<unsigned int>(hr), font_sampler_ != nullptr);
+        const HRESULT sampler_hr = surface_.device()->CreateSamplerState(&sm, &font_sampler_);
+        if (FAILED(sampler_hr)) {
+            // 系统 D3D11 异常时降级：draw_text 绑定 null 采样器（默认采样器兜底）
+            std::println(stderr, "[NekoUI] SamplerState create failed: {:#010X}——文字降级为默认采样器", static_cast<unsigned int>(sampler_hr));
+        }
         return true;
     }
 

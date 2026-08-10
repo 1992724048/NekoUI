@@ -69,7 +69,7 @@ namespace neko::backend {
 
     auto Drawer::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) const -> void {
         ID3D11DeviceContext* ctx = surface_.context();
-        if (ctx == nullptr || pipeline_.text_cbuffer() == nullptr || fonts_.sampler() == nullptr) {
+        if (ctx == nullptr || pipeline_.text_cbuffer() == nullptr) {
             return;
         }
         if (text.empty()) {
@@ -82,6 +82,7 @@ namespace neko::backend {
 
         ctx->VSSetShader(pipeline_.text_vs(), nullptr, 0);
         ctx->PSSetShader(pipeline_.text_ps(), nullptr, 0);
+        // 采样器创建失败时绑定 null → D3D11 默认采样器兜底（系统 D3D11 异常降级；环境修复后 LINEAR 自动恢复）
         ID3D11SamplerState* sampler = fonts_.sampler();
         ctx->PSSetSamplers(0, 1, &sampler);
         ctx->OMSetBlendState(pipeline_.text_blend(), nullptr, 0xFFFFFFFF);
