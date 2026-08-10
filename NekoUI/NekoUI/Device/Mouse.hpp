@@ -1,4 +1,4 @@
-// 2026-07-15 16:28:46
+﻿// 2026-07-15 16:28:46
 
 #pragma once
 #include <algorithm>
@@ -10,7 +10,7 @@
 namespace neko::device {
     using namespace neko::type;
 
-    enum class MouseButton { Left, Right, Middle };
+    enum class MouseButton : std::uint8_t { Left, Right, Middle };
 
     struct MouseMoveEvent {
         int x;
@@ -66,7 +66,7 @@ namespace neko::device {
         }
 
         [[nodiscard]] auto is_inside(const Vec4I r) const -> bool {
-            return pos.x >= r.x && pos.x < (r.x + r.z) && pos.y >= r.y && pos.y < (r.y + r.w);
+            return pos.x >= r.x && pos.x < r.x + r.z && pos.y >= r.y && pos.y < r.y + r.w;
         }
 
         [[nodiscard]] auto is_inside_circle(const Vec2I center, const int radius) const -> bool {
