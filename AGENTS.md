@@ -48,7 +48,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 - **`Surface`**（`surface_`）：设备/交换链/rtv/尺寸/DPI + `begin_rt`（OMSetRenderTargets + viewport + clear）/`end`（Present）/`resize`/`set_dpi`，暴露 `device()`/`context()`/`size()`/`native_handle()`/`client_size()`
 - **`Pipeline`**（`pipeline_`，注入 Surface）：着色器/混合/光栅/常量缓冲（`TextCB` 移入 `Pipeline.hpp`）+ `bind_default()`（RS/Blend/IL/topology/vs/ps/cbuffer 全状态复位）+ `rect_cbuffer`/`text_vs`/`text_ps`/`text_cbuffer`/`text_blend`/`opaque_blend` 访问器；shader 源码与 `compile_shader` 留在 Pipeline.cpp
 - **`FontAtlas`**（`fonts_`，注入 Surface）：stb_truetype 图集烘焙（ASCII+全角标点 3 档图集 16/24/32px 1024² + CJK 单档 16px 4096²，2x oversample）+ `query()` 字形查询（按码点分类选档、`glyph_scale = target_px / atlas.font_size`、越界返回 false）+ 采样器；`STB_TRUETYPE_IMPLEMENTATION` define 与字体常量移入 FontAtlas 模块
-- **`Drawer`**（`drawer_`，注入 Surface/Pipeline/FontAtlas 引用）：`draw_*` 绘制（`RectData` 为 Drawer.cpp 局部结构）；`draw_text` 尾恢复 = `bind_default()` + `PSSetShaderResources(0,0,nullptr)`
+- **`Drawer`**（`drawer_`，注入 Surface/Pipeline/FontAtlas 引用）：`draw_*` 绘制（`RectData` 为 Drawer.cpp 局部结构）；`draw_text` 采样器绑定 null 时降级为 D3D11 默认采样器（系统 `CreateSamplerState` 异常兜底——FontAtlas 打印警告）；尾恢复 = `bind_default()` + `PSSetShaderResources(0,0,nullptr)`
 
 包含：
 
