@@ -1,13 +1,22 @@
+// 2026-08-10
+
 #ifdef _WIN32
-#include "DirectX11.hpp"
+#include "Drawer.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 
+#include "stb_truetype.h"
+
 namespace neko::backend {
-    auto DirectX11::draw_rect_fill(const Vec4I rect, const Color color) const -> void {
-        if (ctx_ == nullptr || cbuffer_ == nullptr) {
+    Drawer::Drawer(const Surface& surface, const Pipeline& pipeline, const FontAtlas& fonts) :
+        surface_{surface}, pipeline_{pipeline}, fonts_{fonts} {
+    }
+
+    auto Drawer::draw_rect_fill(const Vec4I rect, const Color color) const -> void {
+        ID3D11DeviceContext* ctx = surface_.context();
+        if (ctx == nullptr || pipeline_.rect_cbuffer() == nullptr) {
             return;
         }
         struct RectData {
@@ -24,27 +33,27 @@ namespace neko::backend {
             .c_g = color.g() / 255.0F,
             .c_b = color.b() / 255.0F,
             .c_a = color.a() / 255.0F,
-            .s_w = static_cast<float>(size_.x),
-            .s_h = static_cast<float>(size_.y),
+            .s_w = static_cast<float>(surface_.size().x),
+            .s_h = static_cast<float>(surface_.size().y),
         };
 
         D3D11_MAPPED_SUBRESOURCE mapped{};
-        if (FAILED(ctx_->Map(cbuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
+        if (FAILED(ctx->Map(pipeline_.rect_cbuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
             return;
         }
         std::memcpy(mapped.pData, &data, sizeof(data));
-        ctx_->Unmap(cbuffer_, 0);
-        ctx_->Draw(6, 0);
+        ctx->Unmap(pipeline_.rect_cbuffer(), 0);
+        ctx->Draw(6, 0);
     }
 
-    auto DirectX11::draw_rect(const Vec4I rect, const Color color, const int thickness) const -> void {
+    auto Drawer::draw_rect(const Vec4I rect, const Color color, const int thickness) const -> void {
         draw_rect_fill({.x = rect.x, .y = rect.y, .z = rect.z, .w = thickness}, color);
         draw_rect_fill({.x = rect.x, .y = rect.y + rect.w - thickness, .z = rect.z, .w = thickness}, color);
         draw_rect_fill({.x = rect.x, .y = rect.y + thickness, .z = thickness, .w = rect.w - thickness * 2}, color);
         draw_rect_fill({.x = rect.x + rect.z - thickness, .y = rect.y + thickness, .z = thickness, .w = rect.w - thickness * 2}, color);
     }
 
-    auto DirectX11::draw_line(const Vec2I from, const Vec2I to, const Color color, const int thickness) const -> void {
+    auto Drawer::draw_line(const Vec2I from, const Vec2I to, const Color color, const int thickness) const -> void {
         const Vec2I d = to - from;
         if (std::abs(d.x) >= std::abs(d.y)) {
             draw_rect_fill({.x = std::min(from.x, to.x), .y = from.y - thickness / 2, .z = std::abs(d.x) + thickness, .w = thickness}, color);
@@ -53,12 +62,13 @@ namespace neko::backend {
         }
     }
 
-    auto DirectX11::draw_circle_fill(const Vec2I center, const int radius, const Color color) const -> void {
+    auto Drawer::draw_circle_fill(const Vec2I center, const int radius, const Color color) const -> void {
         draw_rect_fill({.x = center.x - radius, .y = center.y - radius, .z = radius * 2, .w = radius * 2}, color);
     }
 
-    auto DirectX11::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) -> void {
-        if (ctx_ == nullptr || text_cb_ == nullptr || ascii_atlases_[0].srv == nullptr || cjk_atlas_.srv == nullptr) {
+    auto Drawer::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) const -> void {
+        ID3D11DeviceContext* ctx = surface_.context();
+        if (ctx == nullptr || pipeline_.text_cbuffer() == nullptr || fonts_.sampler() == nullptr) {
             return;
         }
         if (text.empty()) {
@@ -66,33 +76,26 @@ namespace neko::backend {
         }
 
         // 目标像素大小决定图集档位与缩放；字号非法时钳制到 1px 避免零/负缩放
-        const float target_px = std::max(font_size, 1.0F) * dpi_scale_;
-        size_t ascii_atlas_idx = 0;
-        for (size_t i = 0; i < FONT_SIZES.size(); i++) {
-            if (target_px >= FONT_SIZES[i]) {
-                ascii_atlas_idx = i;
-            }
-        }
-        const FontAtlas& ascii_atlas = ascii_atlases_[ascii_atlas_idx];
-        const float ascii_glyph_scale = target_px / ascii_atlas.font_size;
-        const float cjk_glyph_scale = target_px / cjk_atlas_.font_size;
+        const float dpi_scale = surface_.get_dpi_scale();
+        const float target_px = std::max(font_size, 1.0F) * dpi_scale;
 
-        ctx_->VSSetShader(text_vs_, nullptr, 0);
-        ctx_->PSSetShader(text_ps_, nullptr, 0);
-        ctx_->PSSetSamplers(0, 1, &font_sampler_);
-        ctx_->OMSetBlendState(bs_text_, nullptr, 0xFFFFFFFF);
+        ctx->VSSetShader(pipeline_.text_vs(), nullptr, 0);
+        ctx->PSSetShader(pipeline_.text_ps(), nullptr, 0);
+        ID3D11SamplerState* sampler = fonts_.sampler();
+        ctx->PSSetSamplers(0, 1, &sampler);
+        ctx->OMSetBlendState(pipeline_.text_blend(), nullptr, 0xFFFFFFFF);
 
-        TextCB cb{};
+        Pipeline::TextCB cb{};
         cb.c_r = color.r() / 255.0F;
         cb.c_g = color.g() / 255.0F;
         cb.c_b = color.b() / 255.0F;
         cb.c_a = color.a() / 255.0F;
-        cb.s_w = static_cast<float>(size_.x);
-        cb.s_h = static_cast<float>(size_.y);
+        cb.s_w = static_cast<float>(surface_.size().x);
+        cb.s_h = static_cast<float>(surface_.size().y);
 
         // 笔位置以物理像素维护，逐字形换算到图集档位单位供 stbtt 使用（advance 随档位缩放）
-        float pen_x = static_cast<float>(pos.x) * dpi_scale_;
-        float pen_y = static_cast<float>(pos.y) * dpi_scale_;
+        float pen_x = static_cast<float>(pos.x) * dpi_scale;
+        float pen_y = static_cast<float>(pos.y) * dpi_scale;
         ID3D11ShaderResourceView* bound_srv = nullptr;
 
         for (size_t i = 0; i < text.size();) {
@@ -124,30 +127,17 @@ namespace neko::backend {
             i += seq_len;
 
             // 码点分类：ASCII/全角走多档图集，CJK 走单档；范围外字形直接跳过
-            const FontAtlas* atlas = nullptr;
-            float glyph_scale = 0.0F;
+            const FontAtlas::Glyph* glyph = nullptr;
             int char_idx = 0;
-            if (cp >= FONT_FIRST && cp < FONT_FIRST + FONT_COUNT) {
-                atlas = &ascii_atlas;
-                glyph_scale = ascii_glyph_scale;
-                char_idx = cp - FONT_FIRST;
-            } else if (cp >= FW_PUNCT_FIRST && cp <= FW_PUNCT_LAST) {
-                atlas = &ascii_atlas;
-                glyph_scale = ascii_glyph_scale;
-                char_idx = FONT_COUNT + (cp - FW_PUNCT_FIRST);
-            } else if (cp >= CJK_FIRST && cp <= CJK_LAST) {
-                atlas = &cjk_atlas_;
-                glyph_scale = cjk_glyph_scale;
-                char_idx = cp - CJK_FIRST;
-            }
-            if (atlas == nullptr || static_cast<size_t>(char_idx) >= atlas->chars.size()) {
+            float glyph_scale = 0.0F;
+            if (!fonts_.query(cp, target_px, glyph, char_idx, glyph_scale)) {
                 continue;
             }
 
             float local_x = pen_x / glyph_scale;
             float local_y = pen_y / glyph_scale;
             stbtt_aligned_quad q{};
-            stbtt_GetPackedQuad(atlas->chars.data(), atlas->width, atlas->height, char_idx, &local_x, &local_y, &q, 0);
+            stbtt_GetPackedQuad(glyph->chars, glyph->width, glyph->height, char_idx, &local_x, &local_y, &q, 0);
             pen_x = local_x * glyph_scale;
             pen_y = local_y * glyph_scale;
 
@@ -161,27 +151,25 @@ namespace neko::backend {
             cb.uv_w = q.s1 - q.s0;
             cb.uv_h = q.t1 - q.t0;
 
-            if (atlas->srv != bound_srv) {
-                bound_srv = atlas->srv;
-                ctx_->PSSetShaderResources(0, 1, &bound_srv);
+            if (glyph->srv != bound_srv) {
+                bound_srv = glyph->srv;
+                ctx->PSSetShaderResources(0, 1, &bound_srv);
             }
 
             D3D11_MAPPED_SUBRESOURCE mapped{};
-            if (FAILED(ctx_->Map(text_cb_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
+            ID3D11Buffer* text_cb = pipeline_.text_cbuffer();
+            if (FAILED(ctx->Map(text_cb, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
                 break;
             }
             std::memcpy(mapped.pData, &cb, sizeof(cb));
-            ctx_->Unmap(text_cb_, 0);
+            ctx->Unmap(text_cb, 0);
 
-            ctx_->VSSetConstantBuffers(0, 1, &text_cb_);
-            ctx_->Draw(6, 0);
+            ctx->VSSetConstantBuffers(0, 1, &text_cb);
+            ctx->Draw(6, 0);
         }
 
-        ctx_->VSSetShader(vs_, nullptr, 0);
-        ctx_->PSSetShader(ps_, nullptr, 0);
-        ctx_->PSSetShaderResources(0, 0, nullptr);
-        ctx_->VSSetConstantBuffers(0, 1, &cbuffer_);
-        ctx_->OMSetBlendState(bs_opaque_, nullptr, 0xFFFFFFFF);
+        pipeline_.bind_default();
+        ctx->PSSetShaderResources(0, 0, nullptr);
     }
 } // namespace neko::backend
 #endif

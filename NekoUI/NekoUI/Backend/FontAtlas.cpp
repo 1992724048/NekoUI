@@ -1,65 +1,73 @@
-#ifdef _WIN32
-#include "DirectX11.hpp"
+﻿// 2026-08-10 12:53:30
 
-#include <array>
+#ifdef _WIN32
+#include "FontAtlas.hpp"
+
 #include <fstream>
 #include <print>
-#include <vector>
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
 namespace neko::backend {
-    auto DirectX11::create_atlas_texture(FontAtlas& atlas, const std::vector<unsigned char>& bitmap, const int width, const int height) -> bool {
-        atlas.width = width;
-        atlas.height = height;
-        ID3D11Texture2D* tex{};
-        D3D11_TEXTURE2D_DESC td{};
-        td.Width = static_cast<UINT>(width);
-        td.Height = static_cast<UINT>(height);
-        td.Format = DXGI_FORMAT_A8_UNORM;
-        td.MipLevels = 1;
-        td.ArraySize = 1;
-        td.SampleDesc.Count = 1;
-        td.Usage = D3D11_USAGE_IMMUTABLE;
-        td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-        D3D11_SUBRESOURCE_DATA sd{};
-        sd.pSysMem = bitmap.data();
-        sd.SysMemPitch = static_cast<UINT>(width);
-        if (FAILED(device_->CreateTexture2D(&td, &sd, &tex))) {
+    FontAtlas::FontAtlas(const Surface& surface) :
+        surface_{surface} {
+        init_font();
+    }
+
+    FontAtlas::~FontAtlas() {
+        release_font_resources();
+        if (font_sampler_ != nullptr) {
+            font_sampler_->Release();
+        }
+    }
+
+    auto FontAtlas::query(const int codepoint, const float target_px, const Glyph*& out, int& char_idx, float& glyph_scale) const -> bool {
+        const Atlas* atlas = nullptr;
+        if (codepoint >= FONT_FIRST && codepoint < FONT_FIRST + FONT_COUNT) {
+            // ASCII：选 ≤ 目标像素的最大档位
+            size_t idx = 0;
+            for (size_t i = 0; i < FONT_SIZES.size(); i++) {
+                if (target_px >= FONT_SIZES[i]) {
+                    idx = i;
+                }
+            }
+            atlas = &ascii_atlases_[idx];
+            char_idx = codepoint - FONT_FIRST;
+        } else if (codepoint >= FW_PUNCT_FIRST && codepoint <= FW_PUNCT_LAST) {
+            size_t idx = 0;
+            for (size_t i = 0; i < FONT_SIZES.size(); i++) {
+                if (target_px >= FONT_SIZES[i]) {
+                    idx = i;
+                }
+            }
+            atlas = &ascii_atlases_[idx];
+            char_idx = FONT_COUNT + (codepoint - FW_PUNCT_FIRST);
+        } else if (codepoint >= CJK_FIRST && codepoint <= CJK_LAST) {
+            atlas = &cjk_atlas_;
+            char_idx = codepoint - CJK_FIRST;
+        } else {
             return false;
         }
-        const bool ok = SUCCEEDED(device_->CreateShaderResourceView(tex, nullptr, &atlas.srv));
-        atlas.texture = tex;
-        return ok;
-    }
-
-    auto DirectX11::release_font_resources() -> void {
-        for (auto& atlas : ascii_atlases_) {
-            if (atlas.srv != nullptr) {
-                atlas.srv->Release();
-            }
-            if (atlas.texture != nullptr) {
-                atlas.texture->Release();
-            }
-            atlas.srv = nullptr;
-            atlas.texture = nullptr;
-        }
-        if (cjk_atlas_.srv != nullptr) {
-            cjk_atlas_.srv->Release();
-        }
-        if (cjk_atlas_.texture != nullptr) {
-            cjk_atlas_.texture->Release();
-        }
-        cjk_atlas_.srv = nullptr;
-        cjk_atlas_.texture = nullptr;
-    }
-
-    auto DirectX11::init_font() -> bool {
-        if (text_cb_ == nullptr) {
+        if (static_cast<size_t>(char_idx) >= atlas->chars.size()) {
             return false;
         }
 
+        glyph_cache_.chars = atlas->chars.data();
+        glyph_cache_.srv = atlas->srv;
+        glyph_cache_.width = atlas->width;
+        glyph_cache_.height = atlas->height;
+        glyph_cache_.font_size = atlas->font_size;
+        out = &glyph_cache_;
+        glyph_scale = target_px / atlas->font_size;
+        return true;
+    }
+
+    auto FontAtlas::sampler() const -> ID3D11SamplerState* {
+        return font_sampler_;
+    }
+
+    auto FontAtlas::init_font() -> bool {
         std::vector<unsigned char> font_data;
         for (const auto& path : {L"C:\\Windows\\Fonts\\msyh.ttc", L"C:\\Windows\\Fonts\\segoeui.ttf"}) {
             std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -84,7 +92,7 @@ namespace neko::backend {
         // 3 档 ASCII + 全角标点图集（16/24/32px，1024²，每档 336 字形）
         constexpr int ASCII_CHAR_COUNT = FONT_COUNT + FW_PUNCT_COUNT;
         for (size_t i = 0; i < FONT_SIZES.size(); i++) {
-            FontAtlas& atlas = ascii_atlases_[i];
+            Atlas& atlas = ascii_atlases_[i];
             atlas.font_size = FONT_SIZES[i];
             atlas.chars.resize(ASCII_CHAR_COUNT);
             bitmap.assign(static_cast<size_t>(ASCII_ATLAS) * ASCII_ATLAS, 0);
@@ -108,7 +116,7 @@ namespace neko::backend {
                 release_font_resources();
                 return false;
             }
-            if (!create_atlas_texture(atlas, bitmap, ASCII_ATLAS, ASCII_ATLAS)) {
+            if (!create_atlas_texture(atlas, bitmap, ASCII_ATLAS, ASCII_ATLAS, surface_)) {
                 std::println(stderr, "[NekoUI] Font atlas texture create failed: {}px", atlas.font_size);
                 release_font_resources();
                 return false;
@@ -135,7 +143,7 @@ namespace neko::backend {
             release_font_resources();
             return false;
         }
-        if (!create_atlas_texture(cjk_atlas_, bitmap, CJK_ATLAS, CJK_ATLAS)) {
+        if (!create_atlas_texture(cjk_atlas_, bitmap, CJK_ATLAS, CJK_ATLAS, surface_)) {
             std::println(stderr, "[NekoUI] CJK atlas texture create failed");
             release_font_resources();
             return false;
@@ -148,8 +156,53 @@ namespace neko::backend {
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        device_->CreateSamplerState(&sm, &font_sampler_);
+        surface_.device()->CreateSamplerState(&sm, &font_sampler_);
         return true;
+    }
+
+    auto FontAtlas::create_atlas_texture(Atlas& atlas, const std::vector<unsigned char>& bitmap, const int width, const int height, const Surface& surface) -> bool {
+        atlas.width = width;
+        atlas.height = height;
+        ID3D11Texture2D* tex{};
+        D3D11_TEXTURE2D_DESC td{};
+        td.Width = static_cast<UINT>(width);
+        td.Height = static_cast<UINT>(height);
+        td.Format = DXGI_FORMAT_A8_UNORM;
+        td.MipLevels = 1;
+        td.ArraySize = 1;
+        td.SampleDesc.Count = 1;
+        td.Usage = D3D11_USAGE_IMMUTABLE;
+        td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        D3D11_SUBRESOURCE_DATA sd{};
+        sd.pSysMem = bitmap.data();
+        sd.SysMemPitch = static_cast<UINT>(width);
+        if (FAILED(surface.device()->CreateTexture2D(&td, &sd, &tex))) {
+            return false;
+        }
+        const bool ok = SUCCEEDED(surface.device()->CreateShaderResourceView(tex, nullptr, &atlas.srv));
+        atlas.texture = tex;
+        return ok;
+    }
+
+    auto FontAtlas::release_font_resources() -> void {
+        for (auto& atlas : ascii_atlases_) {
+            if (atlas.srv != nullptr) {
+                atlas.srv->Release();
+            }
+            if (atlas.texture != nullptr) {
+                atlas.texture->Release();
+            }
+            atlas.srv = nullptr;
+            atlas.texture = nullptr;
+        }
+        if (cjk_atlas_.srv != nullptr) {
+            cjk_atlas_.srv->Release();
+        }
+        if (cjk_atlas_.texture != nullptr) {
+            cjk_atlas_.texture->Release();
+        }
+        cjk_atlas_.srv = nullptr;
+        cjk_atlas_.texture = nullptr;
     }
 } // namespace neko::backend
 #endif

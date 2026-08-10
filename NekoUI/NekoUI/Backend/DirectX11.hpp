@@ -1,19 +1,16 @@
-﻿// 2026-08-10 11:31:16
+﻿// 2026-08-10 12:53:11
 
 #pragma once
 #ifdef _WIN32
-#include <DirectXMath.h>
 #include <Windows.h>
-#include <d3d11.h>
-#include <dxgi1_2.h>
 
-#include <array>
-#include <functional>
 #include <string_view>
-#include <vector>
 
 #include "../Type.hpp"
-#include "stb_truetype.h"
+#include "Drawer.hpp"
+#include "FontAtlas.hpp"
+#include "Pipeline.hpp"
+#include "Surface.hpp"
 
 namespace neko::backend {
     using namespace neko::type;
@@ -21,88 +18,66 @@ namespace neko::backend {
     class DirectX11 final {
     public:
         explicit DirectX11(HWND hwnd);
-        ~DirectX11();
+        ~DirectX11() = default;
 
         DirectX11(const DirectX11&) = delete;
         auto operator=(const DirectX11&) -> DirectX11& = delete;
         DirectX11(DirectX11&&) = delete;
         auto operator=(DirectX11&&) -> DirectX11& = delete;
 
-        auto resize(Vec2I new_size) -> void;
-        auto set_dpi(unsigned int dpi) -> void;
-        [[nodiscard]] auto get_dpi_scale() const -> float;
-        auto begin() const -> void;
-        auto end() const -> void;
-        auto draw_rect_fill(Vec4I rect, Color color) const -> void;
-        auto draw_rect(Vec4I rect, Color color, int thickness) const -> void;
-        auto draw_line(Vec2I from, Vec2I to, Color color, int thickness) const -> void;
-        auto draw_circle_fill(Vec2I center, int radius, Color color) const -> void;
-        auto draw_text(std::string_view text, Vec2I pos, Color color, float font_size = 16.0F) -> void;
-
-        [[nodiscard]] auto get_native_handle() const -> Handle {
-            return hwnd_;
+        auto resize(const Vec2I new_size) -> void {
+            surface_.resize(new_size);
         }
 
-        [[nodiscard]] auto get_client_size() const -> Vec2I;
+        auto set_dpi(const unsigned int dpi) -> void {
+            surface_.set_dpi(dpi);
+        }
+
+        [[nodiscard]] auto get_dpi_scale() const -> float {
+            return surface_.get_dpi_scale();
+        }
+
+        auto begin() const -> void {
+            surface_.begin_rt();
+            pipeline_.bind_default();
+        }
+
+        auto end() const -> void {
+            surface_.end();
+        }
+
+        auto draw_rect_fill(const Vec4I rect, const Color color) const -> void {
+            drawer_.draw_rect_fill(rect, color);
+        }
+
+        auto draw_rect(const Vec4I rect, const Color color, const int thickness) const -> void {
+            drawer_.draw_rect(rect, color, thickness);
+        }
+
+        auto draw_line(const Vec2I from, const Vec2I to, const Color color, const int thickness) const -> void {
+            drawer_.draw_line(from, to, color, thickness);
+        }
+
+        auto draw_circle_fill(const Vec2I center, const int radius, const Color color) const -> void {
+            drawer_.draw_circle_fill(center, radius, color);
+        }
+
+        auto draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size = 16.0F) const -> void {
+            drawer_.draw_text(text, pos, color, font_size);
+        }
+
+        [[nodiscard]] auto get_native_handle() const -> Handle {
+            return surface_.native_handle();
+        }
+
+        [[nodiscard]] auto get_client_size() const -> Vec2I {
+            return surface_.client_size();
+        }
     private:
-        static constexpr int ASCII_ATLAS = 1024;
-        static constexpr int CJK_ATLAS = 4096;
-        static constexpr std::array<float, 3> FONT_SIZES = {16.0F, 24.0F, 32.0F};
-        static constexpr int FONT_FIRST = 32;
-        static constexpr int FONT_COUNT = 96;
-        static constexpr int CJK_FIRST = 0x4E00;
-        static constexpr int CJK_LAST = 0x9FFF;
-        static constexpr int FW_PUNCT_FIRST = 0xFF00;
-        static constexpr int FW_PUNCT_LAST = 0xFFEF;
-        static constexpr int FW_PUNCT_COUNT = FW_PUNCT_LAST - FW_PUNCT_FIRST + 1;
-
-        struct TextCB {
-            float r_x, r_y, r_w, r_h;
-            float c_r, c_g, c_b, c_a;
-            float s_w, s_h;
-            float uv_u, uv_v;
-            float uv_w, uv_h;
-            float p0, p1;
-        };
-
-        struct FontAtlas {
-            ID3D11Texture2D* texture = nullptr;
-            ID3D11ShaderResourceView* srv = nullptr;
-            std::vector<stbtt_packedchar> chars;
-            float font_size = 0.0F;
-            int width = 0;
-            int height = 0;
-        };
-
-        auto init_device() -> void;
-        auto init_swap_chain(HWND hwnd) -> void;
-        auto init_shaders() -> bool;
-        auto init_states() -> bool;
-        auto init_font() -> bool;
-        auto create_atlas_texture(FontAtlas& atlas, const std::vector<unsigned char>& bitmap, int width, int height) -> bool;
-        auto release_font_resources() -> void;
-
-        ID3D11Device* device_{};
-        ID3D11DeviceContext* ctx_{};
-        IDXGISwapChain1* swap_chain_{};
-        ID3D11RenderTargetView* rtv_{};
-        ID3D11VertexShader* vs_{};
-        ID3D11PixelShader* ps_{};
-        ID3D11InputLayout* layout_{};
-        ID3D11RasterizerState* rs_{};
-        ID3D11BlendState* bs_opaque_{};
-        ID3D11BlendState* bs_text_{};
-        ID3D11Buffer* cbuffer_{};
-        Vec2I size_{};
-
-        ID3D11SamplerState* font_sampler_{};
-        ID3D11VertexShader* text_vs_{};
-        ID3D11PixelShader* text_ps_{};
-        ID3D11Buffer* text_cb_{};
-        std::array<FontAtlas, 3> ascii_atlases_{};
-        FontAtlas cjk_atlas_{};
-        float dpi_scale_ = 1.0F;
-        HWND hwnd_{};
+        Surface surface_;
+        Pipeline pipeline_{surface_};
+        FontAtlas fonts_{surface_};
+        Drawer drawer_{surface_, pipeline_, fonts_};
     };
 }
 #endif

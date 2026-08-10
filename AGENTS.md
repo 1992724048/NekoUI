@@ -41,14 +41,22 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 
 ### 2. 渲染后端 (`neko::backend`)
 
-`DirectX11`（`backend::DirectX11`）是唯一渲染实现（**无抽象基类**——YAGNI：Windows 下只用 D3D11），提供绘制接口：`draw_rect_fill`、`draw_rect`、`draw_line`、`draw_circle_fill`、`draw_text`，以及 `resize`、`set_dpi`、`begin`/`end` 帧管理、`get_dpi_scale`、`get_native_handle`、`get_client_size`（客户区尺寸，封装 GetClientRect——Engine 不直接依赖 Win32 API）。Rule of Five 显式 delete（不可拷贝/移动）。
+`DirectX11`（`backend::DirectX11`）是唯一渲染实现（**无抽象基类**——YAGNI：Windows 下只用 D3D11），由 4 个模块类组合而成，提供绘制接口：`draw_rect_fill`、`draw_rect`、`draw_line`、`draw_circle_fill`、`draw_text`，以及 `resize`、`set_dpi`、`begin`/`end` 帧管理、`get_dpi_scale`、`get_native_handle`、`get_client_size`（客户区尺寸，封装 GetClientRect——Engine 不直接依赖 Win32 API）。Rule of Five 显式 delete（不可拷贝/移动）。
+
+模块划分（组合层持值成员，声明顺序 = 构造顺序，析构逆序 device 最后释放）：
+
+- **`Surface`**（`surface_`）：设备/交换链/rtv/尺寸/DPI + `begin_rt`（OMSetRenderTargets + viewport + clear）/`end`（Present）/`resize`/`set_dpi`，暴露 `device()`/`context()`/`size()`/`native_handle()`/`client_size()`
+- **`Pipeline`**（`pipeline_`，注入 Surface）：着色器/混合/光栅/常量缓冲（`TextCB` 移入 `Pipeline.hpp`）+ `bind_default()`（RS/Blend/IL/topology/vs/ps/cbuffer 全状态复位）+ `rect_cbuffer`/`text_vs`/`text_ps`/`text_cbuffer`/`text_blend`/`opaque_blend` 访问器；shader 源码与 `compile_shader` 留在 Pipeline.cpp
+- **`FontAtlas`**（`fonts_`，注入 Surface）：stb_truetype 图集烘焙（ASCII+全角标点 3 档图集 16/24/32px 1024² + CJK 单档 16px 4096²，2x oversample）+ `query()` 字形查询（按码点分类选档、`glyph_scale = target_px / atlas.font_size`、越界返回 false）+ 采样器；`STB_TRUETYPE_IMPLEMENTATION` define 与字体常量移入 FontAtlas 模块
+- **`Drawer`**（`drawer_`，注入 Surface/Pipeline/FontAtlas 引用）：`draw_*` 绘制（`RectData` 为 Drawer.cpp 局部结构）；`draw_text` 尾恢复 = `bind_default()` + `PSSetShaderResources(0,0,nullptr)`
 
 包含：
 
 - D3D11 设备/上下文/交换链创建（Debug 下启用 `D3D11_CREATE_DEVICE_DEBUG`）
 - HLSL 顶点/像素着色器编译（矩形着色器 + 文本着色器）
-- stb_truetype 字体图集生成：ASCII+全角标点 3 档图集（16/24/32px，1024²）+ CJK 单档 16px（4096²），2x oversample + 1px padding；LINEAR 采样 + 屏幕像素对齐（floor+0.5）+ 文本预乘 alpha 混合（bs_text_，消除深色背景暗边）
+- stb_truetype 字体图集生成：ASCII+全角标点 3 档图集（16/24/32px，1024²）+ CJK 单档 16px（4096²），2x oversample + 1px padding；LINEAR 采样 + 屏幕像素对齐（floor+0.5）+ 文本预乘 alpha 混合（`bs_text_`，消除深色背景暗边）
 - 常量缓冲区管理（`TextCB` 结构体）
+- `begin()` 组合语义 = `surface_.begin_rt()` + `pipeline_.bind_default()`（清屏 + 全部状态设置，与重构前一致）
 
 ### 3. 输入设备 (`neko::device`)
 
@@ -153,11 +161,12 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         ├── NekoUI.hpp                     # 主包含头文件（转发 Engine.hpp）
         ├── Type.hpp                       # 核心类型：Vec2/3/4<T>（union xyzw/rgba）、Color（uint32 RGBA）、Handle（void*）
         ├── Backend/
-        │   ├── DirectX11.hpp              # D3D11 唯一渲染实现头文件（设备/交换链/着色器/多档字体图集/TextCB）
-        │   ├── DirectX11.cpp              # D3D11 生命周期（构造/析构/设备/交换链/begin/end/resize/DPI）
-        │   ├── DirectX11Draw.cpp          # 绘制实现（draw_rect_fill/rect/line/circle_fill/text）
-        │   ├── DirectX11Font.cpp          # 字体图集（stb_truetype 烘焙 + atlas 纹理 + 释放）
-        │   ├── DirectX11States.cpp        # 着色器源码/编译 + 着色器与混合/光栅化状态创建
+        │   ├── DirectX11.hpp              # D3D11 组合层（持有 Surface/Pipeline/FontAtlas/Drawer 4 模块值成员 + 转发公开 API）
+        │   ├── DirectX11.cpp              # D3D11 组合层实现（构造注入 hwnd + pragma comment lib 3 条）
+        │   ├── Surface.hpp/.cpp           # 表面模块：设备/交换链/rtv/尺寸/DPI + begin_rt/end/resize
+        │   ├── Pipeline.hpp/.cpp          # 管线模块：着色器/混合/光栅/常量缓冲（含 TextCB）+ bind_default
+        │   ├── FontAtlas.hpp/.cpp         # 图集模块：stb_truetype 烘焙（3 档 ASCII+全角 + CJK）/字形查询/采样器
+        │   ├── Drawer.hpp/.cpp            # 绘制模块：draw_* 绘制（注入 Surface/Pipeline/FontAtlas 引用）
         │   └── stb_truetype.h             # 嵌入式字体光栅化（gitignored — 不跟踪，删除后无法从 git 恢复）
         ├── Behavior/                      # 行为层（namespace neko::behavior）
         │   ├── Behavior.hpp               # 行为基类（持 Widget& owner_，Rule of Five delete）
@@ -350,6 +359,7 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 - **状态迁出（已完成）**：交互状态与几何数据迁出 Widget 基类——`InteractionState`（hovered，atomic）与 `GeometryState`（bounds）为 `behavior::` 共享状态对象，控件持有成员、行为构造注入（Input 写/Draw 读；布局写/绘制命中输入读）；Widget 删除 isFocus（死代码）/hovered_/bounds/set_bounds，保留 `get_bounds()`（经 GeometryState* 观察指针，Engine::draw_widget/父布局读子兼容）+ `geometry()` 访问器（父布局写子定位）
 - **焦点路由 + IME 接入（已完成）**：点击聚焦（MouseButton → TreeManager::set_focus）+ 键盘/字符/IME 事件派发给焦点控件 + Tab 导航（next_focus/set_focus）；Win32 翻译 WM_IME_STARTCOMPOSITION/COMPOSITION/ENDCOMPOSITION/CHAR（IMM 方案，ImmGetCompositionStringW，TSF 封装保留未激活）；`ImeCompositionEvent` 事件类型；字体图集补全角标点（U+FF00-U+FFEF）；TextField 输入框控件（单行输入 + 光标闪烁 + IME 合成预览 + wchar→UTF-8，光标宽度近似/非 BMP 字符为已知 MVP 限制）
 - **目录重组（已完成）**：`Behavior/` 与 Widget 平级（namespace `neko::behavior`）；`Backend/DirectX11/` 与 `Platform/Win32/` 去一层目录；样式表移出 CSS.hpp 到各控件目录（`Widget/Button/ButtonStyle.hpp` 等，namespace `neko::style`）；`Widget/Layout/` 按控件分子目录（Center/Column/Row，控件+行为+样式表内聚）；`Engine/` 分类 Core（Engine/Context/MutableWidget）/Tree（TreeManager/WidgetBuilder/WidgetVisitor/HitTester）/Runtime（MsgPump/RenderScheduler/InvalidationTracker/EventRouter）；vcxproj/filters 全条目重写
+- **DirectX11 模块化（已完成）**：单类四文件拆分为 4 模块组合——`Surface`（设备/交换链/rtv/尺寸/DPI + begin_rt/end/resize）、`Pipeline`（着色器/混合/光栅/常量缓冲 + `bind_default` 全状态复位，`TextCB` 移入 Pipeline.hpp）、`FontAtlas`（stb_truetype 图集烘焙 + `query` 字形查询 + 采样器，`STB_TRUETYPE_IMPLEMENTATION` 与字体常量随模块内聚）、`Drawer`（`draw_*` 绘制，注入前三者引用，`RectData` 留 Drawer.cpp 局部）；`DirectX11` 降为组合层（持 4 值成员 + 内联转发，pragma comment lib 保留）；`begin()` = `surface_.begin_rt()` + `pipeline_.bind_default()`；`draw_text` 尾恢复 = `bind_default()` + `PSSetShaderResources(0,0,nullptr)`；旧 DirectX11Draw/Font/States.cpp 删除，vcxproj/filters 同步（+8 模块条目 -3 旧条目）
 - **抽象层砍除（已完成）**：按 YAGNI 移除 `neko::platform` 平台抽象层（基类/单例/工厂注册宏）与 `neko::backend` 渲染抽象层（策略基类），`Win32` 与 `DirectX11` 成为直接实现（无基类、无 override），`handle_message` 改非静态成员方法；初始主题推送从 Engine 构造移至 main.cpp（`win32->query_theme()` 经 MsgPump push）；`Widget::draw` 签名改 `backend::DirectX11&`（Widget.hpp 前置声明避免 D3D11 头渗透）；净减 321 行；顺带修复 Engine 构造 use-after-move 潜在 bug 与 DirectX11 Rule of Five
 - **所有权模型改造（已完成）**：Engine 以 `shared_ptr` 拥有全部子系统（context/backend/invalidation/tree_manager/widget_builder/hit_tester/render_scheduler/msg_pump/event_router），所有观察者改持 `weak_ptr`（EventRouter 7 个依赖、HitTester/WidgetBuilder 的 tree、RenderScheduler 的 invalidation、Context 的 tree_manager、Widget 的 context_、MsgPump handler 捕获的 router）——无 shared_ptr 环；各使用点 lock + 判空（lock 失败安全降级：丢弃事件/返回 nullopt/构造孤儿控件，不 UB）。`Context` 增加 `enable_shared_from_this` 基类供 TreeManager 填充 `Widget::context_`；`Widget::build<T>` 的树锁改经 `context->tree_manager.lock()->mutex_` 获取；构造回调统一改 lambda（`std::bind` 清除）
 - **生命周期契约修复（已完成）**：`Engine::clear()` 不再提前 reset 被 EventRouter 引用的 backend/context/mouse/keyboard（此前在消息线程内销毁被引用对象，留下悬垂窗口），资源释放推迟至 ~Engine 成员析构（RAII 正统）；Engine.hpp 成员区补生命周期契约注释（Engine 拥有全部子系统 shared_ptr，观察者 weak_ptr；成员声明顺序仍保证观察者先析构，weak_ptr 过期只是最后的运行时安全网）

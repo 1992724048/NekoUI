@@ -21,13 +21,16 @@
     <ClCompile Include="NekoUI\Backend\DirectX11.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Backend\DirectX11Draw.cpp">
+    <ClCompile Include="NekoUI\Backend\Drawer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Backend\DirectX11Font.cpp">
+    <ClCompile Include="NekoUI\Backend\FontAtlas.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NekoUI\Backend\DirectX11States.cpp">
+    <ClCompile Include="NekoUI\Backend\Pipeline.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Backend\Surface.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NekoUI\Engine\Core\Engine.cpp">
@@ -117,6 +120,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NekoUI\Backend\DirectX11.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Backend\Drawer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Backend\FontAtlas.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Backend\Pipeline.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NekoUI\Backend\Surface.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="NekoUI\Backend\stb_truetype.h">
