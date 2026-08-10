@@ -1,3 +1,5 @@
+﻿// 2026-08-10 11:31:16
+
 #pragma once
 #ifdef _WIN32
 #include <DirectXMath.h>
@@ -7,9 +9,8 @@
 
 #include <array>
 #include <functional>
-#include <string>
 #include <string_view>
-#include <unordered_map>
+#include <vector>
 
 #include "../Type.hpp"
 #include "stb_truetype.h"
@@ -44,14 +45,16 @@ namespace neko::backend {
 
         [[nodiscard]] auto get_client_size() const -> Vec2I;
     private:
-        static constexpr int ATLAS_W = 4096;
-        static constexpr int ATLAS_H = 4096;
+        static constexpr int ASCII_ATLAS = 1024;
+        static constexpr int CJK_ATLAS = 4096;
+        static constexpr std::array<float, 3> FONT_SIZES = {16.0F, 24.0F, 32.0F};
         static constexpr int FONT_FIRST = 32;
         static constexpr int FONT_COUNT = 96;
         static constexpr int CJK_FIRST = 0x4E00;
         static constexpr int CJK_LAST = 0x9FFF;
         static constexpr int FW_PUNCT_FIRST = 0xFF00;
         static constexpr int FW_PUNCT_LAST = 0xFFEF;
+        static constexpr int FW_PUNCT_COUNT = FW_PUNCT_LAST - FW_PUNCT_FIRST + 1;
 
         struct TextCB {
             float r_x, r_y, r_w, r_h;
@@ -62,11 +65,22 @@ namespace neko::backend {
             float p0, p1;
         };
 
+        struct FontAtlas {
+            ID3D11Texture2D* texture = nullptr;
+            ID3D11ShaderResourceView* srv = nullptr;
+            std::vector<stbtt_packedchar> chars;
+            float font_size = 0.0F;
+            int width = 0;
+            int height = 0;
+        };
+
         auto init_device() -> void;
         auto init_swap_chain(HWND hwnd) -> void;
         auto init_shaders() -> bool;
         auto init_states() -> bool;
         auto init_font() -> bool;
+        auto create_atlas_texture(FontAtlas& atlas, const std::vector<unsigned char>& bitmap, int width, int height) -> bool;
+        auto release_font_resources() -> void;
 
         ID3D11Device* device_{};
         ID3D11DeviceContext* ctx_{};
@@ -76,21 +90,19 @@ namespace neko::backend {
         ID3D11PixelShader* ps_{};
         ID3D11InputLayout* layout_{};
         ID3D11RasterizerState* rs_{};
-        ID3D11BlendState* bs_alpha_{};
         ID3D11BlendState* bs_opaque_{};
+        ID3D11BlendState* bs_text_{};
         ID3D11Buffer* cbuffer_{};
         Vec2I size_{};
 
-        ID3D11ShaderResourceView* font_srv_{};
         ID3D11SamplerState* font_sampler_{};
         ID3D11VertexShader* text_vs_{};
         ID3D11PixelShader* text_ps_{};
         ID3D11Buffer* text_cb_{};
-        float font_size_{};
+        std::array<FontAtlas, 3> ascii_atlases_{};
+        FontAtlas cjk_atlas_{};
         float dpi_scale_ = 1.0F;
         HWND hwnd_{};
-        std::array<stbtt_packedchar, FONT_COUNT> glyphs_{};
-        std::unordered_map<int, stbtt_packedchar> cjk_glyphs_{};
     };
 }
 #endif

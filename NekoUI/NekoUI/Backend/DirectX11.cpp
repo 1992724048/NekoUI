@@ -4,6 +4,7 @@
 #include "DirectX11.hpp"
 
 #include <array>
+#include <cmath>
 #include <cstdio>
 #include <d3dcommon.h>
 #include <d3dcompiler.h>
@@ -88,7 +89,7 @@ VSOutput vs_main(uint vid : SV_VertexID) {
 
 float4 ps_main(VSOutput input) : SV_TARGET {
     float alpha = font_tex.Sample(font_sam, input.uv).a;
-    return float4(input.col.rgb, input.col.a * alpha);
+    return float4(input.col.rgb * alpha, input.col.a * alpha);
 }
 )";
 
@@ -118,11 +119,9 @@ namespace neko::backend {
     }
 
     DirectX11::~DirectX11() {
+        release_font_resources();
         if (font_sampler_ != nullptr) {
             font_sampler_->Release();
-        }
-        if (font_srv_ != nullptr) {
-            font_srv_->Release();
         }
         if (text_cb_ != nullptr) {
             text_cb_->Release();
@@ -133,8 +132,8 @@ namespace neko::backend {
         if (text_vs_ != nullptr) {
             text_vs_->Release();
         }
-        if (bs_alpha_ != nullptr) {
-            bs_alpha_->Release();
+        if (bs_text_ != nullptr) {
+            bs_text_->Release();
         }
         if (bs_opaque_ != nullptr) {
             bs_opaque_->Release();
@@ -278,17 +277,29 @@ namespace neko::backend {
     }
 
     auto DirectX11::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) -> void {
-        if (ctx_ == nullptr || text_cb_ == nullptr || font_srv_ == nullptr) {
+        if (ctx_ == nullptr || text_cb_ == nullptr || ascii_atlases_[0].srv == nullptr || cjk_atlas_.srv == nullptr) {
+            return;
+        }
+        if (text.empty()) {
             return;
         }
 
-        const float scale = font_size / font_size_;
+        // 目标像素大小决定图集档位与缩放；字号非法时钳制到 1px 避免零/负缩放
+        const float target_px = std::max(font_size, 1.0F) * dpi_scale_;
+        size_t ascii_atlas_idx = 0;
+        for (size_t i = 0; i < FONT_SIZES.size(); i++) {
+            if (target_px >= FONT_SIZES[i]) {
+                ascii_atlas_idx = i;
+            }
+        }
+        const FontAtlas& ascii_atlas = ascii_atlases_[ascii_atlas_idx];
+        const float ascii_glyph_scale = target_px / ascii_atlas.font_size;
+        const float cjk_glyph_scale = target_px / cjk_atlas_.font_size;
 
         ctx_->VSSetShader(text_vs_, nullptr, 0);
         ctx_->PSSetShader(text_ps_, nullptr, 0);
-        ctx_->PSSetShaderResources(0, 1, &font_srv_);
         ctx_->PSSetSamplers(0, 1, &font_sampler_);
-        ctx_->OMSetBlendState(bs_alpha_, nullptr, 0xFFFFFFFF);
+        ctx_->OMSetBlendState(bs_text_, nullptr, 0xFFFFFFFF);
 
         TextCB cb{};
         cb.c_r = color.r() / 255.0F;
@@ -298,8 +309,10 @@ namespace neko::backend {
         cb.s_w = static_cast<float>(size_.x);
         cb.s_h = static_cast<float>(size_.y);
 
-        float ux = static_cast<float>(pos.x) / scale;
-        float uy = static_cast<float>(pos.y) / scale;
+        // 笔位置以物理像素维护，逐字形换算到图集档位单位供 stbtt 使用（advance 随档位缩放）
+        float pen_x = static_cast<float>(pos.x) * dpi_scale_;
+        float pen_y = static_cast<float>(pos.y) * dpi_scale_;
+        ID3D11ShaderResourceView* bound_srv = nullptr;
 
         for (size_t i = 0; i < text.size();) {
             const auto u8 = static_cast<unsigned char>(text[i]);
@@ -327,36 +340,50 @@ namespace neko::backend {
             for (size_t j = 1; j < seq_len; j++) {
                 cp = cp << 6 | (static_cast<unsigned char>(text[i + j]) & 0x3F);
             }
+            i += seq_len;
 
-            const stbtt_packedchar* bc = nullptr;
+            // 码点分类：ASCII/全角走多档图集，CJK 走单档；范围外字形直接跳过
+            const FontAtlas* atlas = nullptr;
+            float glyph_scale = 0.0F;
             int char_idx = 0;
             if (cp >= FONT_FIRST && cp < FONT_FIRST + FONT_COUNT) {
-                bc = glyphs_.data();
+                atlas = &ascii_atlas;
+                glyph_scale = ascii_glyph_scale;
                 char_idx = cp - FONT_FIRST;
-            } else {
-                const auto it = cjk_glyphs_.find(cp);
-                if (it != cjk_glyphs_.end()) {
-                    bc = &it->second;
-                    char_idx = 0;
-                }
+            } else if (cp >= FW_PUNCT_FIRST && cp <= FW_PUNCT_LAST) {
+                atlas = &ascii_atlas;
+                glyph_scale = ascii_glyph_scale;
+                char_idx = FONT_COUNT + (cp - FW_PUNCT_FIRST);
+            } else if (cp >= CJK_FIRST && cp <= CJK_LAST) {
+                atlas = &cjk_atlas_;
+                glyph_scale = cjk_glyph_scale;
+                char_idx = cp - CJK_FIRST;
             }
-            i += seq_len;
-            if (bc == nullptr) {
+            if (atlas == nullptr || static_cast<size_t>(char_idx) >= atlas->chars.size()) {
                 continue;
             }
 
+            float local_x = pen_x / glyph_scale;
+            float local_y = pen_y / glyph_scale;
             stbtt_aligned_quad q{};
-            stbtt_GetPackedQuad(bc, ATLAS_W, ATLAS_H, char_idx, &ux, &uy, &q, 1);
+            stbtt_GetPackedQuad(atlas->chars.data(), atlas->width, atlas->height, char_idx, &local_x, &local_y, &q, 0);
+            pen_x = local_x * glyph_scale;
+            pen_y = local_y * glyph_scale;
 
-            const float total = scale * dpi_scale_;
-            cb.r_x = q.x0 * total;
-            cb.r_y = q.y0 * total;
-            cb.r_w = (q.x1 - q.x0) * total;
-            cb.r_h = (q.y1 - q.y0) * total;
+            // 屏幕空间像素对齐：起点取整到物理像素，宽高保持浮点避免累积偏移
+            cb.r_x = std::floor(q.x0 * glyph_scale + 0.5F);
+            cb.r_y = std::floor(q.y0 * glyph_scale + 0.5F);
+            cb.r_w = (q.x1 - q.x0) * glyph_scale;
+            cb.r_h = (q.y1 - q.y0) * glyph_scale;
             cb.uv_u = q.s0;
             cb.uv_v = q.t0;
             cb.uv_w = q.s1 - q.s0;
             cb.uv_h = q.t1 - q.t0;
+
+            if (atlas->srv != bound_srv) {
+                bound_srv = atlas->srv;
+                ctx_->PSSetShaderResources(0, 1, &bound_srv);
+            }
 
             D3D11_MAPPED_SUBRESOURCE mapped{};
             if (FAILED(ctx_->Map(text_cb_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
@@ -496,15 +523,55 @@ namespace neko::backend {
         BlendEnable = 0;
         device_->CreateBlendState(&bd, &bs_opaque_);
 
-        BlendEnable = 1;
-        SrcBlend = D3D11_BLEND_SRC_ALPHA;
-        DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-        BlendOp = D3D11_BLEND_OP_ADD;
-        SrcBlendAlpha = D3D11_BLEND_ONE;
-        DestBlendAlpha = D3D11_BLEND_ZERO;
-        BlendOpAlpha = D3D11_BLEND_OP_ADD;
-        device_->CreateBlendState(&bd, &bs_alpha_);
+        // 文本专用预乘混合：着色器输出已预乘 alpha，避免深色背景暗边 fringing
+        SrcBlend = D3D11_BLEND_ONE;
+        device_->CreateBlendState(&bd, &bs_text_);
         return true;
+    }
+
+    auto DirectX11::create_atlas_texture(FontAtlas& atlas, const std::vector<unsigned char>& bitmap, const int width, const int height) -> bool {
+        atlas.width = width;
+        atlas.height = height;
+        ID3D11Texture2D* tex{};
+        D3D11_TEXTURE2D_DESC td{};
+        td.Width = static_cast<UINT>(width);
+        td.Height = static_cast<UINT>(height);
+        td.Format = DXGI_FORMAT_A8_UNORM;
+        td.MipLevels = 1;
+        td.ArraySize = 1;
+        td.SampleDesc.Count = 1;
+        td.Usage = D3D11_USAGE_IMMUTABLE;
+        td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        D3D11_SUBRESOURCE_DATA sd{};
+        sd.pSysMem = bitmap.data();
+        sd.SysMemPitch = static_cast<UINT>(width);
+        if (FAILED(device_->CreateTexture2D(&td, &sd, &tex))) {
+            return false;
+        }
+        const bool ok = SUCCEEDED(device_->CreateShaderResourceView(tex, nullptr, &atlas.srv));
+        atlas.texture = tex;
+        return ok;
+    }
+
+    auto DirectX11::release_font_resources() -> void {
+        for (auto& atlas : ascii_atlases_) {
+            if (atlas.srv != nullptr) {
+                atlas.srv->Release();
+            }
+            if (atlas.texture != nullptr) {
+                atlas.texture->Release();
+            }
+            atlas.srv = nullptr;
+            atlas.texture = nullptr;
+        }
+        if (cjk_atlas_.srv != nullptr) {
+            cjk_atlas_.srv->Release();
+        }
+        if (cjk_atlas_.texture != nullptr) {
+            cjk_atlas_.texture->Release();
+        }
+        cjk_atlas_.srv = nullptr;
+        cjk_atlas_.texture = nullptr;
     }
 
     auto DirectX11::init_font() -> bool {
@@ -531,73 +598,73 @@ namespace neko::backend {
             return false;
         }
 
-        font_size_ = 16.0F;
+        std::vector<unsigned char> bitmap;
 
-        std::vector<unsigned char> bitmap(static_cast<size_t>(ATLAS_W) * ATLAS_H, 0);
-        std::vector<stbtt_packedchar> cjk_output(CJK_LAST - CJK_FIRST + 1);
-        std::vector<stbtt_packedchar> fw_output(FW_PUNCT_LAST - FW_PUNCT_FIRST + 1);
+        // 3 档 ASCII + 全角标点图集（16/24/32px，1024²，每档 336 字形）
+        constexpr int ASCII_CHAR_COUNT = FONT_COUNT + FW_PUNCT_COUNT;
+        for (size_t i = 0; i < FONT_SIZES.size(); i++) {
+            FontAtlas& atlas = ascii_atlases_[i];
+            atlas.font_size = FONT_SIZES[i];
+            atlas.chars.resize(ASCII_CHAR_COUNT);
+            bitmap.assign(static_cast<size_t>(ASCII_ATLAS) * ASCII_ATLAS, 0);
+
+            stbtt_pack_context pc{};
+            stbtt_PackBegin(&pc, bitmap.data(), ASCII_ATLAS, ASCII_ATLAS, 0, 1, nullptr);
+            stbtt_PackSetOversampling(&pc, 2, 2);
+            std::array<stbtt_pack_range, 2> ranges{};
+            ranges[0].font_size = atlas.font_size;
+            ranges[0].first_unicode_codepoint_in_range = FONT_FIRST;
+            ranges[0].num_chars = FONT_COUNT;
+            ranges[0].chardata_for_range = atlas.chars.data();
+            ranges[1].font_size = atlas.font_size;
+            ranges[1].first_unicode_codepoint_in_range = FW_PUNCT_FIRST;
+            ranges[1].num_chars = FW_PUNCT_COUNT;
+            ranges[1].chardata_for_range = atlas.chars.data() + FONT_COUNT;
+            const int packed = stbtt_PackFontRanges(&pc, font_data.data(), 0, ranges.data(), ranges.size());
+            stbtt_PackEnd(&pc);
+            if (packed == 0) {
+                std::println(stderr, "[NekoUI] Font atlas pack failed: {}px {}x{} too small", atlas.font_size, ASCII_ATLAS, ASCII_ATLAS);
+                release_font_resources();
+                return false;
+            }
+            if (!create_atlas_texture(atlas, bitmap, ASCII_ATLAS, ASCII_ATLAS)) {
+                std::println(stderr, "[NekoUI] Font atlas texture create failed: {}px", atlas.font_size);
+                release_font_resources();
+                return false;
+            }
+        }
+
+        // CJK 图集（16px，4096²，20992 字形单档）
+        cjk_atlas_.font_size = FONT_SIZES[0];
+        cjk_atlas_.chars.resize(CJK_LAST - CJK_FIRST + 1);
+        bitmap.assign(static_cast<size_t>(CJK_ATLAS) * CJK_ATLAS, 0);
 
         stbtt_pack_context pc{};
-        stbtt_PackBegin(&pc, bitmap.data(), ATLAS_W, ATLAS_H, 0, 1, nullptr);
+        stbtt_PackBegin(&pc, bitmap.data(), CJK_ATLAS, CJK_ATLAS, 0, 1, nullptr);
         stbtt_PackSetOversampling(&pc, 2, 2);
-
-        std::array<stbtt_pack_range, 3> ranges{};
-        ranges[0].font_size = font_size_;
-        ranges[0].first_unicode_codepoint_in_range = FONT_FIRST;
-        ranges[0].num_chars = FONT_COUNT;
-        ranges[0].chardata_for_range = glyphs_.data();
-
-        ranges[1].font_size = font_size_;
-        ranges[1].first_unicode_codepoint_in_range = CJK_FIRST;
-        ranges[1].num_chars = CJK_LAST - CJK_FIRST + 1;
-        ranges[1].chardata_for_range = cjk_output.data();
-
-        ranges[2].font_size = font_size_;
-        ranges[2].first_unicode_codepoint_in_range = FW_PUNCT_FIRST;
-        ranges[2].num_chars = FW_PUNCT_LAST - FW_PUNCT_FIRST + 1;
-        ranges[2].chardata_for_range = fw_output.data();
-
-        if (stbtt_PackFontRanges(&pc, font_data.data(), 0, ranges.data(), ranges.size()) == 0) {
-            std::println(stderr, "[NekoUI] Font atlas pack failed: {}x{} too small", ATLAS_W, ATLAS_H);
+        std::array<stbtt_pack_range, 1> ranges{};
+        ranges[0].font_size = cjk_atlas_.font_size;
+        ranges[0].first_unicode_codepoint_in_range = CJK_FIRST;
+        ranges[0].num_chars = CJK_LAST - CJK_FIRST + 1;
+        ranges[0].chardata_for_range = cjk_atlas_.chars.data();
+        const int packed = stbtt_PackFontRanges(&pc, font_data.data(), 0, ranges.data(), ranges.size());
+        stbtt_PackEnd(&pc);
+        if (packed == 0) {
+            std::println(stderr, "[NekoUI] CJK atlas pack failed: {}x{} too small", CJK_ATLAS, CJK_ATLAS);
+            release_font_resources();
             return false;
         }
-        stbtt_PackEnd(&pc);
-
-        for (int i = 0; i < CJK_LAST - CJK_FIRST + 1; i++) {
-            const auto& g = cjk_output[i];
-            if (g.x0 < g.x1 && g.y0 < g.y1) {
-                cjk_glyphs_[CJK_FIRST + i] = g;
-            }
-        }
-        for (int i = 0; i < FW_PUNCT_LAST - FW_PUNCT_FIRST + 1; i++) {
-            const auto& g = fw_output[i];
-            if (g.x0 < g.x1 && g.y0 < g.y1) {
-                cjk_glyphs_[FW_PUNCT_FIRST + i] = g;
-            }
+        if (!create_atlas_texture(cjk_atlas_, bitmap, CJK_ATLAS, CJK_ATLAS)) {
+            std::println(stderr, "[NekoUI] CJK atlas texture create failed");
+            release_font_resources();
+            return false;
         }
 
-        std::println(stderr, "{} CJK + fullwidth glyphs baked", cjk_glyphs_.size());
+        std::println(stderr, "{} font atlases baked (ASCII {}px x3 + CJK {}px)", 3, FONT_SIZES[0], cjk_atlas_.font_size);
 
-        ID3D11Texture2D* tex{};
-        D3D11_TEXTURE2D_DESC td{};
-        td.Width = ATLAS_W;
-        td.Height = ATLAS_H;
-        td.Format = DXGI_FORMAT_A8_UNORM;
-        td.MipLevels = 1;
-        td.ArraySize = 1;
-        td.SampleDesc.Count = 1;
-        td.Usage = D3D11_USAGE_IMMUTABLE;
-        td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-        D3D11_SUBRESOURCE_DATA sd{};
-        sd.pSysMem = bitmap.data();
-        sd.SysMemPitch = ATLAS_W;
-        if (SUCCEEDED(device_->CreateTexture2D(&td, &sd, &tex))) {
-            device_->CreateShaderResourceView(tex, nullptr, &font_srv_);
-            tex->Release();
-        }
-
-        D3D11_SAMPLER_DESC sm;
-        sm.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+        // 图集 MipLevels=1，LINEAR 对 MIN/MAG 生效；放大时平滑插值消除像素化
+        D3D11_SAMPLER_DESC sm{};
+        sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
         device_->CreateSamplerState(&sm, &font_sampler_);

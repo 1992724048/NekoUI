@@ -47,7 +47,7 @@ NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染�
 
 - D3D11 设备/上下文/交换链创建（Debug 下启用 `D3D11_CREATE_DEVICE_DEBUG`）
 - HLSL 顶点/像素着色器编译（矩形着色器 + 文本着色器）
-- stb_truetype 字体图集生成（含 CJK 字形支持）
+- stb_truetype 字体图集生成：ASCII+全角标点 3 档图集（16/24/32px，1024²）+ CJK 单档 16px（4096²），2x oversample + 1px padding；LINEAR 采样 + 屏幕像素对齐（floor+0.5）+ 文本预乘 alpha 混合（bs_text_，消除深色背景暗边）
 - 常量缓冲区管理（`TextCB` 结构体）
 
 ### 3. 输入设备 (`neko::device`)
@@ -153,7 +153,7 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         ├── NekoUI.hpp                     # 主包含头文件（转发 Engine.hpp）
         ├── Type.hpp                       # 核心类型：Vec2/3/4<T>（union xyzw/rgba）、Color（uint32 RGBA）、Handle（void*）
         ├── Backend/
-        │   ├── DirectX11.hpp              # D3D11 唯一渲染实现头文件（设备/交换链/着色器/字体图集/CJK 字形/TextCB）
+        │   ├── DirectX11.hpp              # D3D11 唯一渲染实现头文件（设备/交换链/着色器/多档字体图集/TextCB）
         │   ├── DirectX11.cpp              # D3D11 完整实现
         │   └── stb_truetype.h             # 嵌入式字体光栅化（gitignored — 不跟踪，删除后无法从 git 恢复）
         ├── Behavior/                      # 行为层（namespace neko::behavior）
