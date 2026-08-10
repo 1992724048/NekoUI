@@ -50,6 +50,8 @@ namespace neko::backend {
         static constexpr int FONT_COUNT = 96;
         static constexpr int CJK_FIRST = 0x4E00;
         static constexpr int CJK_LAST = 0x9FFF;
+        static constexpr int FW_PUNCT_FIRST = 0xFF00;
+        static constexpr int FW_PUNCT_LAST = 0xFFEF;
 
         struct TextCB {
             float r_x, r_y, r_w, r_h;

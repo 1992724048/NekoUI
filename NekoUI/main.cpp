@@ -11,6 +11,7 @@
 #include "NekoUI/Platform/Win32.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
 #include "NekoUI/Widget/Layout/Column/Column.hpp"
+#include "NekoUI/Widget/TextField/TextField.hpp"
 
 using namespace neko::type;
 
@@ -96,6 +97,15 @@ auto main(int argc, char* argv[]) -> int try {
         b3.style().size.value = {.x = 120.0F, .y = 40.0F};
         b3.on_click([] -> auto {
             std::println("Button 3 clicked!");
+        });
+
+        auto& input_field = col.template build<neko::widget::TextField>();
+        input_field.style().size.value = {.x = 240.0F, .y = 40.0F};
+
+        auto& show_btn = col.template build<neko::widget::Button>("显示输入");
+        show_btn.style().size.value = {.x = 120.0F, .y = 40.0F};
+        show_btn.on_click([&input_field]() -> void {
+            std::println("输入内容: {}", input_field.text());
         });
     });
 

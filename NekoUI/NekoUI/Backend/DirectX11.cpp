@@ -534,12 +534,13 @@ namespace neko::backend {
 
         std::vector<unsigned char> bitmap(static_cast<size_t>(ATLAS_W) * ATLAS_H, 0);
         std::vector<stbtt_packedchar> cjk_output(CJK_LAST - CJK_FIRST + 1);
+        std::vector<stbtt_packedchar> fw_output(FW_PUNCT_LAST - FW_PUNCT_FIRST + 1);
 
         stbtt_pack_context pc{};
         stbtt_PackBegin(&pc, bitmap.data(), ATLAS_W, ATLAS_H, 0, 1, nullptr);
         stbtt_PackSetOversampling(&pc, 2, 2);
 
-        std::array<stbtt_pack_range, 2> ranges{};
+        std::array<stbtt_pack_range, 3> ranges{};
         ranges[0].font_size = font_size_;
         ranges[0].first_unicode_codepoint_in_range = FONT_FIRST;
         ranges[0].num_chars = FONT_COUNT;
@@ -550,7 +551,15 @@ namespace neko::backend {
         ranges[1].num_chars = CJK_LAST - CJK_FIRST + 1;
         ranges[1].chardata_for_range = cjk_output.data();
 
-        stbtt_PackFontRanges(&pc, font_data.data(), 0, ranges.data(), 2);
+        ranges[2].font_size = font_size_;
+        ranges[2].first_unicode_codepoint_in_range = FW_PUNCT_FIRST;
+        ranges[2].num_chars = FW_PUNCT_LAST - FW_PUNCT_FIRST + 1;
+        ranges[2].chardata_for_range = fw_output.data();
+
+        if (stbtt_PackFontRanges(&pc, font_data.data(), 0, ranges.data(), static_cast<int>(ranges.size())) == 0) {
+            std::println(stderr, "[NekoUI] Font atlas pack failed: {}x{} too small", ATLAS_W, ATLAS_H);
+            return false;
+        }
         stbtt_PackEnd(&pc);
 
         for (int i = 0; i < CJK_LAST - CJK_FIRST + 1; i++) {
@@ -559,8 +568,14 @@ namespace neko::backend {
                 cjk_glyphs_[CJK_FIRST + i] = g;
             }
         }
+        for (int i = 0; i < FW_PUNCT_LAST - FW_PUNCT_FIRST + 1; i++) {
+            const auto& g = fw_output[i];
+            if (g.x0 < g.x1 && g.y0 < g.y1) {
+                cjk_glyphs_[FW_PUNCT_FIRST + i] = g;
+            }
+        }
 
-        std::println(stderr, "{} CJK glyphs baked", cjk_glyphs_.size());
+        std::println(stderr, "{} CJK + fullwidth glyphs baked", cjk_glyphs_.size());
 
         ID3D11Texture2D* tex{};
         D3D11_TEXTURE2D_DESC td{};
