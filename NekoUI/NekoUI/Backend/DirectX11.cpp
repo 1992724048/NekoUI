@@ -212,7 +212,8 @@ namespace neko::backend {
         vp.MaxDepth = 1.0F;
         ctx_->RSSetViewports(1, &vp);
 
-        constexpr std::array color{0.0F, 0.0F, 0.0F, 0.0F};
+        // EXPERIMENT-C: 红色 clear——验证交换链/clear 层是否工作
+        constexpr std::array color{1.0F, 0.0F, 0.0F, 1.0F};
         ctx_->ClearRenderTargetView(rtv_, color.data());
 
         ctx_->RSSetState(rs_);
