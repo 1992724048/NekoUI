@@ -2,6 +2,7 @@
 
 #include "ButtonInput.hpp"
 
+#include <cstdio>
 #include <utility>
 
 #include "../../Device/Mouse.hpp"
@@ -15,12 +16,15 @@ namespace neko::behavior {
         onClick_(std::move(onClick)) {}
 
     auto ButtonInput::input(engine::Context& context, const platform::Event& event) -> void {
-        if (std::get_if<device::MouseMoveEvent>(&event) != nullptr) {
+        if (const auto* move = std::get_if<device::MouseMoveEvent>(&event); move != nullptr) {
             const auto mouse = context.mouse.lock();
             if (!mouse) {
                 return;
             }
             const auto inside = mouse->is_inside(geometry_.bounds);
+            std::printf("[Input] widget=%s pos=(%d,%d) bounds=(%d,%d,%d,%d) inside=%d hovered=%d\n",
+                        owner_.path().c_str(), move->x, move->y, geometry_.bounds.x, geometry_.bounds.y, geometry_.bounds.z, geometry_.bounds.w,
+                        inside, interaction_.hovered.load(std::memory_order_relaxed));
             if (inside != interaction_.hovered.load(std::memory_order_relaxed)) {
                 interaction_.hovered.store(inside, std::memory_order_relaxed);
                 if (context.mark_dirty) {
