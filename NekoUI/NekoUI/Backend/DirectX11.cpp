@@ -10,7 +10,7 @@
 #include <vector>
 
 #define STB_TRUETYPE_IMPLEMENTATION
-#include "../stb_truetype.h"
+#include "stb_truetype.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")

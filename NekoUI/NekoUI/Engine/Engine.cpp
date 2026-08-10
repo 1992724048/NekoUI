@@ -13,7 +13,7 @@
 #include <cmath>
 #include <optional>
 
-#include "../Backend/DirectX11/DirectX11.hpp"
+#include "../Backend/DirectX11.hpp"
 #include "../Widget/Widget.hpp"
 
 namespace neko::engine {

@@ -2,8 +2,8 @@
 
 #include "ColumnDraw.hpp"
 
-#include "../../Backend/DirectX11/DirectX11.hpp"
-#include "../../Style/CSS.hpp"
+#include "../../Backend/DirectX11.hpp"
+#include "Column/ColumnStyle.hpp"
 #include "../Widget.hpp"
 
 namespace neko::behavior {

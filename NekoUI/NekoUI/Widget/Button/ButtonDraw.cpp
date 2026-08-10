@@ -4,8 +4,8 @@
 
 #include <utility>
 
-#include "../../Backend/DirectX11/DirectX11.hpp"
-#include "../../Style/CSS.hpp"
+#include "../../Backend/DirectX11.hpp"
+#include "ButtonStyle.hpp"
 #include "../Widget.hpp"
 
 namespace neko::behavior {

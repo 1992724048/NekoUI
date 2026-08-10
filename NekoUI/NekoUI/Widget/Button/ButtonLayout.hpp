@@ -3,7 +3,7 @@
 #pragma once
 #include "../../Behavior/LayoutBehavior.hpp"
 
-#include "../../Style/CSS.hpp"
+#include "ButtonStyle.hpp"
 
 namespace neko::behavior {
     class ButtonLayout final : public LayoutBehavior {

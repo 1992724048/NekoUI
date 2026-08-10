@@ -3,7 +3,7 @@
 #pragma once
 #include "../../Behavior/DrawBehavior.hpp"
 
-#include "../../Style/CSS.hpp"
+#include "Center/CenterStyle.hpp"
 
 namespace neko::behavior {
     class CenterDraw final : public DrawBehavior {

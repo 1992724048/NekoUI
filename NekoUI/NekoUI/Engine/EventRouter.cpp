@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include "../Backend/DirectX11/DirectX11.hpp"
+#include "../Backend/DirectX11.hpp"
 #include "../Style/ColorScheme.hpp"
 #include "../Widget/Widget.hpp"
 

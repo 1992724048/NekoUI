@@ -11,8 +11,8 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "../../Type.hpp"
-#include "../stb_truetype.h"
+#include "../Type.hpp"
+#include "stb_truetype.h"
 
 namespace neko::backend {
     using namespace neko::type;

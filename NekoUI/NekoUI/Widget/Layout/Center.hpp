@@ -3,7 +3,7 @@
 #pragma once
 #include "../Widget.hpp"
 
-#include "../../Style/CSS.hpp"
+#include "Center/CenterStyle.hpp"
 
 #include "CenterDraw.hpp"
 #include "CenterHitTest.hpp"

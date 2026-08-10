@@ -4,7 +4,7 @@
 
 #include <limits>
 
-#include "../../Style/CSS.hpp"
+#include "ButtonStyle.hpp"
 #include "../Widget.hpp"
 
 namespace neko::behavior {

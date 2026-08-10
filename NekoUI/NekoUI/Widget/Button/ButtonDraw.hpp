@@ -4,7 +4,7 @@
 #include "../../Behavior/DrawBehavior.hpp"
 
 #include "../../Component/Animation.hpp"
-#include "../../Style/CSS.hpp"
+#include "ButtonStyle.hpp"
 
 #include <string>
 

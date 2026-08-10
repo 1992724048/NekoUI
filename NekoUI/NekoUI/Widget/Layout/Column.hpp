@@ -3,7 +3,7 @@
 #pragma once
 #include "../Widget.hpp"
 
-#include "../../Style/CSS.hpp"
+#include "Column/ColumnStyle.hpp"
 
 #include "ColumnDraw.hpp"
 #include "ColumnHitTest.hpp"

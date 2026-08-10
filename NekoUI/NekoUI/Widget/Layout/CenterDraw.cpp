@@ -2,8 +2,8 @@
 
 #include "CenterDraw.hpp"
 
-#include "../../Backend/DirectX11/DirectX11.hpp"
-#include "../../Style/CSS.hpp"
+#include "../../Backend/DirectX11.hpp"
+#include "Center/CenterStyle.hpp"
 #include "../Widget.hpp"
 
 namespace neko::behavior {

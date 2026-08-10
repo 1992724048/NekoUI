@@ -5,8 +5,8 @@
 #include <msctf.h>
 #include <optional>
 
-#include "../Event.hpp"
-#include "../../Engine/MsgPump.hpp"
+#include "Event.hpp"
+#include "../Engine/MsgPump.hpp"
 
 namespace neko::platform {
     struct NativeMessage {

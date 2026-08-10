@@ -5,7 +5,7 @@
 #include <limits>
 
 #include "../../Engine/WidgetVisitor.hpp"
-#include "../../Style/CSS.hpp"
+#include "Row/RowStyle.hpp"
 #include "../Widget.hpp"
 
 namespace neko::behavior {

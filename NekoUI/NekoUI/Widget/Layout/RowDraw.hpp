@@ -3,7 +3,7 @@
 #pragma once
 #include "../../Behavior/DrawBehavior.hpp"
 
-#include "../../Style/CSS.hpp"
+#include "Row/RowStyle.hpp"
 
 namespace neko::behavior {
     class RowDraw final : public DrawBehavior {

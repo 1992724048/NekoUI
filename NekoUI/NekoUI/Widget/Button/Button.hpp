@@ -3,7 +3,7 @@
 #pragma once
 #include "../Widget.hpp"
 
-#include "../../Style/CSS.hpp"
+#include "ButtonStyle.hpp"
 
 #include "ButtonDraw.hpp"
 #include "ButtonHitTest.hpp"

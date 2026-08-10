@@ -6,9 +6,9 @@
 #include <string>
 
 #include "NekoUI/Type.hpp"
-#include "NekoUI/Backend/DirectX11/DirectX11.hpp"
+#include "NekoUI/Backend/DirectX11.hpp"
 #include "NekoUI/Engine/Engine.hpp"
-#include "NekoUI/Platform/Win32/Win32.hpp"
+#include "NekoUI/Platform/Win32.hpp"
 #include "NekoUI/Widget/Button/Button.hpp"
 #include "NekoUI/Widget/Layout/Column.hpp"
 
