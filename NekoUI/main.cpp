@@ -1,4 +1,4 @@
-﻿// 2026-08-10 10:16:37
+﻿// 2026-08-10 10:53:01
 
 #include <Windows.h>
 #include <iostream>
@@ -46,7 +46,7 @@ namespace {
 }
 
 auto main(int argc, char* argv[]) -> int try {
-    const std::wstring class_name = L"NekoUI";
+    constexpr std::wstring class_name = L"NekoUI";
 
     WNDCLASSW win_class{};
     win_class.lpszClassName = class_name.data();
@@ -60,17 +60,17 @@ auto main(int argc, char* argv[]) -> int try {
         return 0;
     }
 
-    win32 = std::make_unique<neko::platform::Win32>();
-
     HWND hwnd = CreateWindowW(class_name.data(), L"NekoUI", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, win_class.hInstance, nullptr);
     if (hwnd == nullptr) {
         std::println("Error {:#X}", GetLastError());
         return 0;
     }
-    win32->set_window(hwnd);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    win32 = std::make_unique<neko::platform::Win32>();
+    win32->set_window(hwnd);
 
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
@@ -81,7 +81,7 @@ auto main(int argc, char* argv[]) -> int try {
     }
 
     bool show_field = true;
-    std::shared_ptr<neko::widget::TextField> input_holder;
+    std::string input_text;
     engine->set_root_widget<neko::widget::Column>([&](neko::widget::Widget& root) -> void {
         auto& column = static_cast<neko::widget::Column&>(root);
         column.children([&](auto& builder) -> void {
@@ -111,18 +111,13 @@ auto main(int argc, char* argv[]) -> int try {
             });
 
             if (show_field) {
-                input_holder = builder.template build<neko::widget::TextField>();
-                input_holder->style().size.value = {.x = 240.0F, .y = 40.0F};
+                builder.template build<neko::widget::TextField>(input_text)->style().size.value = {.x = 240.0F, .y = 40.0F};
 
                 auto show_btn = builder.template build<neko::widget::Button>("显示输入");
                 show_btn->style().size.value = {.x = 120.0F, .y = 40.0F};
                 show_btn->on_click([&]() -> void {
-                    if (input_holder) {
-                        std::println("输入内容: {}", input_holder->text());
-                    }
+                    std::println("输入内容: {}", input_text);
                 });
-            } else {
-                input_holder.reset();
             }
         });
     });

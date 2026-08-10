@@ -96,11 +96,22 @@ namespace {
 } // namespace
 
 namespace neko::behavior {
-    TextFieldInput::TextFieldInput(neko::widget::Widget& owner, behavior::TextFieldState& state, const behavior::GeometryState& geometry, const style::TextFieldStyle& style, const engine::Context& /*context*/) :
+    TextFieldInput::TextFieldInput(neko::widget::Widget& owner, behavior::TextFieldState& state, const behavior::GeometryState& geometry, const style::TextFieldStyle& style, const engine::Context& /*context*/, std::string* bound_text) :
         InputBehavior{owner},
         state_{state},
         geometry_{geometry},
-        style_{style} {}
+        style_{style},
+        bound_text_{bound_text} {}
+
+    auto TextFieldInput::set_bound_text(std::string* bound_text) -> void {
+        bound_text_ = bound_text;
+    }
+
+    auto TextFieldInput::sync_bound_text() -> void {
+        if (bound_text_ != nullptr) {
+            *bound_text_ = state_.text;
+        }
+    }
 
     auto TextFieldInput::input(engine::Context& context, const platform::Event& event) -> void {
         if (const auto* char_evt = std::get_if<device::CharEvent>(&event)) {
@@ -120,6 +131,7 @@ namespace neko::behavior {
         append_utf8(utf8, ch);
         insert_cp(state_.text, state_.caret_pos, utf8);
         ++state_.caret_pos;
+        sync_bound_text();
         context.mark_dirty();
     }
 
@@ -132,6 +144,7 @@ namespace neko::behavior {
             if (state_.caret_pos > 0) {
                 erase_cp(state_.text, state_.caret_pos - 1);
                 --state_.caret_pos;
+                sync_bound_text();
                 context.mark_dirty();
             }
             break;
