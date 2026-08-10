@@ -154,7 +154,10 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         ├── Type.hpp                       # 核心类型：Vec2/3/4<T>（union xyzw/rgba）、Color（uint32 RGBA）、Handle（void*）
         ├── Backend/
         │   ├── DirectX11.hpp              # D3D11 唯一渲染实现头文件（设备/交换链/着色器/多档字体图集/TextCB）
-        │   ├── DirectX11.cpp              # D3D11 完整实现
+        │   ├── DirectX11.cpp              # D3D11 生命周期（构造/析构/设备/交换链/begin/end/resize/DPI）
+        │   ├── DirectX11Draw.cpp          # 绘制实现（draw_rect_fill/rect/line/circle_fill/text）
+        │   ├── DirectX11Font.cpp          # 字体图集（stb_truetype 烘焙 + atlas 纹理 + 释放）
+        │   ├── DirectX11States.cpp        # 着色器源码/编译 + 着色器与混合/光栅化状态创建
         │   └── stb_truetype.h             # 嵌入式字体光栅化（gitignored — 不跟踪，删除后无法从 git 恢复）
         ├── Behavior/                      # 行为层（namespace neko::behavior）
         │   ├── Behavior.hpp               # 行为基类（持 Widget& owner_，Rule of Five delete）

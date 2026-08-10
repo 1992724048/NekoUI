@@ -21,6 +21,15 @@
     <ClCompile Include="NekoUI\Backend\DirectX11.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NekoUI\Backend\DirectX11Draw.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Backend\DirectX11Font.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NekoUI\Backend\DirectX11States.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="NekoUI\Engine\Core\Engine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

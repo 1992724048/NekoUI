@@ -216,6 +216,9 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NekoUI\Backend\DirectX11.cpp" />
+    <ClCompile Include="NekoUI\Backend\DirectX11Draw.cpp" />
+    <ClCompile Include="NekoUI\Backend\DirectX11Font.cpp" />
+    <ClCompile Include="NekoUI\Backend\DirectX11States.cpp" />
     <ClCompile Include="NekoUI\Engine\Core\Engine.cpp" />
     <ClCompile Include="NekoUI\Engine\Runtime\EventRouter.cpp" />
     <ClCompile Include="NekoUI\Engine\Runtime\InvalidationTracker.cpp" />
