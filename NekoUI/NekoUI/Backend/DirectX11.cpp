@@ -524,7 +524,13 @@ namespace neko::backend {
         device_->CreateBlendState(&bd, &bs_opaque_);
 
         // 文本专用预乘混合：着色器输出已预乘 alpha，避免深色背景暗边 fringing
+        BlendEnable = 1;
         SrcBlend = D3D11_BLEND_ONE;
+        DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+        BlendOp = D3D11_BLEND_OP_ADD;
+        SrcBlendAlpha = D3D11_BLEND_ONE;
+        DestBlendAlpha = D3D11_BLEND_ZERO;
+        BlendOpAlpha = D3D11_BLEND_OP_ADD;
         device_->CreateBlendState(&bd, &bs_text_);
         return true;
     }
