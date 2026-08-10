@@ -212,8 +212,7 @@ namespace neko::backend {
         vp.MaxDepth = 1.0F;
         ctx_->RSSetViewports(1, &vp);
 
-        // EXPERIMENT-C: 红色 clear——验证交换链/clear 层是否工作
-        constexpr std::array color{1.0F, 0.0F, 0.0F, 1.0F};
+        constexpr std::array color{0.0F, 0.0F, 0.0F, 0.0F};
         ctx_->ClearRenderTargetView(rtv_, color.data());
 
         ctx_->RSSetState(rs_);
@@ -294,12 +293,6 @@ namespace neko::backend {
     }
 
     auto DirectX11::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) -> void {
-        static int diag_text = 0;
-        if (diag_text < 3) {
-            diag_text++;
-            std::println(stderr, "[diag] text#{}: '{}' at ({},{}) size={} color={:08X} dpi={}", diag_text, text, pos.x, pos.y, font_size, color.value, dpi_scale_);
-        }
-        return; // EXPERIMENT-A: 临时禁用文字绘制——验证是否污染矩形状态
         if (ctx_ == nullptr || text_cb_ == nullptr || ascii_atlases_[0].srv == nullptr || cjk_atlas_.srv == nullptr) {
             return;
         }
@@ -533,13 +526,13 @@ namespace neko::backend {
     }
 
     auto DirectX11::init_states() -> bool {
-        D3D11_RASTERIZER_DESC rs_desc;
+        D3D11_RASTERIZER_DESC rs_desc{};
         rs_desc.FillMode = D3D11_FILL_SOLID;
         rs_desc.CullMode = D3D11_CULL_NONE;
         rs_desc.DepthClipEnable = 1;
         device_->CreateRasterizerState(&rs_desc, &rs_);
 
-        D3D11_BLEND_DESC bd;
+        D3D11_BLEND_DESC bd{};
         bd.IndependentBlendEnable = 0;
         auto& [BlendEnable, SrcBlend, DestBlend, BlendOp, SrcBlendAlpha, DestBlendAlpha, BlendOpAlpha, RenderTargetWriteMask] = bd.RenderTarget[0];
         RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
