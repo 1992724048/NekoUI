@@ -97,6 +97,25 @@ namespace neko::engine {
         if (!context || !mouse || !hit_tester) {
             return;
         }
+        // 键盘/字符/IME 事件优先派发给焦点控件（Tab = 焦点导航）
+        if (std::holds_alternative<device::KeyEvent>(event) || std::holds_alternative<device::CharEvent>(event) || std::holds_alternative<platform::ImeCompositionEvent>(event)) {
+            const auto tree = tree_.lock();
+            const auto focus = tree ? tree->get_focus().lock() : nullptr;
+            if (focus) {
+                if (const auto* key = std::get_if<device::KeyEvent>(&event); key != nullptr && key->pressed && key->key == 0x09) {  // VK_TAB
+                    const auto next = tree->next_focus();
+                    if (next.lock()) {
+                        tree->set_focus(next);  // 实际切换焦点（focused_ 更新）
+                        if (context->mark_dirty) {
+                            context->mark_dirty();
+                        }
+                    }
+                    return;
+                }
+                focus->input(*context, event);
+                return;
+            }
+        }
         if (std::holds_alternative<device::MouseMoveEvent>(event)) {
             const auto target = hit_tester->hit_test(*mouse);
             const auto prev = last_mouse_target_.lock();
@@ -111,6 +130,11 @@ namespace neko::engine {
             return;
         }
         if (const auto target = hit_tester->hit_test(*mouse)) {
+            if (std::holds_alternative<device::MouseButtonEvent>(event)) {
+                if (const auto tree = tree_.lock()) {
+                    tree->set_focus(*target);
+                }
+            }
             (*target)->input(*context, event);
         }
     }

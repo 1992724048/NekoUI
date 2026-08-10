@@ -35,20 +35,24 @@ namespace neko::engine {
         if (index_widgets_.empty()) {
             return {};
         }
-        if (focus_index > index_count) {
-            focus_index = -1;
+        ++focus_index;
+        if (focus_index >= index_count) {
+            focus_index = 0;
         }
-        return index_widgets_[++focus_index];
+        const auto it = index_widgets_.find(focus_index);
+        return it != index_widgets_.end() ? it->second : std::weak_ptr<widget::Widget>{};
     }
 
     auto TreeManager::prev_focus() -> std::weak_ptr<widget::Widget> {
         if (index_widgets_.empty()) {
             return {};
         }
-        if (focus_index <= 0) {
-            focus_index = index_count + 1;
+        --focus_index;
+        if (focus_index < 0) {
+            focus_index = index_count - 1;
         }
-        return index_widgets_[--focus_index];
+        const auto it = index_widgets_.find(focus_index);
+        return it != index_widgets_.end() ? it->second : std::weak_ptr<widget::Widget>{};
     }
 
     auto TreeManager::clear() -> void {
