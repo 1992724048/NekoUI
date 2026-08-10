@@ -25,6 +25,8 @@ namespace neko::engine {
 
         std::function<void()> widget_tree_changed;
 
+        std::function<void(int pos_x, int pos_y)> set_ime_pos;  // IME 合成窗/候选窗定位（main.cpp 绑定 Win32）
+
         std::weak_ptr<device::Mouse> mouse;
         std::weak_ptr<device::Keyboard> keyboard;
 

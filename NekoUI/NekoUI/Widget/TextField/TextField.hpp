@@ -20,7 +20,7 @@ namespace neko::widget {
     class TextField final : public Widget {
     public:
         explicit TextField(const engine::Context& context)
-            : input_{add_behavior<behavior::TextFieldInput>(state_, context)} {
+            : input_{add_behavior<behavior::TextFieldInput>(state_, geometry_, style_, context)} {
             set_geometry(geometry_);
             set_interaction(interaction_);
             add_behavior<behavior::TextFieldLayout>(geometry_, style_);

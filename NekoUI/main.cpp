@@ -73,6 +73,9 @@ auto main(int argc, char* argv[]) -> int try {
 
     auto directx11 = std::make_unique<neko::backend::DirectX11>(hwnd);
     engine = std::make_unique<neko::engine::Engine>(std::move(directx11));
+    engine->get_context().set_ime_pos = [](const int x, const int y) -> void {
+        win32->set_ime_window_position(x, y);
+    };
     msg_pump = engine->get_msg_pump();
     if (const auto pump = msg_pump.lock()) {
         pump->push_msg(win32->query_theme());

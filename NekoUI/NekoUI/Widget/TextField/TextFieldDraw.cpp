@@ -56,9 +56,12 @@ namespace neko::behavior {
         const auto bg_color = style_.background.color.value != 0 ? style_.background.color : context.scheme.surface;
         backend.draw_rect_fill(bounds, bg_color);
 
+        const auto caret_color = focused ? style_.caret_color_focus : style_.caret_color;
+        const auto resolved_caret = caret_color.value != 0 ? caret_color : context.scheme.on_surface;
+
         if (style_.border.width > 0.0F) {
             // hovered 作为聚焦视觉（MVP）
-            const auto border_color = focused ? style_.caret_color_focus : style_.border.color;
+            const auto border_color = focused ? resolved_caret : style_.border.color;
             backend.draw_rect(bounds, border_color, static_cast<int>(style_.border.width));
         }
 
@@ -78,7 +81,7 @@ namespace neko::behavior {
             const auto now = std::chrono::steady_clock::now().time_since_epoch();
             const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
             if ((ms / 500) % 2 == 0) {
-                backend.draw_line(Vec2I{.x = caret_x, .y = bounds.y + PADDING}, Vec2I{.x = caret_x, .y = bounds.w - PADDING}, style_.caret_color_focus, 2);
+                backend.draw_line(Vec2I{.x = caret_x, .y = bounds.y + PADDING}, Vec2I{.x = caret_x, .y = bounds.w - PADDING}, resolved_caret, 2);
             }
         }
 

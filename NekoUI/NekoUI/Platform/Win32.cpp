@@ -135,6 +135,27 @@ namespace neko::platform {
         return cached_theme_;
     }
 
+    auto Win32::set_ime_window_position(const int client_x, const int client_y) -> void {
+        if (hwnd_ == nullptr) {
+            return;
+        }
+        POINT point{.x = client_x, .y = client_y};
+        ClientToScreen(hwnd_, &point);
+        const HIMC himc = ImmGetContext(hwnd_);
+        if (himc == nullptr) {
+            return;
+        }
+        COMPOSITIONFORM comp{};
+        comp.dwStyle = CFS_POINT;
+        comp.ptCurrentPos = point;
+        ImmSetCompositionWindow(himc, &comp);
+        CANDIDATEFORM cand{};
+        cand.dwStyle = CFS_EXCLUDE;
+        cand.ptCurrentPos = point;
+        ImmSetCandidateWindow(himc, &cand);
+        ImmReleaseContext(hwnd_, himc);
+    }
+
     auto Win32::activate_ime(type::Handle native_window, const bool active) -> bool {
         init_ime();
         if (ime_thread_mgr_ == nullptr || ime_doc_mgr_ == nullptr) {

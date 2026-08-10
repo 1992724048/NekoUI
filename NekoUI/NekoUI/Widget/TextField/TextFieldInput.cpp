@@ -54,6 +54,18 @@ namespace {
         return count;
     }
 
+    // 近似文本宽度（ASCII = font_size/2，非 ASCII = font_size——与 TextFieldDraw 同算法）
+    [[nodiscard]] auto approx_width(const std::string_view text, const float font_size) -> float {
+        float width = 0.0F;
+        for (const unsigned char c : text) {
+            if (!is_lead_byte(c)) {
+                continue;
+            }
+            width += c < 0x80 ? font_size * 0.5F : font_size;
+        }
+        return width;
+    }
+
     // 在码点位置插入 UTF-8 字符
     auto insert_cp(std::string& text, const size_t cp, const std::string_view utf8_char) -> void {
         text.insert(cp_to_byte(text, cp), utf8_char);
@@ -84,9 +96,11 @@ namespace {
 } // namespace
 
 namespace neko::behavior {
-    TextFieldInput::TextFieldInput(neko::widget::Widget& owner, behavior::TextFieldState& state, const engine::Context& /*context*/) :
+    TextFieldInput::TextFieldInput(neko::widget::Widget& owner, behavior::TextFieldState& state, const behavior::GeometryState& geometry, const style::TextFieldStyle& style, const engine::Context& /*context*/) :
         InputBehavior{owner},
-        state_{state} {}
+        state_{state},
+        geometry_{geometry},
+        style_{style} {}
 
     auto TextFieldInput::input(engine::Context& context, const platform::Event& event) -> void {
         if (const auto* char_evt = std::get_if<device::CharEvent>(&event)) {
@@ -145,6 +159,15 @@ namespace neko::behavior {
         } else {
             state_.ime_comp = wstring_to_utf8(ime.composition);
             state_.ime_active = true;
+            // IME 合成窗/候选窗定位到光标（与 TextFieldDraw 相同的近似宽度算法）
+            if (context.set_ime_pos) {
+                const auto bounds = geometry_.bounds;
+                const auto byte_offset = cp_to_byte(state_.text, state_.caret_pos);
+                const auto before = std::string_view(state_.text).substr(0, byte_offset);
+                constexpr int PADDING = 4;
+                const auto caret_x = bounds.x + PADDING + static_cast<int>(approx_width(before, style_.text.font_size));
+                context.set_ime_pos(caret_x, bounds.y + PADDING);
+            }
         }
         context.mark_dirty();
     }
