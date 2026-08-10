@@ -228,7 +228,12 @@ namespace neko::backend {
         if (swap_chain_ == nullptr) {
             return;
         }
-        swap_chain_->Present(1, 0);
+        const HRESULT hr = swap_chain_->Present(1, 0);
+        static bool diag_present = false;
+        if (!diag_present) {
+            diag_present = true;
+            std::println(stderr, "[diag] present hr={:#010X} ({})", static_cast<unsigned int>(hr), hr == S_OK ? "OK" : "FAIL");
+        }
     }
 
     auto DirectX11::draw_rect_fill(const Vec4I rect, const Color color) const -> void {
