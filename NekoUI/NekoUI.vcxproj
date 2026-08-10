@@ -239,6 +239,10 @@
     <ClCompile Include="NekoUI\Widget\Layout\Row\RowDraw.cpp" />
     <ClCompile Include="NekoUI\Widget\Layout\Row\RowHitTest.cpp" />
     <ClCompile Include="NekoUI\Widget\Layout\Row\RowLayout.cpp" />
+    <ClCompile Include="NekoUI\Widget\TextField\TextFieldDraw.cpp" />
+    <ClCompile Include="NekoUI\Widget\TextField\TextFieldHitTest.cpp" />
+    <ClCompile Include="NekoUI\Widget\TextField\TextFieldInput.cpp" />
+    <ClCompile Include="NekoUI\Widget\TextField\TextFieldLayout.cpp" />
     <ClCompile Include="NekoUI\Widget\Widget.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -250,6 +254,7 @@
     <ClInclude Include="NekoUI\Behavior\HitTestBehavior.hpp" />
     <ClInclude Include="NekoUI\Behavior\InputBehavior.hpp" />
     <ClInclude Include="NekoUI\Behavior\InteractionState.hpp" />
+    <ClInclude Include="NekoUI\Behavior\TextFieldState.hpp" />
     <ClInclude Include="NekoUI\Behavior\LayoutBehavior.hpp" />
     <ClInclude Include="NekoUI\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Component\ValueState.hpp" />
@@ -294,6 +299,12 @@
     <ClInclude Include="NekoUI\Widget\Layout\Row\RowLayout.hpp" />
     <ClInclude Include="NekoUI\Widget\Layout\Row\RowStyle.hpp" />
     <ClInclude Include="NekoUI\Widget\Widget.hpp" />
+    <ClInclude Include="NekoUI\Widget\TextField\TextField.hpp" />
+    <ClInclude Include="NekoUI\Widget\TextField\TextFieldDraw.hpp" />
+    <ClInclude Include="NekoUI\Widget\TextField\TextFieldHitTest.hpp" />
+    <ClInclude Include="NekoUI\Widget\TextField\TextFieldInput.hpp" />
+    <ClInclude Include="NekoUI\Widget\TextField\TextFieldLayout.hpp" />
+    <ClInclude Include="NekoUI\Widget\TextField\TextFieldStyle.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
