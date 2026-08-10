@@ -107,6 +107,9 @@
     <ClInclude Include="NekoUI\Behavior\DrawBehavior.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="NekoUI\Behavior\GeometryState.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="NekoUI\Behavior\HitTestBehavior.hpp">
       <Filter>头文件</Filter>
     </ClInclude>

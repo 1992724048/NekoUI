@@ -246,6 +246,7 @@
     <ClInclude Include="NekoUI\Backend\stb_truetype.h" />
     <ClInclude Include="NekoUI\Behavior\Behavior.hpp" />
     <ClInclude Include="NekoUI\Behavior\DrawBehavior.hpp" />
+    <ClInclude Include="NekoUI\Behavior\GeometryState.hpp" />
     <ClInclude Include="NekoUI\Behavior\HitTestBehavior.hpp" />
     <ClInclude Include="NekoUI\Behavior\InputBehavior.hpp" />
     <ClInclude Include="NekoUI\Behavior\InteractionState.hpp" />
