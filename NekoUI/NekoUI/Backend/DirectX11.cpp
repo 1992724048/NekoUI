@@ -196,12 +196,6 @@ namespace neko::backend {
     }
 
     auto DirectX11::begin() const -> void {
-        static bool diag_begin = false;
-        if (!diag_begin) {
-            diag_begin = true;
-            std::println(stderr, "[diag] begin: size=({},{}), rtv={}, vs={}, ps={}, rs={}, bs_opaque={}, bs_text={}, ctx={}",
-                         size_.x, size_.y, rtv_ != nullptr, vs_ != nullptr, ps_ != nullptr, rs_ != nullptr, bs_opaque_ != nullptr, bs_text_ != nullptr, ctx_ != nullptr);
-        }
         if (ctx_ == nullptr || rtv_ == nullptr) {
             return;
         }
@@ -228,20 +222,10 @@ namespace neko::backend {
         if (swap_chain_ == nullptr) {
             return;
         }
-        const HRESULT hr = swap_chain_->Present(1, 0);
-        static bool diag_present = false;
-        if (!diag_present) {
-            diag_present = true;
-            std::println(stderr, "[diag] present hr={:#010X} ({})", static_cast<unsigned int>(hr), hr == S_OK ? "OK" : "FAIL");
-        }
+        swap_chain_->Present(1, 0);
     }
 
     auto DirectX11::draw_rect_fill(const Vec4I rect, const Color color) const -> void {
-        static int diag_rect = 0;
-        if (diag_rect < 5) {
-            diag_rect++;
-            std::println(stderr, "[diag] rect#{}: ({},{},{},{}) color={:08X}", diag_rect, rect.x, rect.y, rect.z, rect.w, color.value);
-        }
         if (ctx_ == nullptr || cbuffer_ == nullptr) {
             return;
         }
