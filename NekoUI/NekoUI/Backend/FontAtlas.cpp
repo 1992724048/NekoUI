@@ -152,32 +152,11 @@ namespace neko::backend {
         std::println(stderr, "{} font atlases baked (ASCII {}px x3 + CJK {}px)", 3, FONT_SIZES[0], cjk_atlas_.font_size);
 
         // 图集 MipLevels=1，LINEAR 对 MIN/MAG 生效；放大时平滑插值消除像素化
-        ID3D11Device* dev = surface_.device();
-        // 分水岭实验：新建独立 device 测试 CreateSamplerState
-        ID3D11Device* fresh_dev = nullptr;
-        ID3D11DeviceContext* fresh_ctx = nullptr;
-        D3D_FEATURE_LEVEL fresh_feat{};
-        const HRESULT fresh_create = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT, nullptr, 0, D3D11_SDK_VERSION, &fresh_dev, &fresh_feat, &fresh_ctx);
-        ID3D11SamplerState* fresh_sampler = nullptr;
-        D3D11_SAMPLER_DESC fresh_sm{};
-        const HRESULT fresh_sampler_hr = fresh_dev->CreateSamplerState(&fresh_sm, &fresh_sampler);
-        std::println(stderr, "[diag] fresh device: create={:#010X} sampler={:#010X} result={}", static_cast<unsigned int>(fresh_create), static_cast<unsigned int>(fresh_sampler_hr), fresh_sampler != nullptr);
-        if (fresh_sampler != nullptr) {
-            fresh_sampler->Release();
-        }
-        if (fresh_ctx != nullptr) {
-            fresh_ctx->Release();
-        }
-        if (fresh_dev != nullptr) {
-            fresh_dev->Release();
-        }
-        // 正式创建（成员）
         D3D11_SAMPLER_DESC sm{};
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        const HRESULT hr = dev->CreateSamplerState(&sm, &font_sampler_);
-        std::println(stderr, "[diag] sampler hr={:#010X} result={}", static_cast<unsigned int>(hr), font_sampler_ != nullptr);
+        surface_.device()->CreateSamplerState(&sm, &font_sampler_);
         return true;
     }
 

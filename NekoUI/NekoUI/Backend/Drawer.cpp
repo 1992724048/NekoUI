@@ -1,4 +1,4 @@
-// 2026-08-10
+﻿// 2026-08-10
 
 #ifdef _WIN32
 #include "Drawer.hpp"
@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <print>
 
 #include "stb_truetype.h"
 
@@ -68,15 +69,6 @@ namespace neko::backend {
 
     auto Drawer::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) const -> void {
         ID3D11DeviceContext* ctx = surface_.context();
-        static bool diag = false;
-        if (!diag) {
-            diag = true;
-            std::println(stderr, "[diag] draw_text: '{}' pos=({},{}) font={} | ctx={} tcb={} sampler={} tvs={} tps={} tblend={} dpi={}",
-                         text, pos.x, pos.y, font_size,
-                         ctx != nullptr, pipeline_.text_cbuffer() != nullptr, fonts_.sampler() != nullptr,
-                         pipeline_.text_vs() != nullptr, pipeline_.text_ps() != nullptr, pipeline_.text_blend() != nullptr,
-                         surface_.get_dpi_scale());
-        }
         if (ctx == nullptr || pipeline_.text_cbuffer() == nullptr || fonts_.sampler() == nullptr) {
             return;
         }
@@ -141,11 +133,6 @@ namespace neko::backend {
             float glyph_scale = 0.0F;
             if (!fonts_.query(cp, target_px, glyph, char_idx, glyph_scale)) {
                 continue;
-            }
-            static bool diag2 = false;
-            if (!diag2) {
-                diag2 = true;
-                std::println(stderr, "[diag] query: cp={:#x} idx={} scale={} srv={} chars={} atlas=({}x{})", cp, char_idx, glyph_scale, glyph->srv != nullptr, glyph->chars != nullptr, glyph->width, glyph->height);
             }
 
             float local_x = pen_x / glyph_scale;
