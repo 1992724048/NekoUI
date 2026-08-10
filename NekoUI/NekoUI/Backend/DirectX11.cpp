@@ -298,6 +298,7 @@ namespace neko::backend {
             diag_text++;
             std::println(stderr, "[diag] text#{}: '{}' at ({},{}) size={} color={:08X} dpi={}", diag_text, text, pos.x, pos.y, font_size, color.value, dpi_scale_);
         }
+        return; // EXPERIMENT-A: 临时禁用文字绘制——验证是否污染矩形状态
         if (ctx_ == nullptr || text_cb_ == nullptr || ascii_atlases_[0].srv == nullptr || cjk_atlas_.srv == nullptr) {
             return;
         }
