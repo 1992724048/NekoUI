@@ -163,7 +163,8 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         │   ├── InputBehavior.hpp          # 输入行为接口（纯虚 input）
         │   ├── HitTestBehavior.hpp        # 命中测试行为接口（纯虚 hit_test const -> bool）
         │   ├── InteractionState.hpp       # 交互状态（hovered，Input 写/Draw 读）
-        │   └── GeometryState.hpp          # 几何状态（bounds，布局写/绘制命中读）
+        │   ├── GeometryState.hpp          # 几何状态（bounds，布局写/绘制命中读）
+        │   └── TextFieldState.hpp         # 文本输入状态（text/caret_pos/ime_comp）
         ├── Component/
         │   ├── ValueState.hpp             # 响应式值封装 + 脏标记绑定
         │   └── Animation.hpp              # 12 种速率曲线动画引擎
@@ -197,8 +198,7 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
         └── Widget/
             ├── Widget.hpp                 # Widget 基类声明（含 Builder API：build<T>/children/parent + 行为委托）
             ├── Widget.cpp                 # Widget 默认实现
-            ├── Button/
-            │   ├── Button.hpp             # Button 声明（继承仅 Widget，style_ 成员 + style() 访问器，行为组装零 override）
+            ├── Button/            │   ├── Button.hpp             # Button 声明（继承仅 Widget，style_ 成员 + style() 访问器，行为组装零 override）
             │   ├── ButtonStyle.hpp        # Button 样式表（组合 Background/Size/Border/Text）
             │   ├── ButtonLayout.hpp/.cpp  # 布局行为：style_.size.value 回退尺寸计算
             │   ├── ButtonDraw.hpp/.cpp    # 绘制行为：背景/边框/文字 + hover 边沿检测 + scale_ 动画
@@ -217,12 +217,19 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
                 │   ├── ColumnLayout.hpp/.cpp  # 布局行为：垂直栈式布局
                 │   ├── ColumnDraw.hpp/.cpp    # 绘制行为：背景绘制
                 │   └── ColumnHitTest.hpp/.cpp # 命中行为
-                └── Row/
-                    ├── Row.hpp            # Row 声明（行为组装零 override）
-                    ├── RowStyle.hpp       # Row 样式表（组合 Background/Size）
-                    ├── RowLayout.hpp/.cpp # 布局行为：水平栈式布局
-                    ├── RowDraw.hpp/.cpp   # 绘制行为：背景绘制
-                    └── RowHitTest.hpp/.cpp # 命中行为
+                ├── Row/
+                │   ├── Row.hpp            # Row 声明（行为组装零 override）
+                │   ├── RowStyle.hpp       # Row 样式表（组合 Background/Size）
+                │   ├── RowLayout.hpp/.cpp # 布局行为：水平栈式布局
+                │   ├── RowDraw.hpp/.cpp   # 绘制行为：背景绘制
+                │   └── RowHitTest.hpp/.cpp # 命中行为
+                └── TextField/             # 输入框控件（行为组装 + TextFieldState + TextFieldStyle）
+                    ├── TextField.hpp      # TextField 声明（组装 4 行为）
+                    ├── TextFieldStyle.hpp # 样式表（Background/Size/Border/Text + 光标/合成色）
+                    ├── TextFieldLayout.hpp/.cpp  # 布局行为：尺寸回退
+                    ├── TextFieldDraw.hpp/.cpp    # 绘制行为：文本两段绘制 + 光标闪烁 + IME 合成预览
+                    ├── TextFieldInput.hpp/.cpp   # 输入行为：字符/Backspace/移动/IME 事件 + wchar→UTF-8
+                    └── TextFieldHitTest.hpp/.cpp # 命中行为：bounds 判定
 ```
 
 ## Build
@@ -338,6 +345,7 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 - **布局下放（已完成）**：布局计算曾从 Engine 集中式 Renderer 下放到各 Widget——Widget 基类新增 `layout()` 虚方法，Column/Row/Center 各自实现子节点定位逻辑，Button 实现自身尺寸计算，`horizontal_` 成员从 Widget 基类移除。`Engine::render_frame` 每帧调用 `root->layout({0,0,w,h})`（草稿期每帧全量布局）驱动布局阶段
 - **行为组件化（已完成）**：Widget 行为拆分——Task 1 行为接口层（`Behavior/`：Behavior 基类 + Layout/Draw/Input/HitTest 四接口，持 `Widget& owner_`，namespace `neko::behavior`）；Task 2 Widget 基类改造（4 虚方法默认实现遍历 `behaviors_` 容器按类型委托、`add_behavior<T>()` 组装模板、`hovered_` 提升为 atomic 交互状态修复跨线程病灶、删除 build/event 空壳及全部调用点）；Task 3/4 全部控件重构为行为组装零 override（Button 四行为 + Column/Row/Center 各三行为），全部旧 cpp 删除、vcxproj/filters 同步。**新控件开发 = 组合行为 + 数据，不再 override 虚方法**（样式经组合样式表注入，见"样式组合化"）
 - **状态迁出（已完成）**：交互状态与几何数据迁出 Widget 基类——`InteractionState`（hovered，atomic）与 `GeometryState`（bounds）为 `behavior::` 共享状态对象，控件持有成员、行为构造注入（Input 写/Draw 读；布局写/绘制命中输入读）；Widget 删除 isFocus（死代码）/hovered_/bounds/set_bounds，保留 `get_bounds()`（经 GeometryState* 观察指针，Engine::draw_widget/父布局读子兼容）+ `geometry()` 访问器（父布局写子定位）
+- **焦点路由 + IME 接入（已完成）**：点击聚焦（MouseButton → TreeManager::set_focus）+ 键盘/字符/IME 事件派发给焦点控件 + Tab 导航（next_focus/set_focus）；Win32 翻译 WM_IME_STARTCOMPOSITION/COMPOSITION/ENDCOMPOSITION/CHAR（IMM 方案，ImmGetCompositionStringW，TSF 封装保留未激活）；`ImeCompositionEvent` 事件类型；字体图集补全角标点（U+FF00-U+FFEF）；TextField 输入框控件（单行输入 + 光标闪烁 + IME 合成预览 + wchar→UTF-8，光标宽度近似/非 BMP 字符为已知 MVP 限制）
 - **目录重组（已完成）**：`Behavior/` 与 Widget 平级（namespace `neko::behavior`）；`Backend/DirectX11/` 与 `Platform/Win32/` 去一层目录；样式表移出 CSS.hpp 到各控件目录（`Widget/Button/ButtonStyle.hpp` 等，namespace `neko::style`）；`Widget/Layout/` 按控件分子目录（Center/Column/Row，控件+行为+样式表内聚）；`Engine/` 分类 Core（Engine/Context/MutableWidget）/Tree（TreeManager/WidgetBuilder/WidgetVisitor/HitTester）/Runtime（MsgPump/RenderScheduler/InvalidationTracker/EventRouter）；vcxproj/filters 全条目重写
 - **抽象层砍除（已完成）**：按 YAGNI 移除 `neko::platform` 平台抽象层（基类/单例/工厂注册宏）与 `neko::backend` 渲染抽象层（策略基类），`Win32` 与 `DirectX11` 成为直接实现（无基类、无 override），`handle_message` 改非静态成员方法；初始主题推送从 Engine 构造移至 main.cpp（`win32->query_theme()` 经 MsgPump push）；`Widget::draw` 签名改 `backend::DirectX11&`（Widget.hpp 前置声明避免 D3D11 头渗透）；净减 321 行；顺带修复 Engine 构造 use-after-move 潜在 bug 与 DirectX11 Rule of Five
 - **所有权模型改造（已完成）**：Engine 以 `shared_ptr` 拥有全部子系统（context/backend/invalidation/tree_manager/widget_builder/hit_tester/render_scheduler/msg_pump/event_router），所有观察者改持 `weak_ptr`（EventRouter 7 个依赖、HitTester/WidgetBuilder 的 tree、RenderScheduler 的 invalidation、Context 的 tree_manager、Widget 的 context_、MsgPump handler 捕获的 router）——无 shared_ptr 环；各使用点 lock + 判空（lock 失败安全降级：丢弃事件/返回 nullopt/构造孤儿控件，不 UB）。`Context` 增加 `enable_shared_from_this` 基类供 TreeManager 填充 `Widget::context_`；`Widget::build<T>` 的树锁改经 `context->tree_manager.lock()->mutex_` 获取；构造回调统一改 lambda（`std::bind` 清除）
