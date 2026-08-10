@@ -109,7 +109,9 @@ namespace neko::backend {
         create_flags |= D3D11_CREATE_DEVICE_DEBUG;
         #endif
         D3D_FEATURE_LEVEL feature_level{};
-        if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flags, nullptr, 0, D3D11_SDK_VERSION, &device_, &feature_level, &ctx_))) {
+        const HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_flags, nullptr, 0, D3D11_SDK_VERSION, &device_, &feature_level, &ctx_);
+        std::println(stderr, "[diag] D3D11CreateDevice hr={:#010X} feat={} dev={} ctx={}", static_cast<unsigned int>(hr), static_cast<int>(feature_level), device_ != nullptr, ctx_ != nullptr);
+        if (FAILED(hr)) {
             std::println(stderr, "[NekoUI] D3D11CreateDevice failed");
         }
     }

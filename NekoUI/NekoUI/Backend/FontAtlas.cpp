@@ -153,7 +153,15 @@ namespace neko::backend {
 
         // 图集 MipLevels=1，LINEAR 对 MIN/MAG 生效；放大时平滑插值消除像素化
         ID3D11Device* dev = surface_.device();
-        // 对照：同一 device 创建小纹理（create_atlas_texture 成功过——验证创建能力）
+        // 对照 1：全零 desc（不设置字段）
+        D3D11_SAMPLER_DESC zero_sm{};
+        ID3D11SamplerState* zero_sampler = nullptr;
+        const HRESULT zero_hr = dev->CreateSamplerState(&zero_sm, &zero_sampler);
+        std::println(stderr, "[diag] zero sampler hr={:#010X} result={}", static_cast<unsigned int>(zero_hr), zero_sampler != nullptr);
+        if (zero_sampler != nullptr) {
+            zero_sampler->Release();
+        }
+        // 对照 2：probe 纹理（CreateTexture2D 成功过）
         D3D11_TEXTURE2D_DESC probe_td{};
         probe_td.Width = 8;
         probe_td.Height = 8;
@@ -169,15 +177,11 @@ namespace neko::backend {
         if (probe != nullptr) {
             probe->Release();
         }
-        // sampler 字节 dump
+        // 正式创建
         D3D11_SAMPLER_DESC sm{};
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        const auto* bytes = reinterpret_cast<const unsigned char*>(&sm);
-        std::println(stderr, "[diag] sm bytes: {:02X} {:02X} {:02X} {:02X} | {:02X} {:02X} {:02X} {:02X} | {:02X} {:02X} {:02X} {:02X} | {:02X} {:02X} {:02X} {:02X}",
-                     bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
-                     bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
         const HRESULT hr = dev->CreateSamplerState(&sm, &font_sampler_);
         std::println(stderr, "[diag] sampler hr={:#010X} result={}", static_cast<unsigned int>(hr), font_sampler_ != nullptr);
         return true;
