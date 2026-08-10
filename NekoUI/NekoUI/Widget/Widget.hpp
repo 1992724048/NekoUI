@@ -170,7 +170,7 @@ namespace neko::widget {
             child = std::make_shared<T>(*orphan_context, std::forward<Args>(args)...);
         }
         child->parent_ = this;
-        auto shared = child; // visit 内会 move 走 child，返回前保留副本
+        auto shared = child;
 
         std::unique_lock<std::shared_mutex> tree_lock;
         if (context) {

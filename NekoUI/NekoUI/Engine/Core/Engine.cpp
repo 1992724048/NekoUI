@@ -116,7 +116,7 @@ namespace neko::engine {
 
     auto Engine::schedule_rebuild() -> void {
         if (rebuilding_.load(std::memory_order_relaxed)) {
-            return;  // rebuild 中抑制中间帧请求（build<T> 逐个触发，避免半树渲染闪屏）
+            return;
         }
         tree_dirty_.store(true, std::memory_order_relaxed);
         if (render_scheduler_) {

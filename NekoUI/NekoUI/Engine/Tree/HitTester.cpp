@@ -1,9 +1,10 @@
-﻿// 2026-08-10 10:17:40
+﻿// 2026-08-10 11:03:52
 
 #include "HitTester.hpp"
 #include "TreeManager.hpp"
 #include "../../Widget/Widget.hpp"
 
+#include <ranges>
 #include <utility>
 
 namespace neko::engine {
@@ -30,17 +31,17 @@ namespace neko::engine {
                     return hit;
                 }
             } else if (children.is_list()) {
-                for (auto it = children.as_list().rbegin(); it != children.as_list().rend(); ++it) {
-                    if (it->is_widget()) {
-                        if (auto hit = self(self, it->as_widget())) {
+                for (auto& it : std::views::reverse(children.as_list())) {
+                    if (it.is_widget()) {
+                        if (auto hit = self(self, it.as_widget())) {
                             return hit;
                         }
                     }
                 }
             } else if (children.is_vector()) {
-                for (auto it = children.as_vector().rbegin(); it != children.as_vector().rend(); ++it) {
-                    if (it->is_widget()) {
-                        if (auto hit = self(self, it->as_widget())) {
+                for (auto& it : std::views::reverse(children.as_vector())) {
+                    if (it.is_widget()) {
+                        if (auto hit = self(self, it.as_widget())) {
                             return hit;
                         }
                     }

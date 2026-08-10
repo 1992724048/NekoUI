@@ -1,4 +1,4 @@
-﻿// 2026-08-10 10:53:01
+﻿// 2026-08-10 11:23:04
 
 #include <Windows.h>
 #include <iostream>
@@ -84,26 +84,26 @@ auto main(int argc, char* argv[]) -> int try {
     std::string input_text;
     engine->set_root_widget<neko::widget::Column>([&](neko::widget::Widget& root) -> void {
         auto& column = static_cast<neko::widget::Column&>(root);
-        column.children([&](auto& builder) -> void {
-            auto b1 = builder.template build<neko::widget::Button>("Button 1");
+        column.children([&](neko::widget::Widget& builder) -> void {
+            const auto b1 = builder.build<neko::widget::Button>("Button 1");
             b1->style().size.value = {.x = 120.0F, .y = 40.0F};
             b1->on_click([]() -> void {
                 std::println("Button 1 clicked!");
             });
 
-            auto b2 = builder.template build<neko::widget::Button>("Button 2");
+            const auto b2 = builder.build<neko::widget::Button>("Button 2");
             b2->style().size.value = {.x = 120.0F, .y = 40.0F};
             b2->on_click([]() -> void {
                 std::println("Button 2 clicked!");
             });
 
-            auto b3 = builder.template build<neko::widget::Button>("Button 3");
+            const auto b3 = builder.build<neko::widget::Button>("Button 3");
             b3->style().size.value = {.x = 120.0F, .y = 40.0F};
             b3->on_click([]() -> void {
                 std::println("Button 3 clicked!");
             });
 
-            auto toggle_btn = builder.template build<neko::widget::Button>("切换输入框");
+            const auto toggle_btn = builder.build<neko::widget::Button>("切换输入框");
             toggle_btn->style().size.value = {.x = 120.0F, .y = 40.0F};
             toggle_btn->on_click([&]() -> void {
                 show_field = !show_field;
@@ -111,9 +111,9 @@ auto main(int argc, char* argv[]) -> int try {
             });
 
             if (show_field) {
-                builder.template build<neko::widget::TextField>(input_text)->style().size.value = {.x = 240.0F, .y = 40.0F};
+                builder.build<neko::widget::TextField>(input_text)->style().size.value = {.x = 240.0F, .y = 40.0F};
 
-                auto show_btn = builder.template build<neko::widget::Button>("显示输入");
+                const auto show_btn = builder.build<neko::widget::Button>("显示输入");
                 show_btn->style().size.value = {.x = 120.0F, .y = 40.0F};
                 show_btn->on_click([&]() -> void {
                     std::println("输入内容: {}", input_text);
