@@ -196,6 +196,12 @@ namespace neko::backend {
     }
 
     auto DirectX11::begin() const -> void {
+        static bool diag_begin = false;
+        if (!diag_begin) {
+            diag_begin = true;
+            std::println(stderr, "[diag] begin: size=({},{}), rtv={}, vs={}, ps={}, rs={}, bs_opaque={}, bs_text={}, ctx={}",
+                         size_.x, size_.y, rtv_ != nullptr, vs_ != nullptr, ps_ != nullptr, rs_ != nullptr, bs_opaque_ != nullptr, bs_text_ != nullptr, ctx_ != nullptr);
+        }
         if (ctx_ == nullptr || rtv_ == nullptr) {
             return;
         }
@@ -226,6 +232,11 @@ namespace neko::backend {
     }
 
     auto DirectX11::draw_rect_fill(const Vec4I rect, const Color color) const -> void {
+        static bool diag_rect = false;
+        if (!diag_rect) {
+            diag_rect = true;
+            std::println(stderr, "[diag] rect: ({},{},{},{}) color={:08X}", rect.x, rect.y, rect.z, rect.w, color.value);
+        }
         if (ctx_ == nullptr || cbuffer_ == nullptr) {
             return;
         }
@@ -277,6 +288,11 @@ namespace neko::backend {
     }
 
     auto DirectX11::draw_text(const std::string_view text, const Vec2I pos, const Color color, const float font_size) -> void {
+        static bool diag_text = false;
+        if (!diag_text) {
+            diag_text = true;
+            std::println(stderr, "[diag] text: '{}' at ({},{}) size={} dpi={}", text, pos.x, pos.y, font_size, dpi_scale_);
+        }
         if (ctx_ == nullptr || text_cb_ == nullptr || ascii_atlases_[0].srv == nullptr || cjk_atlas_.srv == nullptr) {
             return;
         }
