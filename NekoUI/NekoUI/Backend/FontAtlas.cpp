@@ -156,7 +156,8 @@ namespace neko::backend {
         sm.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         sm.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
         sm.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-        surface_.device()->CreateSamplerState(&sm, &font_sampler_);
+        const HRESULT sampler_hr = surface_.device()->CreateSamplerState(&sm, &font_sampler_);
+        std::println(stderr, "[diag] sampler create: device={} hr={:#010X} result={}", surface_.device() != nullptr, static_cast<unsigned int>(sampler_hr), font_sampler_ != nullptr);
         return true;
     }
 
