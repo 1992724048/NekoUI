@@ -113,6 +113,9 @@
     <ClInclude Include="NekoUI\Behavior\InputBehavior.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="NekoUI\Behavior\InteractionState.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="NekoUI\Behavior\LayoutBehavior.hpp">
       <Filter>头文件</Filter>
     </ClInclude>

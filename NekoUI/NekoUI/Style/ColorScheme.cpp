@@ -148,7 +148,7 @@ namespace neko::style {
         }
 
         [[nodiscard]] constexpr auto make_color(const uint8_t r, const uint8_t g, const uint8_t b) -> type::Color {
-            return type::Color{.value = (static_cast<uint32_t>(r) << 24U) | (static_cast<uint32_t>(g) << 16U) | (static_cast<uint32_t>(b) << 8U) | 0xFFU,};
+            return type::Color{(static_cast<uint32_t>(r) << 24U) | (static_cast<uint32_t>(g) << 16U) | (static_cast<uint32_t>(b) << 8U) | 0xFFU,};
         }
 
         [[nodiscard]] auto inverse_chromatic_adaptation(const float adapted) -> float {

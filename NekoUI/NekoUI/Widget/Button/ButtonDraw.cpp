@@ -9,15 +9,16 @@
 #include "../Widget.hpp"
 
 namespace neko::behavior {
-    ButtonDraw::ButtonDraw(neko::widget::Widget& owner, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
+    ButtonDraw::ButtonDraw(neko::widget::Widget& owner, const InteractionState& interaction, const style::ButtonStyle& style, const engine::Context& context, std::string text) :
         DrawBehavior{owner},
+        interaction_(interaction),
         style_{style},
         text_(std::move(text)) {
         scale_.bind(context.anim_inc, context.anim_dec);
     }
 
     auto ButtonDraw::draw(Vec4I /*rect*/, engine::Context& context, backend::DirectX11& backend) -> Rect {
-        const bool hovered = owner_.get_hovered();
+        const bool hovered = interaction_.hovered.load(std::memory_order_relaxed);
         if (hovered != prev_hovered_) {
             prev_hovered_ = hovered;
             scale_.to_value(hovered ? 1.06F : 1.0F);

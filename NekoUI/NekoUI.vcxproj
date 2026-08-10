@@ -248,6 +248,7 @@
     <ClInclude Include="NekoUI\Behavior\DrawBehavior.hpp" />
     <ClInclude Include="NekoUI\Behavior\HitTestBehavior.hpp" />
     <ClInclude Include="NekoUI\Behavior\InputBehavior.hpp" />
+    <ClInclude Include="NekoUI\Behavior\InteractionState.hpp" />
     <ClInclude Include="NekoUI\Behavior\LayoutBehavior.hpp" />
     <ClInclude Include="NekoUI\Component\Animation.hpp" />
     <ClInclude Include="NekoUI\Component\ValueState.hpp" />

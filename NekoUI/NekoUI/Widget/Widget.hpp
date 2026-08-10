@@ -97,14 +97,6 @@ namespace neko::widget {
         [[nodiscard]] auto index() const -> int;
         [[nodiscard]] auto path() const -> const std::string&;
 
-        [[nodiscard]] auto get_hovered() const -> bool {
-            return hovered_.load(std::memory_order_relaxed);
-        }
-
-        auto set_hovered(const bool hovered) -> void {
-            hovered_.store(hovered, std::memory_order_relaxed);
-        }
-
         [[nodiscard]] auto get_bounds() const -> Vec4I {
             return bounds;
         }
@@ -126,9 +118,7 @@ namespace neko::widget {
         Widget* parent_ = nullptr;
         std::weak_ptr<engine::Context> context_;
 
-        std::atomic_bool isFocus{true};
         std::atomic_bool isDirty{true};
-        std::atomic_bool hovered_{false};
 
         std::vector<std::unique_ptr<neko::behavior::Behavior>> behaviors_;
     private:

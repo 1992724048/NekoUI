@@ -17,14 +17,14 @@ namespace {
             }
             RegCloseKey(key);
         }
-        neko::type::Color accent_color{.value = 0xFF000000U};
+        neko::type::Color accent_color{0xFF000000U};
         {
             HKEY dwm_key{};
             if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\DWM", 0, KEY_READ, &dwm_key) == ERROR_SUCCESS) {
                 DWORD accent_raw{};
                 DWORD accent_size = sizeof(accent_raw);
                 if (RegQueryValueExW(dwm_key, L"AccentColor", nullptr, nullptr, reinterpret_cast<LPBYTE>(&accent_raw), &accent_size) == ERROR_SUCCESS) {
-                    accent_color = neko::type::Color{.value = ((accent_raw & 0xFFU) << 24) | ((accent_raw & 0xFF00U) << 8) | ((accent_raw & 0xFF0000U) >> 8) | ((accent_raw >> 24) & 0xFFU)};
+                    accent_color = neko::type::Color{((accent_raw & 0xFFU) << 24) | ((accent_raw & 0xFF00U) << 8) | ((accent_raw & 0xFF0000U) >> 8) | ((accent_raw >> 24) & 0xFFU)};
                 }
                 RegCloseKey(dwm_key);
             }

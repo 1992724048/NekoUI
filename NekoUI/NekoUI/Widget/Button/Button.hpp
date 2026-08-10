@@ -14,19 +14,19 @@
 #include <utility>
 
 namespace neko::widget {
-    using neko::behavior::ButtonDraw;
-    using neko::behavior::ButtonHitTest;
-    using neko::behavior::ButtonInput;
-    using neko::behavior::ButtonLayout;
+    using behavior::ButtonDraw;
+    using behavior::ButtonHitTest;
+    using behavior::ButtonInput;
+    using behavior::ButtonLayout;
 
     class Button final : public Widget {
     public:
         using OnClick = ButtonInput::OnClick;
 
-        explicit Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr)
-            : input_{add_behavior<ButtonInput>(context, std::move(onClick))} {
+        explicit Button(const engine::Context& context, std::string text = "", OnClick onClick = nullptr) :
+            input_{add_behavior<ButtonInput>(interaction_, context, std::move(onClick))} {
             add_behavior<ButtonLayout>(style_);
-            add_behavior<ButtonDraw>(style_, context, std::move(text));
+            add_behavior<ButtonDraw>(interaction_, style_, context, std::move(text));
             add_behavior<ButtonHitTest>();
         }
 
@@ -40,6 +40,7 @@ namespace neko::widget {
         }
     private:
         style::ButtonStyle style_{};
+        behavior::InteractionState interaction_{};
         ButtonInput& input_;
     };
 } // namespace neko::widget

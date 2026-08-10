@@ -8,8 +8,9 @@
 #include "../Widget.hpp"
 
 namespace neko::behavior {
-    ButtonInput::ButtonInput(neko::widget::Widget& owner, const engine::Context& /*context*/, OnClick onClick) :
+    ButtonInput::ButtonInput(neko::widget::Widget& owner, InteractionState& interaction, const engine::Context& /*context*/, OnClick onClick) :
         InputBehavior{owner},
+        interaction_(interaction),
         onClick_(std::move(onClick)) {}
 
     auto ButtonInput::input(engine::Context& context, const platform::Event& event) -> void {
@@ -19,8 +20,8 @@ namespace neko::behavior {
                 return;
             }
             const auto inside = mouse->is_inside(owner_.get_bounds());
-            if (inside != owner_.get_hovered()) {
-                owner_.set_hovered(inside);
+            if (inside != interaction_.hovered.load(std::memory_order_relaxed)) {
+                interaction_.hovered.store(inside, std::memory_order_relaxed);
                 if (context.mark_dirty) {
                     context.mark_dirty();
                 }

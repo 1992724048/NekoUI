@@ -1,6 +1,8 @@
-﻿#pragma once
+﻿// 2026-08-10 08:42:35
 
-#include <compare>
+#pragma once
+
+#include <algorithm>
 #include <cstdint>
 
 namespace neko::type {
@@ -112,6 +114,23 @@ namespace neko::type {
 
     struct Color {
         uint32_t value;
+
+        Color() = default;
+
+        explicit Color(const uint32_t rgba) :
+            value{rgba} {}
+
+        explicit Color(const Vec3& rgb, const uint8_t alpha = 255) :
+            value{
+                (static_cast<uint32_t>(alpha) << 24) | (static_cast<uint32_t>(std::clamp(rgb.r, 0.0F, 255.0F)) << 16) | (static_cast<uint32_t>(std::clamp(rgb.g, 0.0F, 255.0F)) << 8) | static_cast<uint32_t>(
+                    std::clamp(rgb.b, 0.0F, 255.0F))
+            } {}
+
+        explicit Color(const Vec4& rgba) :
+            value{
+                (static_cast<uint32_t>(std::clamp(rgba.a, 0.0F, 255.0F)) << 24) | (static_cast<uint32_t>(std::clamp(rgba.r, 0.0F, 255.0F)) << 16) | (static_cast<uint32_t>(std::clamp(rgba.g, 0.0F, 255.0F)) << 8) |
+                static_cast<uint32_t>(std::clamp(rgba.b, 0.0F, 255.0F))
+            } {}
 
         [[nodiscard]] constexpr auto r() const -> uint8_t {
             return static_cast<uint8_t>(value >> 24);
