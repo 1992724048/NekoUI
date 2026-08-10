@@ -43,7 +43,7 @@ namespace neko::widget {
         virtual ~Widget();
 
         template<std::derived_from<Widget> T, typename... Args>
-        auto build(Args&&... args) -> T&;
+        auto build(Args&&... args) -> std::shared_ptr<T>;
 
         template<std::invocable<Widget&> F>
         auto children(F&& fn) -> Widget&;
@@ -160,7 +160,7 @@ namespace neko::widget {
 
 namespace neko::widget {
     template<std::derived_from<Widget> T, typename... Args>
-    auto Widget::build(Args&&... args) -> T& {
+    auto Widget::build(Args&&... args) -> std::shared_ptr<T> {
         const auto context = context_.lock();
         std::shared_ptr<T> child;
         if (context) {
@@ -170,7 +170,7 @@ namespace neko::widget {
             child = std::make_shared<T>(*orphan_context, std::forward<Args>(args)...);
         }
         child->parent_ = this;
-        auto& ref = *child;
+        auto shared = child; // visit 内会 move 走 child，返回前保留副本
 
         std::unique_lock<std::shared_mutex> tree_lock;
         if (context) {
@@ -199,7 +199,7 @@ namespace neko::widget {
             context->widget_tree_changed();
         }
 
-        return ref;
+        return shared;
     }
 
     template<std::invocable<Widget&> F>

@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <iostream>
+#include <memory>
 #include <print>
 #include <string>
 
@@ -80,48 +81,48 @@ auto main(int argc, char* argv[]) -> int try {
     }
 
     bool show_field = true;
-    neko::widget::TextField* input_ptr = nullptr;
+    std::shared_ptr<neko::widget::TextField> input_holder;
     engine->set_root_widget<neko::widget::Column>([&](neko::widget::Widget& root) -> void {
         auto& column = static_cast<neko::widget::Column&>(root);
         column.children([&](auto& builder) -> void {
-            auto& b1 = builder.template build<neko::widget::Button>("Button 1");
-            b1.style().size.value = {.x = 120.0F, .y = 40.0F};
-            b1.on_click([]() -> void {
+            auto b1 = builder.template build<neko::widget::Button>("Button 1");
+            b1->style().size.value = {.x = 120.0F, .y = 40.0F};
+            b1->on_click([]() -> void {
                 std::println("Button 1 clicked!");
             });
 
-            auto& b2 = builder.template build<neko::widget::Button>("Button 2");
-            b2.style().size.value = {.x = 120.0F, .y = 40.0F};
-            b2.on_click([]() -> void {
+            auto b2 = builder.template build<neko::widget::Button>("Button 2");
+            b2->style().size.value = {.x = 120.0F, .y = 40.0F};
+            b2->on_click([]() -> void {
                 std::println("Button 2 clicked!");
             });
 
-            auto& b3 = builder.template build<neko::widget::Button>("Button 3");
-            b3.style().size.value = {.x = 120.0F, .y = 40.0F};
-            b3.on_click([]() -> void {
+            auto b3 = builder.template build<neko::widget::Button>("Button 3");
+            b3->style().size.value = {.x = 120.0F, .y = 40.0F};
+            b3->on_click([]() -> void {
                 std::println("Button 3 clicked!");
             });
 
-            auto& toggle_btn = builder.template build<neko::widget::Button>("切换输入框");
-            toggle_btn.style().size.value = {.x = 120.0F, .y = 40.0F};
-            toggle_btn.on_click([&]() -> void {
+            auto toggle_btn = builder.template build<neko::widget::Button>("切换输入框");
+            toggle_btn->style().size.value = {.x = 120.0F, .y = 40.0F};
+            toggle_btn->on_click([&]() -> void {
                 show_field = !show_field;
                 engine->rebuild();
             });
 
             if (show_field) {
-                input_ptr = &builder.template build<neko::widget::TextField>();
-                input_ptr->style().size.value = {.x = 240.0F, .y = 40.0F};
+                input_holder = builder.template build<neko::widget::TextField>();
+                input_holder->style().size.value = {.x = 240.0F, .y = 40.0F};
 
-                auto& show_btn = builder.template build<neko::widget::Button>("显示输入");
-                show_btn.style().size.value = {.x = 120.0F, .y = 40.0F};
-                show_btn.on_click([&]() -> void {
-                    if (input_ptr != nullptr) {
-                        std::println("输入内容: {}", input_ptr->text());
+                auto show_btn = builder.template build<neko::widget::Button>("显示输入");
+                show_btn->style().size.value = {.x = 120.0F, .y = 40.0F};
+                show_btn->on_click([&]() -> void {
+                    if (input_holder) {
+                        std::println("输入内容: {}", input_holder->text());
                     }
                 });
             } else {
-                input_ptr = nullptr;
+                input_holder.reset();
             }
         });
     });

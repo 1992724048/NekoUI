@@ -102,7 +102,7 @@ namespace neko::engine {
         return render_scheduler_;
     }
 
-    auto Engine::rebuild() -> void {
+    auto Engine::rebuild() const -> void {
         if (!rebuild_root_) {
             return;
         }

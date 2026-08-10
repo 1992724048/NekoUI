@@ -71,7 +71,7 @@ namespace neko::engine {
         auto clear() -> void;
         auto get_msg_pump() -> std::weak_ptr<MsgPump>;
         auto get_render_scheduler() -> std::weak_ptr<RenderScheduler>;
-        auto rebuild() -> void;
+        auto rebuild() const -> void;
         auto schedule_rebuild() -> void;
         [[nodiscard]] auto get_native_handle() const -> Handle;
         [[nodiscard]] auto get_context() const -> Context&;
