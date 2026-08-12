@@ -1,5 +1,7 @@
 # NekoUI
 
+> 状态：已冻结（legacy，2026-08-13）。产品方向已转向 C++ 宿主 + WebView2 + Vue 3，本仓库归档保留；恢复开发指引见 README「恢复开发指引」。
+
 ## Overview
 
 NekoUI 是一个 Windows C++ GUI 框架（UI 库），使用 DirectX 11 渲染。处于开发早期（草稿状态）。核心架构包括 DirectX11 渲染后端、响应式 Widget 树、Material You HCT 色彩引擎、速率曲线动画引擎、独立渲染线程和线程安全消息队列。
@@ -350,7 +352,7 @@ NekoUI/                                    ← 项目根（.slnx, AGENTS.md, .cl
 
 ## Current Status
 
-- **草稿状态** — 核心架构已建立，渲染和交互链路可运行
+- **已冻结（legacy，2026-08-13）** — 核心架构已建立，渲染和交互链路可运行；技术选型评估（Flutter/WebView2/自研对比）后产品方向转向 C++ 宿主 + WebView2 + Vue 3，仓库停止开发归档保留
 - **已实现**：DirectX11 渲染后端、HCT Material You 色彩引擎（sRGB→XYZ→CAM16→HCT 完整管线 + 6 组色调色板）、Win32 平台实现（IME TSF / 11 窗口操作 / 注册表主题检测 + 强调色）、响应式 Widget 树（含焦点导航）、Widget Builder API（`build<T>()` / `children()`）、组合样式表（零运行时开销）、12 种速率曲线动画引擎、线程安全事件传递、系统主题变化检测与传递（Light/Dark + AccentColor）、全部核心 Widget（Button/Center/Column/Row）已实现绘制和交互、控件树 `shared_ptr` 所有权（子控件强持有）、rebuild 帧首合并（消除 build<T> 自死锁与 O(n²) 重建风暴）、布局 + 前序 DFS 递归绘制驱动、动画接线（anim_inc 唤醒 + 16ms 节拍）、Button hover 视觉态与 200ms 缩放动画、hover 离开清除（EventRouter `last_mouse_target_` 向旧目标补派 MouseMove）、关窗线程安全（RenderScheduler::stop join 渲染线程，self-id 守卫）、树结构并发加锁（build\<T\> unique_lock / render_frame shared_lock）、HCT 数学偏差修正、Button 构造参数 const 化与 draw_widget 静态化
 - **架构重构**：引擎核心已从单块 `WidgetTree` 拆分为 `TreeManager`（树数据 + ID 映射）、`HitTester`（命中测试）、`WidgetBuilder`（构建遍历）、`WidgetVisitor`（子节点分发）四个独立组件（`Renderer` 已删除，渲染驱动并入 `Engine::render_frame`），贯彻单一职责原则
 - **样式组合化（已完成）**：移除 style mixin 继承（`BackgroundStyle`/`SizeStyle`/`BorderStyle`/`TextStyle`），替换为组合样式表——基础结构体重构（`Size` 删 margin/padding 死字段、`size`→`value`、`Border::size`→`width`、新增 `Text`）+ 每控件聚合样式结构体（`ButtonStyle`/`ColumnStyle`/`RowStyle`/`CenterStyle`），控件持 `style_` 成员 + `style()` 访问器，行为构造注入样式引用（`const style::XxxStyle&`）——消灭 static_cast 样式访问，零运行时开销
